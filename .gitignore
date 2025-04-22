@@ -1,6 +1,7 @@
 # Local files
 output/*
 local/*
+data/tmp/*
 resources/*
 **/*.pdf
 **/*.DS_Store
