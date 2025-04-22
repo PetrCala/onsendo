@@ -8,10 +8,10 @@ def get_mock_db_url(filename: Optional[str] = None) -> str:
     Get a database URL for a mock database.
 
     Args:
-    - filename (str, optional): The name of the database file.
+        filename (str, optional): The name of the database file.
 
     Returns:
-    - A database URL for a mock database.
+        str: A database URL for a mock database.
     """
     filename = filename if filename is not None else "test.db"
 
