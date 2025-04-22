@@ -1,4 +1,3 @@
-import pytest
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from src.testing.testutils import Integration
