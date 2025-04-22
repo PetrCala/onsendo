@@ -4,6 +4,11 @@ from sqlalchemy.orm import sessionmaker, Session
 from contextlib import contextmanager
 
 
+def is_valid_url(url: str) -> bool:
+    """Check if the URL is valid."""
+    return isinstance(url, str) and url.startswith("sqlite://")
+
+
 class DatabaseConnection:
     """Manages database connections and sessions."""
 
@@ -80,5 +85,5 @@ def get_db(url: str) -> Generator[Session, None, None]:
         # Use the db object here
     ```
     """
-    assert url is not None, "url must be provided"
+    assert is_valid_url(url), "url must be provided and a valid SQLite URL"
     yield from db_manager.get_session(url)

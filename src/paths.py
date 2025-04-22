@@ -11,3 +11,6 @@ class PATHS(CustomStrEnum):
 
     # Files
     DB_PATH = os.path.join(DATA_DIR, "onsen.db")
+
+    FIXTURES_PATH_REL = "src.testing.testutils.fixtures"
+    """Path to the fixtures directory relative to the app root."""

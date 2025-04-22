@@ -29,7 +29,7 @@ def get_mock_engine(filename: Optional[str] = None):
     return create_engine(url)
 
 
-def get_mock_session(filename: Optional[str] = None) -> Session:
+def get_mock_db(filename: Optional[str] = None) -> Session:
     """Get a SQLAlchemy session for the mock database."""
     engine = get_mock_engine(filename)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
