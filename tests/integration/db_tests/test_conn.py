@@ -1,5 +1,6 @@
 from typing import Any
 import pytest
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from src import CONST
 from src.db.conn import is_valid_url
