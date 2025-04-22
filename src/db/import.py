@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from loguru import logger
 from sqlalchemy.orm import Session
 from src.db.models import Onsen
+from src.const import CONST
 
 
 def import_onsen_data(db: Session):
@@ -56,7 +57,7 @@ def main():
     """
     from src.db.conn import get_db
 
-    with get_db() as db:
+    with get_db(url=CONST.DATABASE_URL) as db:
         import_onsen_data(db)
 
 
