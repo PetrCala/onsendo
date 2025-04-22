@@ -1,16 +1,26 @@
+from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from loguru import logger
+from sqlalchemy.orm import Session
+from src import CONST
 
-DATABASE_URL = "sqlite:///onsen.db"  # Or you can parametrize this
+DATABASE_URL = CONST.DATABASE_URL
 
 engine = create_engine(DATABASE_URL, echo=False)  # echo=True for SQL logging
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-def get_db():
+
+def get_db() -> Generator[Session, None, None]:
     """
     A function to yield a SQLAlchemy session.
-    In a web framework, you'd typically use this in a request context.
+
+    Usage:
+    ```python
+    from src.db.conn import get_db
+
+    with get_db() as db:
+        # Use the db object here
+    ```
     """
     db = SessionLocal()
     try:

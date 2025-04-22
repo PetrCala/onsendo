@@ -1,14 +1,13 @@
-from typing import Optional
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import declarative_base, relationship
-from loguru import logger
 
 Base = declarative_base()
+
 
 class Onsen(Base):
     """
     The Onsen table. Stores info about each hot spring.
-    
+
     Columns:
     - id: primary key
     - ban_number: a "ban" code or unique number for the onsen (string or integer)
@@ -29,6 +28,7 @@ class Onsen(Base):
     - parking (駐車場)
     - remarks (備考)
     """
+
     __tablename__ = "onsens"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -59,7 +59,7 @@ class Onsen(Base):
 class OnsenVisit(Base):
     """
     A single onsen visit. Ties to one onsen (foreign key).
-    
+
     Columns:
     - id: primary key
     - onsen_id: foreign key referencing Onsen
@@ -70,6 +70,7 @@ class OnsenVisit(Base):
     - sauna_visited: whether you used the sauna
     - any other columns you'd like to add
     """
+
     __tablename__ = "onsen_visits"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

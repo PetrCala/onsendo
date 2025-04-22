@@ -4,6 +4,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 from src.db.models import Onsen
 
+
 def import_onsen_data(db: Session):
     """
     Example function to fetch online data and store in the DB.
@@ -46,16 +47,18 @@ def import_onsen_data(db: Session):
             db.add(new_onsen)
     db.commit()
 
+
 def main():
     """
     Example script entrypoint.
     Use this if you want to run data import from the command line:
     `poetry run python -m onsen_manager.data_import`
     """
-    from src.db.conn import SessionLocal
+    from src.db.conn import get_db
 
-    with SessionLocal() as db:
+    with get_db() as db:
         import_onsen_data(db)
+
 
 if __name__ == "__main__":
     main()
