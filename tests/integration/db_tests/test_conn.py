@@ -1,15 +1,16 @@
 from typing import Any
 import pytest
 from sqlalchemy.orm import Session
-from src.db.conn import get_db, is_valid_url
-from src.testing.mocks import get_mock_db_url
+from src import CONST
+from src.db.conn import is_valid_url
 
 
 class TestIsValidUrl:
     """Test the is_valid_url function."""
 
     @pytest.mark.parametrize(
-        "url", ["sqlite:///:memory:", "sqlite:///:memory:?check_same_thread=False"]
+        "url",
+        [CONST.MOCK_DATABASE_URL, CONST.MOCK_DATABASE_URL + "?check_same_thread=False"],
     )
     def test_valid_url(self, url: Any):
         """Should return True if the URL is valid."""
@@ -24,7 +25,7 @@ class TestIsValidUrl:
 class TestGetDb:
     """Test the get_db function."""
 
-    mock_url = get_mock_db_url()
+    mock_url = CONST.MOCK_DATABASE_URL
 
     def test_get_db(self, mock_db):
         """Should return a valid SQLAlchemy session."""
