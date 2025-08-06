@@ -2,10 +2,11 @@ import matplotlib.pyplot as plt
 from src.db.conn import SessionLocal
 from src.db.models import OnsenVisit
 
+
 def plot_visit_lengths():
     with SessionLocal() as db:
         visits = db.query(OnsenVisit).all()
-        lengths = [v.length_minutes for v in visits]
+        lengths = [v.stay_length_minutes for v in visits]
 
     # Simple histogram of visit lengths:
     plt.hist(lengths)
