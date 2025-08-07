@@ -10,7 +10,9 @@ Average fields filled per onsen: 15.5
 Average table entries per onsen: 8.8
 ==================================================
 
-# Other data
+==================================================
+OTHER DATA
+==================================================
 Total entries: 177
 Entries with 'deleted' == True: 28 (15.82%)
 Entries with '宿泊限定': 9 (5.08%)
