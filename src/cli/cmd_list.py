@@ -7,14 +7,8 @@ Defines CLI commands using dataclasses for better structure and type safety.
 import argparse
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional
-from src.cli.functions import (
-    add_onsen,
-    add_visit,
-    interactive_add_visit,
-    init_db,
-    fill_db,
-)
 from src.const import CONST
+import src.cli.commands as commands
 
 
 @dataclass
@@ -40,14 +34,14 @@ class CommandConfig:
 # Define all CLI commands
 COMMANDS = {
     "init-db": CommandConfig(
-        func=init_db,
+        func=commands.init_db,
         help="Initialize the database.",
         args={
             "force": ArgumentConfig(action="store_true"),
         },
     ),
     "fill-db": CommandConfig(
-        func=fill_db,
+        func=commands.fill_db,
         help="Fill the database with onsen data.",
         args={
             "database_folder": ArgumentConfig(type=str, default=CONST.DATABASE_FOLDER),
@@ -59,7 +53,7 @@ COMMANDS = {
         },
     ),
     "add-onsen": CommandConfig(
-        func=add_onsen,
+        func=commands.add_onsen,
         help="Add a new onsen.",
         args={
             "ban_number": ArgumentConfig(type=str, required=True),
@@ -68,7 +62,7 @@ COMMANDS = {
         },
     ),
     "add-visit": CommandConfig(
-        func=add_visit,
+        func=commands.add_visit,
         help="Add a new onsen visit.",
         args={
             # Interactive mode flag
@@ -137,7 +131,7 @@ COMMANDS = {
         },
     ),
     "add-visit-interactive": CommandConfig(
-        func=lambda args: interactive_add_visit(),
+        func=lambda args: commands.interactive_add_visit(),
         help="Add a new onsen visit using an interactive questionnaire.",
         args={},
     ),
