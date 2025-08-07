@@ -7,7 +7,14 @@ Defines CLI commands using dataclasses for better structure and type safety.
 import argparse
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional
-from src.cli.functions import add_onsen, add_visit, interactive_add_visit
+from src.cli.functions import (
+    add_onsen,
+    add_visit,
+    interactive_add_visit,
+    init_db,
+    fill_db,
+)
+from src.const import CONST
 
 
 @dataclass
@@ -32,6 +39,25 @@ class CommandConfig:
 
 # Define all CLI commands
 COMMANDS = {
+    "init-db": CommandConfig(
+        func=init_db,
+        help="Initialize the database.",
+        args={
+            "force": ArgumentConfig(action="store_true"),
+        },
+    ),
+    "fill-db": CommandConfig(
+        func=fill_db,
+        help="Fill the database with onsen data.",
+        args={
+            "database_folder": ArgumentConfig(type=str, default=CONST.DATABASE_FOLDER),
+            "database_name": ArgumentConfig(
+                type=str,
+                default=CONST.DATABASE_NAME,
+                help=f"Database file name, including the .db extension. Default: {CONST.DATABASE_NAME}",
+            ),
+        },
+    ),
     "add-onsen": CommandConfig(
         func=add_onsen,
         help="Add a new onsen.",

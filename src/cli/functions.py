@@ -5,11 +5,50 @@ Functions for the CLI commands.
 """
 
 import argparse
+import os
+from sqlalchemy import create_engine
+from src.db.models import Base
 from loguru import logger
 from src.db.conn import get_db
 from src.db.models import Onsen, OnsenVisit
+from src.db.import_data import import_onsen_data
 from src.const import CONST
 from src.cli.interactive import interactive_add_visit
+
+
+def init_db(args: argparse.Namespace) -> None:
+    """
+    Initialize the database.
+    """
+    if not args.force and os.path.exists(CONST.DATABASE_URL):
+        logger.error("Database already exists! Use --force to overwrite.")
+        return
+
+    data_dir = os.path.dirname(CONST.DATABASE_URL.replace("sqlite:///", ""))
+    os.makedirs(data_dir, exist_ok=True)
+
+    # Create engine and tables
+    engine = create_engine(CONST.DATABASE_URL)
+    Base.metadata.create_all(bind=engine)
+
+    logger.info(f"Database initialized at: {CONST.DATABASE_URL}")
+    logger.info("Tables created successfully!")
+
+
+def fill_db(args: argparse.Namespace) -> None:
+    """
+    Scrape onsen data from the web and fill the database.
+    """
+    file_path = os.path.join(args.database_folder, args.database_name)
+    database_url = f"sqlite:///{file_path}"
+
+    if not os.path.exists(file_path):
+        logger.error(f"Database file {file_path} does not exist!")
+        return
+
+    logger.info(f"Scraping onsen data and filling database at {database_url}...")
+    with get_db(url=database_url) as db:
+        import_onsen_data(db)
 
 
 def add_onsen(args: argparse.Namespace) -> None:
