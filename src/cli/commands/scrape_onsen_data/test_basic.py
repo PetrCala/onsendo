@@ -132,6 +132,58 @@ def test_data_mapper():
         return False
 
 
+def test_mock_data():
+    """Test that mock data is available and properly structured."""
+    print("Testing mock data...")
+
+    try:
+        from src.testing.mocks.mock_onsen_data import (
+            get_mock_onsen_mapping,
+            get_mock_extracted_data,
+            get_mock_mapped_data,
+            get_mock_complete_entry,
+        )
+
+        # Test mock data functions
+        mapping = get_mock_onsen_mapping()
+        extracted = get_mock_extracted_data()
+        mapped = get_mock_mapped_data()
+        complete = get_mock_complete_entry()
+
+        # Check that data is properly structured
+        assert isinstance(mapping, dict)
+        assert isinstance(extracted, dict)
+        assert isinstance(mapped, dict)
+        assert isinstance(complete, dict)
+
+        print("✓ Mock data is available and properly structured")
+        return True
+
+    except Exception as e:
+        print(f"✗ Mock data error: {e}")
+        return False
+
+
+def test_fixtures():
+    """Test that test fixtures are available."""
+    print("Testing fixtures...")
+
+    try:
+        from src.testing.testutils.scraper_fixtures import (
+            temp_output_dir,
+            mock_selenium_driver,
+            mock_onsen_mapping,
+            mock_extracted_data,
+        )
+
+        print("✓ Test fixtures are available")
+        return True
+
+    except Exception as e:
+        print(f"✗ Fixtures error: {e}")
+        return False
+
+
 if __name__ == "__main__":
     print("Running basic tests for onsen scraper...")
 
@@ -141,6 +193,8 @@ if __name__ == "__main__":
         test_constants,
         test_file_structure,
         test_data_mapper,
+        test_mock_data,
+        test_fixtures,
     ]
 
     all_passed = True
@@ -151,6 +205,10 @@ if __name__ == "__main__":
 
     if all_passed:
         print("🎉 All basic tests passed!")
+        print("\nFor comprehensive testing, run:")
+        print("  pytest tests/unit/test_data_mapper.py")
+        print("  pytest tests/unit/test_scraper.py")
+        print("  pytest tests/integration/test_scraper_integration.py")
         sys.exit(0)
     else:
         print("❌ Some tests failed!")
