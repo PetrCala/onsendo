@@ -13,6 +13,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
+from src.const import CONST
+
 
 def setup_selenium_driver() -> webdriver.Chrome:
     """
@@ -349,7 +351,7 @@ def extract_detailed_onsen_data(driver) -> Dict[str, Any]:
         try:
             img_element = driver.find_element(By.XPATH, "/html/body/div[4]/div[1]/img")
             img_src = img_element.get_attribute("src")
-            extracted_data["deleted"] = img_src.endswith("thumbnail/deleted.jpg")
+            extracted_data["deleted"] = CONST.DELETED_IMAGE_SUBSTRING in img_src
             logger.debug(f"Onsen deleted status: {extracted_data['deleted']}")
         except Exception as e:
             logger.debug(f"Error checking deleted status: {e}")

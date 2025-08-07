@@ -16,6 +16,9 @@ class CONST(NamedTuple):
     DELETED_IMAGE_URL: str = (
         "https://onsen-hunter.oita-apc.co.jp/dhunter/thumbnail/deleted.jpg"
     )
+    DELETED_IMAGE_SUBSTRING: str = (
+        "thumbnail/deleted.jpg"  # If found in the image URL, an image is marked as deleted
+    )
 
 
 CONST = CONST()
