@@ -2,6 +2,7 @@
 output/*
 local/*
 data/tmp/*
+data/db/*
 resources/*
 **/*.pdf
 **/*.DS_Store

@@ -67,6 +67,7 @@ class DatabaseConnection:
 db_manager = DatabaseConnection()
 
 
+@contextmanager
 def get_db(url: str) -> Generator[Session, None, None]:
     """
     A function to yield a SQLAlchemy session.
@@ -86,4 +87,5 @@ def get_db(url: str) -> Generator[Session, None, None]:
     ```
     """
     assert is_valid_url(url), "url must be provided and a valid SQLite URL"
-    yield from db_manager.get_session(url)
+    with db_manager.get_session(url) as session:
+        yield session

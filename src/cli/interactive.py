@@ -4,6 +4,7 @@ interactive.py
 
 import subprocess
 import sys
+from collections.abc import Callable
 from datetime import datetime
 from typing import Any, Dict
 from src.db.conn import get_db
@@ -22,7 +23,7 @@ def interactive_add_visit() -> None:
     visit_data: Dict[str, Any] = {}
 
     # Helper function for input validation
-    def get_valid_input(prompt: str, validator: callable, max_attempts: int = 3) -> Any:
+    def get_valid_input(prompt: str, validator: Callable, max_attempts: int = 3) -> Any:
         """Get valid input from user with retry logic."""
         for attempt in range(max_attempts):
             try:

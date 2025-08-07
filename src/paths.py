@@ -6,11 +6,12 @@ class PATHS(CustomStrEnum):
     """Paths for the project."""
 
     APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-    DATA_DIR = os.path.join(APP_ROOT, "data")
+    PROJECT_ROOT = os.path.dirname(APP_ROOT)
+    DATA_DIR = os.path.join(PROJECT_ROOT, "data")
     TMP_DATA_DIR = os.path.join(DATA_DIR, "tmp")
 
     # Files
-    DB_PATH = os.path.join(DATA_DIR, "onsen.db")
+    DB_PATH = os.path.join(DATA_DIR, "db", "onsen.db")
 
     FIXTURES_PATH_REL = "src.testing.testutils.fixtures"
     """Path to the fixtures directory relative to the app root."""

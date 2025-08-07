@@ -19,6 +19,8 @@
 
 - [Set up the project](#set-up-the-project)
 - [How to use](#how-to-use)
+  - [Preparing a database](#preparing-a-database)
+  - [Using Command Line Interface](#using-command-line-interface)
 
 ## Set up the project
 
@@ -34,7 +36,18 @@ source .venv/bin/activate
 
 ## How to use
 
-The project offers a number of utility functions through a simple Command Line Interface. To list these, run the following:
+### Preparing a database
+
+You can either choose to create your own database, or use the provided one.
+
+- To create a new database, run `poetry run python scripts/init_db.py`. This creates a new sub-folder in the `data` folder, and puts a new SQLite database file there.
+- To use the provided database, simply copy it over to this folder.
+
+<!-- TODO this should be clearer -->
+
+### Using Command Line Interface
+
+The project offers a number of utility functions through a simple CLI. To list these, run the following:
 
 ```bash
 poetry run onsendo --help
