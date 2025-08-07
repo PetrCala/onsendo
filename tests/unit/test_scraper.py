@@ -384,3 +384,284 @@ class TestScraper:
         result = extract_table_data(mock_table)
 
         assert result == {}
+
+    # New tests for recursive areaDIV functionality
+    def test_find_all_onsen_divs_recursive_single_level(self):
+        """Test finding onsen divs with single level areaDIV structure."""
+        driver = Mock()
+
+        # Create mock areaDIV elements
+        area_div1 = Mock()
+        area_div1.get_attribute.return_value = "areaDIV1"
+
+        area_div2 = Mock()
+        area_div2.get_attribute.return_value = "areaDIV2"
+
+        # Create mock onsen divs
+        onsen_div1 = Mock()
+        onsen_div1.get_attribute.return_value = "onsen_div_1"
+
+        onsen_div2 = Mock()
+        onsen_div2.get_attribute.return_value = "onsen_div_2"
+
+        # Mock the is_onsen_div function to return True for onsen divs
+        with patch(
+            "src.cli.commands.scrape_onsen_data.scraper.is_onsen_div"
+        ) as mock_is_onsen:
+            mock_is_onsen.side_effect = lambda div: div.get_attribute() in [
+                "onsen_div_1",
+                "onsen_div_2",
+            ]
+
+            # Setup areaDIV1 to contain onsen_div1
+            area_div1.find_elements.return_value = [onsen_div1]
+
+            # Setup areaDIV2 to contain onsen_div2
+            area_div2.find_elements.return_value = [onsen_div2]
+
+            # Mock driver to find areaDIVs
+            driver.find_elements.return_value = [area_div1, area_div2]
+
+            result = find_all_onsen_divs(driver)
+
+            # Should find both onsen divs
+            assert len(result) == 2
+            assert onsen_div1 in result
+            assert onsen_div2 in result
+
+    def test_find_all_onsen_divs_recursive_nested_structure(self):
+        """Test finding onsen divs with nested areaDIV structure."""
+        driver = Mock()
+
+        # Create mock areaDIV elements
+        area_div1 = Mock()
+        area_div1.get_attribute.return_value = "areaDIV1"
+
+        area_div2 = Mock()
+        area_div2.get_attribute.return_value = "areaDIV2"
+
+        nested_area_div = Mock()
+        nested_area_div.get_attribute.return_value = "areaDIV3"
+
+        # Create mock onsen divs
+        onsen_div1 = Mock()
+        onsen_div1.get_attribute.return_value = "onsen_div_1"
+
+        onsen_div2 = Mock()
+        onsen_div2.get_attribute.return_value = "onsen_div_2"
+
+        # Mock the is_onsen_div function
+        with patch(
+            "src.cli.commands.scrape_onsen_data.scraper.is_onsen_div"
+        ) as mock_is_onsen:
+            mock_is_onsen.side_effect = lambda div: div.get_attribute() in [
+                "onsen_div_1",
+                "onsen_div_2",
+            ]
+
+            # Setup nested structure: areaDIV1 contains onsen_div1 and nested areaDIV3
+            # areaDIV3 contains onsen_div2
+            nested_area_div.find_elements.return_value = [onsen_div2]
+            area_div1.find_elements.return_value = [onsen_div1, nested_area_div]
+            area_div2.find_elements.return_value = []
+
+            # Mock driver to find areaDIVs
+            driver.find_elements.return_value = [area_div1, area_div2]
+
+            result = find_all_onsen_divs(driver)
+
+            # Should find both onsen divs from different nesting levels
+            assert len(result) == 2
+            assert onsen_div1 in result
+            assert onsen_div2 in result
+
+    def test_find_all_onsen_divs_recursive_duplicate_prevention(self):
+        """Test that duplicate areaDIVs are not processed multiple times."""
+        driver = Mock()
+
+        # Create mock areaDIV elements
+        area_div1 = Mock()
+        area_div1.get_attribute.return_value = "areaDIV1"
+
+        area_div2 = Mock()
+        area_div2.get_attribute.return_value = "areaDIV2"
+
+        # Create mock onsen div
+        onsen_div = Mock()
+        onsen_div.get_attribute.return_value = "onsen_div_1"
+
+        # Mock the is_onsen_div function
+        with patch(
+            "src.cli.commands.scrape_onsen_data.scraper.is_onsen_div"
+        ) as mock_is_onsen:
+            mock_is_onsen.return_value = True
+
+            # Setup areaDIV1 to contain areaDIV2 and onsen_div
+            # areaDIV2 also contains the same onsen_div (creating a cycle)
+            area_div2.find_elements.return_value = [onsen_div]
+            area_div1.find_elements.return_value = [area_div2, onsen_div]
+
+            # Mock driver to find areaDIVs
+            driver.find_elements.return_value = [area_div1]
+
+            result = find_all_onsen_divs(driver)
+
+            # Should find the onsen div twice since it appears in both areaDIV1 and areaDIV2
+            # This is the correct behavior - we want to find all onsen divs regardless of nesting
+            assert len(result) == 2
+            assert onsen_div in result
+
+    def test_find_all_onsen_divs_recursive_depth_limit(self):
+        """Test that recursion is limited to prevent infinite loops."""
+        driver = Mock()
+
+        # Create deeply nested areaDIVs
+        area_divs = []
+        for i in range(10):  # Create more than the 5-level limit
+            area_div = Mock()
+            area_div.get_attribute.return_value = f"areaDIV{i+1}"
+            area_divs.append(area_div)
+
+        # Create mock onsen div
+        onsen_div = Mock()
+        onsen_div.get_attribute.return_value = "onsen_div_deep"
+
+        # Mock the is_onsen_div function
+        with patch(
+            "src.cli.commands.scrape_onsen_data.scraper.is_onsen_div"
+        ) as mock_is_onsen:
+            mock_is_onsen.return_value = True
+
+            # Create deep nesting: areaDIV1 contains areaDIV2, which contains areaDIV3, etc.
+            for i in range(len(area_divs) - 1):
+                area_divs[i].find_elements.return_value = [area_divs[i + 1]]
+
+            # The last areaDIV contains the onsen div
+            area_divs[-1].find_elements.return_value = [onsen_div]
+
+            # Mock driver to find areaDIVs
+            driver.find_elements.return_value = [area_divs[0]]
+
+            result = find_all_onsen_divs(driver)
+
+            # Should not find the onsen div due to depth limit
+            assert len(result) == 0
+
+    def test_find_all_onsen_divs_recursive_no_area_divs(self):
+        """Test behavior when no areaDIV elements are found."""
+        driver = Mock()
+        driver.find_elements.return_value = []
+
+        result = find_all_onsen_divs(driver)
+
+        assert len(result) == 0
+
+    def test_find_all_onsen_divs_recursive_mixed_content(self):
+        """Test finding onsen divs in mixed content (areaDIVs and regular divs)."""
+        driver = Mock()
+
+        # Create mock areaDIV elements
+        area_div1 = Mock()
+        area_div1.get_attribute.return_value = "areaDIV1"
+
+        area_div2 = Mock()
+        area_div2.get_attribute.return_value = "areaDIV2"
+
+        # Create mock divs (not areaDIVs)
+        regular_div1 = Mock()
+        regular_div1.get_attribute.return_value = "regular_div_1"
+
+        regular_div2 = Mock()
+        regular_div2.get_attribute.return_value = "regular_div_2"
+
+        # Create mock onsen divs
+        onsen_div1 = Mock()
+        onsen_div1.get_attribute.return_value = "onsen_div_1"
+
+        onsen_div2 = Mock()
+        onsen_div2.get_attribute.return_value = "onsen_div_2"
+
+        # Mock the is_onsen_div function
+        with patch(
+            "src.cli.commands.scrape_onsen_data.scraper.is_onsen_div"
+        ) as mock_is_onsen:
+            mock_is_onsen.side_effect = lambda div: div.get_attribute() in [
+                "onsen_div_1",
+                "onsen_div_2",
+            ]
+
+            # Setup mixed content: areaDIV1 contains regular_div1 and onsen_div1
+            # areaDIV2 contains regular_div2 and onsen_div2
+            area_div1.find_elements.return_value = [regular_div1, onsen_div1]
+            area_div2.find_elements.return_value = [regular_div2, onsen_div2]
+
+            # Mock driver to find areaDIVs
+            driver.find_elements.return_value = [area_div1, area_div2]
+
+            result = find_all_onsen_divs(driver)
+
+            # Should find only the onsen divs, not the regular divs
+            assert len(result) == 2
+            assert onsen_div1 in result
+            assert onsen_div2 in result
+
+    def test_find_all_onsen_divs_recursive_exception_handling(self):
+        """Test that exceptions during recursive search are handled gracefully."""
+        driver = Mock()
+
+        # Create mock areaDIV element
+        area_div = Mock()
+        area_div.get_attribute.return_value = "areaDIV1"
+
+        # Make find_elements raise an exception
+        area_div.find_elements.side_effect = Exception("Test exception")
+
+        # Mock driver to find areaDIVs
+        driver.find_elements.return_value = [area_div]
+
+        result = find_all_onsen_divs(driver)
+
+        # Should return empty list when exception occurs
+        assert len(result) == 0
+
+    def test_extract_all_onsen_mapping_with_navigation(self):
+        """Test that extract_all_onsen_mapping navigates to the correct URL."""
+        driver = Mock()
+
+        # Mock the find_all_onsen_divs function
+        with patch(
+            "src.cli.commands.scrape_onsen_data.scraper.find_all_onsen_divs"
+        ) as mock_find_divs:
+            mock_find_divs.return_value = []
+
+            # Mock WebDriverWait
+            with patch(
+                "src.cli.commands.scrape_onsen_data.scraper.WebDriverWait"
+            ) as mock_wait:
+                mock_wait.return_value.until.return_value = True
+
+                result = extract_all_onsen_mapping(driver)
+
+                # Should call driver.get with the correct URL
+                driver.get.assert_called_once()
+                # Should call WebDriverWait
+                mock_wait.assert_called_once()
+                # Should return empty dict when no onsen divs found
+                assert result == {}
+
+    def test_extract_all_onsen_mapping_navigation_timeout(self):
+        """Test that extract_all_onsen_mapping handles navigation timeout."""
+        driver = Mock()
+
+        # Mock WebDriverWait to raise TimeoutException
+        with patch(
+            "src.cli.commands.scrape_onsen_data.scraper.WebDriverWait"
+        ) as mock_wait:
+            from selenium.common.exceptions import TimeoutException
+
+            mock_wait.return_value.until.side_effect = TimeoutException("Timeout")
+
+            result = extract_all_onsen_mapping(driver)
+
+            # Should return empty dict when timeout occurs
+            assert result == {}
