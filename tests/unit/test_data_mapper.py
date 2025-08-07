@@ -7,8 +7,6 @@ from unittest.mock import patch
 
 from src.cli.commands.scrape_onsen_data.data_mapper import (
     map_scraped_data_to_onsen_model,
-    extract_ban_number,
-    extract_region,
     create_description,
     validate_mapped_data,
     get_mapping_summary,
@@ -65,58 +63,6 @@ class TestDataMapper:
         assert result["longitude"] is None
         assert result["admission_fee"] is None
         assert result["spring_quality"] is None
-
-    def test_extract_ban_number_simple(self):
-        """Test extracting ban number from simple format."""
-        result = extract_ban_number("123 温泉名")
-        assert result == "123"
-
-    def test_extract_ban_number_with_label(self):
-        """Test extracting ban number with label."""
-        result = extract_ban_number("番号: 456 温泉名")
-        assert result == "456"
-
-    def test_extract_ban_number_with_spaces(self):
-        """Test extracting ban number with spaces."""
-        result = extract_ban_number("番号 : 789 温泉名")
-        assert result == "789"
-
-    def test_extract_ban_number_no_number(self):
-        """Test extracting ban number when no number is present."""
-        result = extract_ban_number("温泉名のみ")
-        assert result == "温泉名のみ"
-
-    def test_extract_ban_number_empty(self):
-        """Test extracting ban number from empty string."""
-        result = extract_ban_number("")
-        assert result == ""
-
-    def test_extract_region_from_address(self):
-        """Test extracting region from address."""
-        result = extract_region("大分県別府市鉄輪559-1", "温泉名")
-        assert result == "別府"
-
-    def test_extract_region_from_name(self):
-        """Test extracting region from name when not in address."""
-        result = extract_region("大分県大分市テスト町1-1", "湯布院温泉")
-        assert (
-            result == "大分"
-        )  # Address is checked first, so "大分" from address is returned
-
-    def test_extract_region_not_found(self):
-        """Test extracting region when not found."""
-        result = extract_region("大分県テスト市テスト町1-1", "テスト温泉")
-        assert result == "大分"  # "大分" is found in the address
-
-    def test_extract_region_truly_not_found(self):
-        """Test extracting region when truly not found."""
-        result = extract_region("テスト県テスト市テスト町1-1", "テスト温泉")
-        assert result is None  # No known region found
-
-    def test_extract_region_empty_inputs(self):
-        """Test extracting region with empty inputs."""
-        result = extract_region("", "")
-        assert result is None
 
     def test_create_description_with_all_fields(self, mock_extracted_data):
         """Test creating description with all available fields."""
@@ -233,7 +179,8 @@ class TestDataMapper:
         """Test mapping with None values in the data."""
         data_with_nones = {
             "name": "テスト温泉",
-            "ban_number_and_name": "123 テスト温泉",
+            "region": "別府",
+            "ban_number": "123",
             "latitude": None,
             "longitude": None,
             "住所": None,

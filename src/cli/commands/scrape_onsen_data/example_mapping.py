@@ -20,8 +20,9 @@ def demonstrate_mapping():
 
     # Sample scraped data (what would be extracted from a real onsen page)
     sample_scraped_data = {
+        "region": "別府",
+        "ban_number": "123",
         "name": "別府温泉 海地獄",
-        "ban_number_and_name": "123 別府温泉 海地獄",
         "latitude": 33.2797,
         "longitude": 131.5011,
         "map_url": "https://maps.google.co.jp/maps?q=33.2797,131.5011&z=15",

@@ -303,25 +303,45 @@ def extract_detailed_onsen_data(driver) -> Dict[str, Any]:
     extracted_data = {}
 
     try:
-        # 1. Extract onsen name from /html/body/div[2]
+        # 1. Extract region from /html/body/div[2]
         try:
-            name_element = driver.find_element(By.XPATH, "/html/body/div[2]")
-            extracted_data["name"] = name_element.text.strip()
-            logger.debug(f"Extracted name: {extracted_data['name']}")
+            region_element = driver.find_element(By.XPATH, "/html/body/div[2]")
+            extracted_data["region"] = region_element.text.strip()
+            logger.debug(f"Extracted region: {extracted_data['region']}")
         except Exception as e:
-            logger.debug(f"Error extracting name: {e}")
-            extracted_data["name"] = ""
+            logger.debug(f"Error extracting region: {e}")
+            extracted_data["region"] = ""
 
-        # 2. Extract ban number and full name from /html/body/div[3]
+        # 2. Extract ban number and name from /html/body/div[3]
         try:
             ban_element = driver.find_element(By.XPATH, "/html/body/div[3]")
-            extracted_data["ban_number_and_name"] = ban_element.text.strip()
-            logger.debug(
-                f"Extracted ban number and name: {extracted_data['ban_number_and_name']}"
-            )
+            ban_number_and_name_text = ban_element.text.strip()
+
+            # Split the ban number and name
+            import re
+
+            match = re.match(r"^(\d+)\s+(.+)$", ban_number_and_name_text)
+            if match:
+                extracted_data["ban_number"] = match.group(1)
+                extracted_data["name"] = match.group(2).strip()
+            else:
+                # Fallback: try to extract just the number
+                number_match = re.match(r"^(\d+)", ban_number_and_name_text)
+                if number_match:
+                    extracted_data["ban_number"] = number_match.group(1)
+                    extracted_data["name"] = re.sub(
+                        r"^\d+\s*", "", ban_number_and_name_text
+                    )
+                else:
+                    extracted_data["ban_number"] = ""
+                    extracted_data["name"] = ban_number_and_name_text
+
+            logger.debug(f"Extracted ban number: {extracted_data['ban_number']}")
+            logger.debug(f"Extracted name: {extracted_data['name']}")
         except Exception as e:
             logger.debug(f"Error extracting ban number and name: {e}")
-            extracted_data["ban_number_and_name"] = ""
+            extracted_data["ban_number"] = ""
+            extracted_data["name"] = ""
 
         # 3. Extract map iframe and coordinates from /html/body/div[4]/iframe
         try:

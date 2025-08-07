@@ -83,8 +83,9 @@ def test_mock_data_validation():
 
         # Test extracted data
         extracted_data = get_mock_extracted_data()
+        assert "region" in extracted_data
+        assert "ban_number" in extracted_data
         assert "name" in extracted_data
-        assert "ban_number_and_name" in extracted_data
         assert "latitude" in extracted_data
         assert "longitude" in extracted_data
         print("✓ Mock extracted data is valid")

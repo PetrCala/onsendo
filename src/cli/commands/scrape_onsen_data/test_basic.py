@@ -106,8 +106,9 @@ def test_data_mapper():
 
         # Test with sample data
         sample_data = {
+            "region": "別府",
+            "ban_number": "123",
             "name": "テスト温泉",
-            "ban_number_and_name": "123 テスト温泉",
             "latitude": 33.123,
             "longitude": 131.456,
             "住所": "大分県別府市テスト町1-1",

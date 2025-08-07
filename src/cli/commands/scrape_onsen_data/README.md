@@ -104,8 +104,9 @@ Each scraped onsen entry contains:
   "url": "https://...",
   "raw_html": "...",
   "extracted_data": {
+    "region": "別府",
+    "ban_number": "123",
     "name": "温泉名",
-    "ban_number_and_name": "123 温泉名",
     "latitude": 33.123,
     "longitude": 131.456,
     "map_url": "https://maps.google.co.jp/...",

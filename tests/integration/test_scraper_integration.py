@@ -351,8 +351,9 @@ class TestScraperIntegration:
         for url, (expected_lat, expected_lon) in zip(test_urls, expected_coords):
             # Create mock data with the URL and extracted coordinates
             mock_data = {
-                "name": "テスト温泉",
-                "ban_number_and_name": "123 テスト温泉",
+                "name": "別府温泉 海地獄",
+                "region": "別府",
+                "ban_number": "123",
                 "map_url": url,
                 "latitude": expected_lat,  # Add the coordinates that would be extracted
                 "longitude": expected_lon,
@@ -374,24 +375,25 @@ class TestScraperIntegration:
     def test_region_extraction_integration(self):
         """Test region extraction from addresses and names."""
         test_cases = [
-            ("大分県別府市鉄輪559-1", "温泉名", "別府"),
+            ("大分県別府市鉄輪559-1", "別府", "別府"),
             (
                 "大分県大分市テスト町1-1",
-                "湯布院温泉",
                 "大分",
-            ),  # Address is checked first, so "大分" from address
-            ("大分県由布市湯布院町川上", "温泉名", "湯布院"),
+                "大分",
+            ),  # Region is now extracted directly
+            ("大分県由布市湯布院町川上", "湯布院", "湯布院"),
             (
                 "大分県日田市テスト町1-1",
-                "温泉名",
-                "大分",
-            ),  # "大分" is found in address first
+                "日田",
+                "日田",
+            ),  # Region is now extracted directly
         ]
 
-        for address, name, expected_region in test_cases:
+        for address, region, expected_region in test_cases:
             mock_data = {
-                "name": name,
-                "ban_number_and_name": "123 温泉名",
+                "region": region,
+                "ban_number": "123",
+                "name": "温泉名",
                 "住所": address,
             }
 

@@ -172,8 +172,9 @@ MOCK_ONSEN_DETAIL_HTML = """
 
 # Sample extracted data (what the scraper would extract)
 MOCK_EXTRACTED_ONSEN_DATA = {
+    "region": "別府",  # This is the region
+    "ban_number": "123",
     "name": "別府温泉 海地獄",
-    "ban_number_and_name": "123 別府温泉 海地獄",
     "latitude": 33.2797,
     "longitude": 131.5011,
     "map_url": "https://maps.google.co.jp/maps?q=33.2797,131.5011&z=15",
@@ -243,8 +244,9 @@ MOCK_ERROR_ONSEN_ENTRY = {
 
 # Sample incomplete data for testing edge cases
 MOCK_INCOMPLETE_ONSEN_DATA = {
+    "region": "大分",  # This is the region
+    "ban_number": "456",
     "name": "テスト温泉",
-    "ban_number_and_name": "456 テスト温泉",
     "latitude": None,
     "longitude": None,
     "map_url": "",
@@ -256,8 +258,9 @@ MOCK_INCOMPLETE_ONSEN_DATA = {
 
 # Sample data with different region
 MOCK_YUFUIN_ONSEN_DATA = {
+    "region": "湯布院",  # This is the region
+    "ban_number": "789",
     "name": "湯布院温泉 金鱗湖",
-    "ban_number_and_name": "789 湯布院温泉 金鱗湖",
     "latitude": 33.2633,
     "longitude": 131.3544,
     "map_url": "https://maps.google.co.jp/maps?q=33.2633,131.3544&z=15",

@@ -18,11 +18,9 @@ def map_scraped_data_to_onsen_model(scraped_data: Dict[str, Any]) -> Dict[str, A
     mapped_data = {}
 
     # Basic fields
+    mapped_data["region"] = scraped_data.get("region", "")
+    mapped_data["ban_number"] = scraped_data.get("ban_number", "")
     mapped_data["name"] = scraped_data.get("name", "")
-
-    # Extract ban number from the combined field
-    ban_number_and_name = scraped_data.get("ban_number_and_name", "")
-    mapped_data["ban_number"] = extract_ban_number(ban_number_and_name)
 
     # Coordinates
     mapped_data["latitude"] = scraped_data.get("latitude")
@@ -53,94 +51,10 @@ def map_scraped_data_to_onsen_model(scraped_data: Dict[str, Any]) -> Dict[str, A
         else:
             mapped_data[english_field] = None
 
-    # Extract region from address or name if available
-    mapped_data["region"] = extract_region(
-        mapped_data.get("address", ""), mapped_data.get("name", "")
-    )
-
     # Create description from available data
     mapped_data["description"] = create_description(scraped_data)
 
     return mapped_data
-
-
-def extract_ban_number(ban_number_and_name: str) -> str:
-    """
-    Extract ban number from the combined ban number and name field.
-
-    Args:
-        ban_number_and_name: String containing ban number and name
-
-    Returns:
-        Extracted ban number
-    """
-    if not ban_number_and_name:
-        return ""
-
-    # Try to extract ban number (usually at the beginning, before the name)
-    # Common patterns: "番号: 123 温泉名" or "123 温泉名"
-    import re
-
-    # Look for numbers at the beginning
-    match = re.match(r"^(\d+)", ban_number_and_name.strip())
-    if match:
-        return match.group(1)
-
-    # Look for "番号:" pattern
-    match = re.search(r"番号[:\s]*(\d+)", ban_number_and_name)
-    if match:
-        return match.group(1)
-
-    # If no clear pattern, return the whole string
-    return ban_number_and_name.strip()
-
-
-def extract_region(address: str, name: str) -> Optional[str]:
-    """
-    Extract region information from address or name.
-
-    Args:
-        address: Full address string
-        name: Onsen name
-
-    Returns:
-        Extracted region or None
-    """
-    if not address and not name:
-        return None
-
-    # Common regions in Oita prefecture
-    regions = [
-        "別府",
-        "Beppu",
-        "湯布院",
-        "Yufuin",
-        "由布院",
-        "大分",
-        "Oita",
-        "日田",
-        "Hita",
-        "中津",
-        "Nakatsu",
-        "佐伯",
-        "Saiki",
-        "臼杵",
-        "Usuki",
-    ]
-
-    # Check address first
-    if address:
-        for region in regions:
-            if region in address:
-                return region
-
-    # Check name if no region found in address
-    if name:
-        for region in regions:
-            if region in name:
-                return region
-
-    return None
 
 
 def create_description(scraped_data: Dict[str, Any]) -> str:
@@ -192,7 +106,7 @@ def validate_mapped_data(mapped_data: Dict[str, Any]) -> bool:
     Returns:
         True if data is valid, False otherwise
     """
-    required_fields = ["name", "ban_number"]
+    required_fields = ["region", "name", "ban_number"]
 
     for field in required_fields:
         if not mapped_data.get(field):

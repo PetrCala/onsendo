@@ -242,23 +242,25 @@ class TestScraper:
         result = extract_detailed_onsen_data(mock_selenium_driver)
 
         # Check that all expected fields are extracted
+        assert "region" in result
+        assert "ban_number" in result
         assert "name" in result
-        assert "ban_number_and_name" in result
         assert "latitude" in result
         assert "longitude" in result
         assert "map_url" in result
 
         # Check specific values (these depend on the mock setup)
+        assert result["region"] == "別府"
+        assert result["ban_number"] == "123"
         assert result["name"] == "別府温泉 海地獄"
-        assert result["ban_number_and_name"] == "123 別府温泉 海地獄"
         # Note: The mock might not provide actual coordinates, so we'll just check they exist
         assert "latitude" in result
         assert "longitude" in result
 
-    def test_extract_detailed_onsen_data_missing_name(self, mock_selenium_driver):
-        """Test extracting detailed data when name is missing."""
+    def test_extract_detailed_onsen_data_missing_region(self, mock_selenium_driver):
+        """Test extracting detailed data when region is missing."""
 
-        # Mock missing name element
+        # Mock missing region element
         def mock_find_element(by, value):
             if by == By.XPATH and value == "/html/body/div[2]":
                 raise NoSuchElementException("Element not found")
@@ -276,7 +278,7 @@ class TestScraper:
 
         result = extract_detailed_onsen_data(mock_selenium_driver)
 
-        assert result["name"] == ""
+        assert result["region"] == ""
 
     def test_extract_detailed_onsen_data_missing_coordinates(
         self, mock_selenium_driver
@@ -290,7 +292,7 @@ class TestScraper:
             # Return other elements normally
             element = Mock()
             if by == By.XPATH and value == "/html/body/div[2]":
-                element.text = "温泉名"
+                element.text = "別府"
             elif by == By.XPATH and value == "/html/body/div[3]":
                 element.text = "123 温泉名"
             return element
