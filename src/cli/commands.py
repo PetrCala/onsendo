@@ -7,7 +7,7 @@ Defines CLI commands using dataclasses for better structure and type safety.
 import argparse
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional
-from src.cli.functions import add_onsen, add_visit
+from src.cli.functions import add_onsen, add_visit, interactive_add_visit
 
 
 @dataclass
@@ -45,8 +45,12 @@ COMMANDS = {
         func=add_visit,
         help="Add a new onsen visit.",
         args={
-            # Required fields
-            "onsen_id": ArgumentConfig(type=int, required=True),
+            # Interactive mode flag
+            "interactive": ArgumentConfig(
+                action="store_true", help="Run in interactive mode"
+            ),
+            # Required fields (only required when not in interactive mode)
+            "onsen_id": ArgumentConfig(type=int, required=False),
             # Integer fields
             "entry_fee_yen": ArgumentConfig(type=int, default=0),
             "stay_length_minutes": ArgumentConfig(type=int, default=0),
@@ -105,6 +109,11 @@ COMMANDS = {
             "outdoor_bath_visited": ArgumentConfig(action="store_true"),
             "multi_onsen_day": ArgumentConfig(action="store_true"),
         },
+    ),
+    "add-visit-interactive": CommandConfig(
+        func=lambda args: interactive_add_visit(),
+        help="Add a new onsen visit using an interactive questionnaire.",
+        args={},
     ),
 }
 
