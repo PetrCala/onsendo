@@ -1,3 +1,7 @@
-from src import PATHS
+"""
+Pytest configuration and shared fixtures.
+"""
 
-pytest_plugins = [PATHS.FIXTURES_PATH_REL]
+pytest_plugins = [
+    "src.testing.testutils.scraper_fixtures",
+]

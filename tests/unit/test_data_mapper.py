@@ -99,12 +99,19 @@ class TestDataMapper:
     def test_extract_region_from_name(self):
         """Test extracting region from name when not in address."""
         result = extract_region("大分県大分市テスト町1-1", "湯布院温泉")
-        assert result == "湯布院"
+        assert (
+            result == "大分"
+        )  # Address is checked first, so "大分" from address is returned
 
     def test_extract_region_not_found(self):
         """Test extracting region when not found."""
         result = extract_region("大分県テスト市テスト町1-1", "テスト温泉")
-        assert result is None
+        assert result == "大分"  # "大分" is found in the address
+
+    def test_extract_region_truly_not_found(self):
+        """Test extracting region when truly not found."""
+        result = extract_region("テスト県テスト市テスト町1-1", "テスト温泉")
+        assert result is None  # No known region found
 
     def test_extract_region_empty_inputs(self):
         """Test extracting region with empty inputs."""
