@@ -1,15 +1,14 @@
 """
-scrape_onsen_data.py
-
-Scrape onsen data from the web.
+Main entry point for the scrape_onsen_data command.
 """
 
 import argparse
 import json
-import logging
 import os
 import time
 from typing import Dict, Any
+
+from loguru import logger
 
 from src.const import CONST
 from src.paths import PATHS
@@ -23,13 +22,23 @@ from .data_mapper import map_scraped_data_to_onsen_model, get_mapping_summary
 
 def setup_logging() -> None:
     """Setup logging configuration."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        handlers=[
-            logging.StreamHandler(),
-            logging.FileHandler(os.path.join(PATHS.OUTPUT_DIR, "scraping.log")),
-        ],
+    # Remove default handler
+    logger.remove()
+
+    # Add console handler
+    logger.add(
+        sink=lambda msg: print(msg, end=""),
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+        level="INFO",
+    )
+
+    # Add file handler
+    logger.add(
+        sink=os.path.join(PATHS.OUTPUT_DIR, "scraping.log"),
+        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+        level="DEBUG",
+        rotation="10 MB",
+        retention="7 days",
     )
 
 
@@ -73,7 +82,7 @@ def process_scraped_onsen_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
         summary = get_mapping_summary(raw_data["extracted_data"])
         processed_data["mapping_summary"] = summary
 
-        logging.info(
+        logger.info(
             f"Mapped data for onsen {raw_data.get('onsen_id', 'unknown')}: "
             f"{summary['filled_fields']}/{summary['total_fields']} fields filled, "
             f"coordinates: {summary['has_coordinates']}"
@@ -89,11 +98,11 @@ def scrape_onsen_data(args: argparse.Namespace) -> None:
     setup_logging()
     ensure_output_directory()
 
-    logging.info("Starting onsen data scraping process...")
+    logger.info("Starting onsen data scraping process...")
 
     # Load existing data
     existing_data = load_existing_data()
-    logging.info(f"Loaded {len(existing_data)} existing onsen records")
+    logger.info(f"Loaded {len(existing_data)} existing onsen records")
 
     # Extract onsen mapping
     driver = setup_selenium_driver()
@@ -104,7 +113,7 @@ def scrape_onsen_data(args: argparse.Namespace) -> None:
 
     # Save the mapping
     save_data(onsen_mapping, PATHS.ONSEN_MAPPING_FILE)
-    logging.info(f"Saved onsen mapping to {PATHS.ONSEN_MAPPING_FILE}")
+    logger.info(f"Saved onsen mapping to {PATHS.ONSEN_MAPPING_FILE}")
 
     # Scrape individual onsens
     scraped_count = 0
@@ -112,11 +121,11 @@ def scrape_onsen_data(args: argparse.Namespace) -> None:
 
     for onsen_id, ban_number in onsen_mapping.items():
         if onsen_id in existing_data:
-            logging.debug(f"Skipping onsen ID {onsen_id} (already scraped)")
+            logger.debug(f"Skipping onsen ID {onsen_id} (already scraped)")
             skipped_count += 1
             continue
 
-        logging.info(f"Scraping new onsen ID: {onsen_id} (Ban: {ban_number})")
+        logger.info(f"Scraping new onsen ID: {onsen_id} (Ban: {ban_number})")
         raw_onsen_data = scrape_onsen_page_with_selenium(onsen_id)
 
         # Process the data to include mapped fields
@@ -131,11 +140,11 @@ def scrape_onsen_data(args: argparse.Namespace) -> None:
         # Add delay to be respectful to the server
         time.sleep(1)
 
-    logging.info(
+    logger.info(
         f"Scraping completed. Scraped: {scraped_count}, Skipped: {skipped_count}"
     )
-    logging.info(f"Total onsens in database: {len(existing_data)}")
-    logging.info(f"Data saved to: {PATHS.SCRAPED_ONSEN_DATA_FILE}")
+    logger.info(f"Total onsens in database: {len(existing_data)}")
+    logger.info(f"Data saved to: {PATHS.SCRAPED_ONSEN_DATA_FILE}")
 
     # Print summary statistics
     print_summary_statistics(existing_data)

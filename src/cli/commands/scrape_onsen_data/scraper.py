@@ -1,21 +1,26 @@
 """
-Scraper module for onsen data extraction.
+Web scraping functionality for onsen data.
 """
 
-import logging
 import re
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, List
 
+from loguru import logger
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 
 def setup_selenium_driver() -> webdriver.Chrome:
-    """Setup Selenium Chrome driver with appropriate options."""
+    """
+    Setup and configure Selenium Chrome driver.
+
+    Returns:
+        Configured Chrome WebDriver instance
+    """
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
@@ -26,7 +31,8 @@ def setup_selenium_driver() -> webdriver.Chrome:
         "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     )
 
-    return webdriver.Chrome(options=chrome_options)
+    driver = webdriver.Chrome(options=chrome_options)
+    return driver
 
 
 def find_all_onsen_divs(driver: webdriver.Chrome) -> List:
@@ -37,44 +43,38 @@ def find_all_onsen_divs(driver: webdriver.Chrome) -> List:
         driver: Selenium WebDriver instance
 
     Returns:
-        List of div elements that contain onsen data
+        List of div elements containing onsen data
     """
     onsen_divs = []
 
     try:
-        # Wait for the main area div to load
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "areaDIV11"))
-        )
-
+        # Find the main area div
         area_div = driver.find_element(By.ID, "areaDIV11")
 
-        # Find all divs recursively that might contain onsens
-        all_divs = area_div.find_elements(By.XPATH, ".//div")
+        # Find all divs within the area
+        all_divs = area_div.find_elements(By.TAG_NAME, "div")
 
         for div in all_divs:
-            div_id = div.get_attribute("id")
-
-            # Skip the main container div
-            if div_id == "areaDIV11":
-                continue
-
-            # Check if this div contains a table (indicates it has onsens)
             try:
-                tables = div.find_elements(By.TAG_NAME, "table")
-                if tables:
-                    # Verify this is actually an onsen div by checking for specific structure
-                    if is_onsen_div(div):
-                        onsen_divs.append(div)
-                        logging.debug(f"Found onsen div: {div_id}")
+                div_id = div.get_attribute("id")
+
+                # Skip divs with numeric IDs (they don't contain onsens)
+                if div_id and div_id.replace("areaDIV", "").isdigit():
+                    continue
+
+                # Check if this div contains onsen data
+                if is_onsen_div(div):
+                    onsen_divs.append(div)
+                    logger.debug(f"Found onsen div: {div_id}")
+
             except Exception as e:
-                logging.debug(f"Error checking div {div_id}: {e}")
+                logger.debug(f"Error checking div {div_id}: {e}")
                 continue
 
     except TimeoutException:
-        logging.error("Timeout waiting for areaDIV11 to load")
+        logger.error("Timeout waiting for areaDIV11 to load")
     except Exception as e:
-        logging.error(f"Error finding onsen divs: {e}")
+        logger.error(f"Error finding onsen divs: {e}")
 
     return onsen_divs
 
@@ -147,16 +147,16 @@ def extract_onsen_data_from_div(div_element) -> Dict[str, str]:
                     if match:
                         onsen_id = match.group(1)
                         onsen_data[onsen_id] = ban_number
-                        logging.debug(
+                        logger.debug(
                             f"Extracted onsen: ID={onsen_id}, Ban={ban_number}"
                         )
 
             except Exception as e:
-                logging.debug(f"Error extracting data from table: {e}")
+                logger.debug(f"Error extracting data from table: {e}")
                 continue
 
     except Exception as e:
-        logging.debug(f"Error processing div: {e}")
+        logger.debug(f"Error processing div: {e}")
 
     return onsen_data
 
@@ -176,14 +176,14 @@ def extract_all_onsen_mapping(driver: webdriver.Chrome) -> Dict[str, str]:
     # Find all divs that contain onsen data
     onsen_divs = find_all_onsen_divs(driver)
 
-    logging.info(f"Found {len(onsen_divs)} divs containing onsen data")
+    logger.info(f"Found {len(onsen_divs)} divs containing onsen data")
 
     # Extract data from each div
     for div in onsen_divs:
         div_data = extract_onsen_data_from_div(div)
         onsen_mapping.update(div_data)
 
-    logging.info(f"Total onsens extracted: {len(onsen_mapping)}")
+    logger.info(f"Total onsens extracted: {len(onsen_mapping)}")
     return onsen_mapping
 
 
@@ -199,7 +199,7 @@ def scrape_onsen_page_with_selenium(onsen_id: str) -> Dict[str, Any]:
     """
     from src.const import CONST
 
-    logging.info(f"Scraping onsen ID: {onsen_id}")
+    logger.info(f"Scraping onsen ID: {onsen_id}")
 
     url = CONST.ONSEN_DETAIL_URL_TEMPLATE.format(onsen_id=onsen_id)
 
@@ -226,11 +226,11 @@ def scrape_onsen_page_with_selenium(onsen_id: str) -> Dict[str, Any]:
             "extracted_data": extracted_data,
         }
 
-        logging.info(f"Successfully scraped onsen ID: {onsen_id}")
+        logger.info(f"Successfully scraped onsen ID: {onsen_id}")
         return onsen_data
 
     except Exception as e:
-        logging.error(f"Error scraping onsen ID {onsen_id}: {e}")
+        logger.error(f"Error scraping onsen ID {onsen_id}: {e}")
         return {"onsen_id": onsen_id, "url": url, "error": str(e), "extracted_data": {}}
     finally:
         driver.quit()
@@ -253,20 +253,20 @@ def extract_detailed_onsen_data(driver) -> Dict[str, Any]:
         try:
             name_element = driver.find_element(By.XPATH, "/html/body/div[2]")
             extracted_data["name"] = name_element.text.strip()
-            logging.debug(f"Extracted name: {extracted_data['name']}")
+            logger.debug(f"Extracted name: {extracted_data['name']}")
         except Exception as e:
-            logging.debug(f"Error extracting name: {e}")
+            logger.debug(f"Error extracting name: {e}")
             extracted_data["name"] = ""
 
         # 2. Extract ban number and full name from /html/body/div[3]
         try:
             ban_element = driver.find_element(By.XPATH, "/html/body/div[3]")
             extracted_data["ban_number_and_name"] = ban_element.text.strip()
-            logging.debug(
+            logger.debug(
                 f"Extracted ban number and name: {extracted_data['ban_number_and_name']}"
             )
         except Exception as e:
-            logging.debug(f"Error extracting ban number and name: {e}")
+            logger.debug(f"Error extracting ban number and name: {e}")
             extracted_data["ban_number_and_name"] = ""
 
         # 3. Extract map iframe and coordinates from /html/body/div[4]/iframe
@@ -287,18 +287,18 @@ def extract_detailed_onsen_data(driver) -> Dict[str, Any]:
                     lon = float(coord_match.group(2))
                     extracted_data["latitude"] = lat
                     extracted_data["longitude"] = lon
-                    logging.debug(f"Extracted coordinates: {lat}, {lon}")
+                    logger.debug(f"Extracted coordinates: {lat}, {lon}")
                 else:
                     extracted_data["latitude"] = None
                     extracted_data["longitude"] = None
-                    logging.debug("No coordinates found in map URL")
+                    logger.debug("No coordinates found in map URL")
             else:
                 extracted_data["map_url"] = ""
                 extracted_data["latitude"] = None
                 extracted_data["longitude"] = None
 
         except Exception as e:
-            logging.debug(f"Error extracting map data: {e}")
+            logger.debug(f"Error extracting map data: {e}")
             extracted_data["map_url"] = ""
             extracted_data["latitude"] = None
             extracted_data["longitude"] = None
@@ -308,12 +308,12 @@ def extract_detailed_onsen_data(driver) -> Dict[str, Any]:
             table_element = driver.find_element(By.XPATH, "/html/body/div[5]/table")
             table_data = extract_table_data(table_element)
             extracted_data.update(table_data)
-            logging.debug(f"Extracted {len(table_data)} table entries")
+            logger.debug(f"Extracted {len(table_data)} table entries")
         except Exception as e:
-            logging.debug(f"Error extracting table data: {e}")
+            logger.debug(f"Error extracting table data: {e}")
 
     except Exception as e:
-        logging.error(f"Error in detailed data extraction: {e}")
+        logger.error(f"Error in detailed data extraction: {e}")
 
     return extracted_data
 
@@ -346,13 +346,13 @@ def extract_table_data(table_element) -> Dict[str, str]:
                         # Clean up the key (remove any special characters or formatting)
                         clean_key = key.replace(":", "").strip()
                         table_data[clean_key] = value
-                        logging.debug(f"Table entry: {clean_key} = {value}")
+                        logger.debug(f"Table entry: {clean_key} = {value}")
 
             except Exception as e:
-                logging.debug(f"Error extracting row data: {e}")
+                logger.debug(f"Error extracting row data: {e}")
                 continue
 
     except Exception as e:
-        logging.debug(f"Error processing table: {e}")
+        logger.debug(f"Error processing table: {e}")
 
     return table_data

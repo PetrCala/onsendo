@@ -254,16 +254,19 @@ def mock_requests_patch():
 
 @pytest.fixture
 def mock_logging_patch():
-    """Patch logging for testing."""
-    with patch("logging.basicConfig") as mock_basic_config, patch(
-        "logging.info"
-    ) as mock_info, patch("logging.debug") as mock_debug, patch(
-        "logging.error"
-    ) as mock_error:
+    """Patch loguru for testing."""
+    with patch("loguru.logger.info") as mock_info, patch(
+        "loguru.logger.debug"
+    ) as mock_debug, patch("loguru.logger.error") as mock_error, patch(
+        "loguru.logger.remove"
+    ) as mock_remove, patch(
+        "loguru.logger.add"
+    ) as mock_add:
 
         yield {
-            "basic_config": mock_basic_config,
             "info": mock_info,
             "debug": mock_debug,
             "error": mock_error,
+            "remove": mock_remove,
+            "add": mock_add,
         }
