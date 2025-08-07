@@ -32,7 +32,7 @@ class CommandConfig:
 
 
 # Define all CLI commands
-COMMANDS = {
+CLI_COMMANDS = {
     "init-db": CommandConfig(
         func=commands.init_db,
         help="Initialize the database.",
