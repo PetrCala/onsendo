@@ -51,46 +51,50 @@ def find_all_onsen_divs(driver: webdriver.Chrome) -> List:
     def search_area_div_recursively(area_div_element, depth=0):
         """
         Recursively search through an areaDIV element for onsen data.
-        
+
         Args:
             area_div_element: The areaDIV element to search
             depth: Current nesting depth (for logging)
         """
         if depth > 5:  # Safety limit to prevent infinite recursion
-            logger.warning(f"Reached maximum recursion depth ({depth}) for areaDIV search")
+            logger.warning(
+                f"Reached maximum recursion depth ({depth}) for areaDIV search"
+            )
             return
-            
+
         try:
             area_div_id = area_div_element.get_attribute("id")
             if area_div_id in processed_area_divs:
                 logger.debug(f"Skipping already processed areaDIV: {area_div_id}")
                 return
-                
+
             processed_area_divs.add(area_div_id)
             logger.debug(f"Searching areaDIV: {area_div_id} (depth: {depth})")
-            
+
             # Find all divs within this areaDIV
             all_divs = area_div_element.find_elements(By.TAG_NAME, "div")
-            
+
             for div in all_divs:
                 try:
                     div_id = div.get_attribute("id")
-                    
+
                     # Check if this is another areaDIV (recursive case)
                     if div_id and div_id.startswith("areaDIV"):
-                        logger.debug(f"Found nested areaDIV: {div_id} within {area_div_id}")
+                        logger.debug(
+                            f"Found nested areaDIV: {div_id} within {area_div_id}"
+                        )
                         search_area_div_recursively(div, depth + 1)
                         continue
-                    
+
                     # Check if this div contains onsen data
                     if is_onsen_div(div):
                         onsen_divs.append(div)
                         logger.debug(f"Found onsen div: {div_id} in {area_div_id}")
-                        
+
                 except Exception as e:
                     logger.debug(f"Error checking div {div_id}: {e}")
                     continue
-                    
+
         except Exception as e:
             logger.debug(f"Error processing areaDIV: {e}")
 
@@ -98,14 +102,14 @@ def find_all_onsen_divs(driver: webdriver.Chrome) -> List:
         # Find all areaDIV elements on the page
         area_divs = driver.find_elements(By.CSS_SELECTOR, "[id^='areaDIV']")
         logger.info(f"Found {len(area_divs)} areaDIV elements on the page")
-        
+
         # Sort by ID to process in a predictable order
         area_divs.sort(key=lambda x: x.get_attribute("id"))
-        
+
         # Search through each areaDIV recursively
         for area_div in area_divs:
             search_area_div_recursively(area_div)
-            
+
     except Exception as e:
         logger.error(f"Error finding onsen divs: {e}")
 
