@@ -72,9 +72,11 @@ def mock_selenium_driver():
             )
         elif by == By.XPATH:
             if value == "/html/body/div[2]":
-                element.text = "別府温泉 海地獄"
+                element.text = "別府"  # This is now the region
             elif value == "/html/body/div[3]":
-                element.text = "123 別府温泉 海地獄"
+                element.text = (
+                    "123 別府温泉 海地獄"  # This contains ban number and name
+                )
             elif value == "/html/body/div[4]/iframe":
                 element.get_attribute = Mock(
                     return_value="https://maps.google.co.jp/maps?q=33.2797,131.5011&z=15"

@@ -172,7 +172,7 @@ MOCK_ONSEN_DETAIL_HTML = """
 
 # Sample extracted data (what the scraper would extract)
 MOCK_EXTRACTED_ONSEN_DATA = {
-    "region": "別府",  # This is the region
+    "region": "別府",
     "ban_number": "123",
     "name": "別府温泉 海地獄",
     "latitude": 33.2797,
