@@ -1,7 +1,7 @@
 """
 Unit tests for the interactive CLI functionality.
 
-This module contains comprehensive unit tests for the interactive_add_visit function
+This module contains comprehensive unit tests for the add_visit_interactive function
 that simulates user interactions and validates the complete flow of the interactive
 onsen visit recording system.
 
@@ -27,7 +27,7 @@ The tests ensure that:
 """
 
 from unittest.mock import patch, MagicMock
-from src.cli.commands.add_visit_interactive import interactive_add_visit
+from src.cli.commands.add_visit_interactive import add_visit_interactive
 from src.db.models import Onsen
 from src.testing.mocks import (
     get_complete_flow_inputs,
@@ -42,7 +42,7 @@ import sys
 
 
 class TestInteractiveAddVisit:
-    """Test the interactive_add_visit function."""
+    """Test the add_visit_interactive function."""
 
     # TODO
     # - Rewrite common mock setup into fixtures
@@ -51,7 +51,7 @@ class TestInteractiveAddVisit:
     @patch("src.cli.commands.add_visit_interactive.get_db")
     @patch("subprocess.run")
     @patch("builtins.print")
-    def test_interactive_add_visit_complete_flow(
+    def test_add_visit_interactive_complete_flow(
         self, mock_print, mock_subprocess, mock_get_db, mock_input
     ):
         """Test the complete interactive flow with valid inputs."""
@@ -72,7 +72,7 @@ class TestInteractiveAddVisit:
         # Mock user inputs for complete flow
         mock_input.side_effect = get_complete_flow_inputs()
 
-        interactive_add_visit()
+        add_visit_interactive()
 
         # Verify database was queried for onsen (called twice: once for validation, once for summary)
         mock_db.query.assert_called_with(Onsen)
@@ -106,7 +106,7 @@ class TestInteractiveAddVisit:
     @patch("src.cli.commands.add_visit_interactive.get_db")
     @patch("subprocess.run")
     @patch("builtins.print")
-    def test_interactive_add_visit_with_exercise(
+    def test_add_visit_interactive_with_exercise(
         self, mock_print, mock_subprocess, mock_get_db, mock_input
     ):
         """Test the interactive flow when user exercised before onsen."""
@@ -127,7 +127,7 @@ class TestInteractiveAddVisit:
         mock_input.side_effect = get_exercise_flow_inputs()
 
         # Call the function
-        interactive_add_visit()
+        add_visit_interactive()
 
         # Verify subprocess was called
         mock_subprocess.assert_called_once()
@@ -148,7 +148,7 @@ class TestInteractiveAddVisit:
     @patch("builtins.input")
     @patch("src.cli.commands.add_visit_interactive.get_db")
     @patch("builtins.print")
-    def test_interactive_add_visit_invalid_onsen_id(
+    def test_add_visit_interactive_invalid_onsen_id(
         self, mock_print, mock_get_db, mock_input
     ):
         """Test handling of invalid onsen ID."""
@@ -180,7 +180,7 @@ class TestInteractiveAddVisit:
             mock_subprocess.return_value.returncode = 0
 
             # Call the function
-            interactive_add_visit()
+            add_visit_interactive()
 
             # Verify error message was printed for invalid onsen
             mock_print.assert_any_call("No onsen found with ID 999")
@@ -191,7 +191,7 @@ class TestInteractiveAddVisit:
     @patch("builtins.input")
     @patch("src.cli.commands.add_visit_interactive.get_db")
     @patch("builtins.print")
-    def test_interactive_add_visit_invalid_rating(
+    def test_add_visit_interactive_invalid_rating(
         self, mock_print, mock_get_db, mock_input
     ):
         """Test handling of invalid rating input."""
@@ -213,7 +213,7 @@ class TestInteractiveAddVisit:
             mock_subprocess.return_value.returncode = 0
 
             # Call the function
-            interactive_add_visit()
+            add_visit_interactive()
 
             # Verify error message was printed for invalid rating
             mock_print.assert_any_call("Invalid input. Please try again.")
@@ -225,7 +225,7 @@ class TestInteractiveAddVisit:
     @patch("src.cli.commands.add_visit_interactive.get_db")
     @patch("subprocess.run")
     @patch("builtins.print")
-    def test_interactive_add_visit_user_cancels(
+    def test_add_visit_interactive_user_cancels(
         self, mock_print, mock_subprocess, mock_get_db, mock_input
     ):
         """Test when user cancels the operation."""
@@ -245,7 +245,7 @@ class TestInteractiveAddVisit:
         # Mock sys.exit
         with patch("sys.exit") as mock_exit:
             # Call the function
-            interactive_add_visit()
+            add_visit_interactive()
 
             # Verify cancellation message was printed
             mock_print.assert_any_call("Visit recording cancelled.")
@@ -260,7 +260,7 @@ class TestInteractiveAddVisit:
     @patch("src.cli.commands.add_visit_interactive.get_db")
     @patch("subprocess.run")
     @patch("builtins.print")
-    def test_interactive_add_visit_subprocess_error(
+    def test_add_visit_interactive_subprocess_error(
         self, mock_print, mock_subprocess, mock_get_db, mock_input
     ):
         """Test handling of subprocess execution error."""
@@ -285,7 +285,7 @@ class TestInteractiveAddVisit:
         # Mock sys.exit
         with patch("sys.exit") as mock_exit:
             # Call the function
-            interactive_add_visit()
+            add_visit_interactive()
 
             # Verify error message was printed
             mock_print.assert_any_call(

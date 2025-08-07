@@ -12,7 +12,7 @@ from src.db.models import Onsen
 from src.const import CONST
 
 
-def interactive_add_visit() -> None:
+def add_visit_interactive() -> None:
     """
     Interactive version of add_visit that guides users through a series of questions.
     """

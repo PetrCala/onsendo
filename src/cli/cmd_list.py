@@ -131,7 +131,7 @@ CLI_COMMANDS = {
         },
     ),
     "add-visit-interactive": CommandConfig(
-        func=lambda args: commands.interactive_add_visit(),
+        func=lambda args: commands.add_visit_interactive(),
         help="Add a new onsen visit using an interactive questionnaire.",
         args={},
     ),

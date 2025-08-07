@@ -9,7 +9,7 @@ from loguru import logger
 from src.db.conn import get_db
 from src.db.models import Onsen, OnsenVisit
 from src.const import CONST
-from .add_visit_interactive import interactive_add_visit
+from .add_visit_interactive import add_visit_interactive
 
 
 def add_visit(args: argparse.Namespace) -> None:
@@ -18,7 +18,7 @@ def add_visit(args: argparse.Namespace) -> None:
     """
     # Check if interactive mode is requested
     if hasattr(args, "interactive") and args.interactive:
-        interactive_add_visit()
+        add_visit_interactive()
         return
 
     with get_db(url=CONST.DATABASE_URL) as db:
