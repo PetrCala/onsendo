@@ -24,6 +24,9 @@ pytest = "^8.3.5"
 pylint = "^3.3.5"
 coverage = "^7.6.12"
 
+[tool.poetry.scripts]
+onsendo = "src.cli.__main__:main"
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
