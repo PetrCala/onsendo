@@ -349,7 +349,7 @@ def extract_detailed_onsen_data(driver) -> Dict[str, Any]:
         try:
             img_element = driver.find_element(By.XPATH, "/html/body/div[4]/div[1]/img")
             img_src = img_element.get_attribute("src")
-            extracted_data["deleted"] = img_src == "thumbnail/deleted.jpg"
+            extracted_data["deleted"] = img_src.endswith("thumbnail/deleted.jpg")
             logger.debug(f"Onsen deleted status: {extracted_data['deleted']}")
         except Exception as e:
             logger.debug(f"Error checking deleted status: {e}")

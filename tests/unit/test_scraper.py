@@ -22,6 +22,7 @@ from src.testing.mocks.mock_onsen_data import (
     get_mock_extracted_data,
     get_mock_onsen_detail_html,
 )
+from src.const import CONST
 
 
 class TestScraper:
@@ -316,7 +317,7 @@ class TestScraper:
             elif by == By.XPATH and value == "/html/body/div[3]":
                 element.text = "999番 廃止温泉"
             elif by == By.XPATH and value == "/html/body/div[4]/div[1]/img":
-                element.get_attribute.return_value = "thumbnail/deleted.jpg"
+                element.get_attribute.return_value = CONST.DELETED_IMAGE_URL
             elif by == By.XPATH and value == "/html/body/div[4]/iframe":
                 element.get_attribute.return_value = ""
             return element
