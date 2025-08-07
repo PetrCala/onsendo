@@ -45,6 +45,9 @@ import sys
 class TestInteractiveAddVisit:
     """Test the interactive_add_visit function."""
 
+    # TODO
+    # - Rewrite common mock setup into fixtures
+
     @patch("builtins.input")
     @patch("src.cli.interactive.get_db")
     @patch("subprocess.run")

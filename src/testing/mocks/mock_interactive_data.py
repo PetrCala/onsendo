@@ -11,6 +11,10 @@ from faker import Faker
 
 fake = Faker()
 
+# TODO
+# - Use faker to generate more realistic data
+# - Use keys to access values instead of indices
+
 
 def get_complete_flow_inputs() -> List[str]:
     """
