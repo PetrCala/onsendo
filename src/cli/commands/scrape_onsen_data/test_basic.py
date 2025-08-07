@@ -169,7 +169,7 @@ def test_fixtures():
     print("Testing fixtures...")
 
     try:
-        from src.testing.testutils.scraper_fixtures import (
+        from src.testing.testutils.fixtures import (
             temp_output_dir,
             mock_selenium_driver,
             mock_onsen_mapping,

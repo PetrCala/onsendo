@@ -3,5 +3,5 @@ Pytest configuration and shared fixtures.
 """
 
 pytest_plugins = [
-    "src.testing.testutils.scraper_fixtures",
+    "src.testing.testutils.fixtures",
 ]

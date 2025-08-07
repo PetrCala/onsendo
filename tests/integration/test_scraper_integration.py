@@ -29,7 +29,7 @@ from src.testing.mocks.mock_onsen_data import (
     get_mock_error_entry,
     get_mock_extracted_data,
 )
-from src.testing.testutils.scraper_fixtures import (
+from src.testing.testutils.fixtures import (
     temp_output_dir,
     sample_scraped_data_file,
     mock_selenium_patch,
