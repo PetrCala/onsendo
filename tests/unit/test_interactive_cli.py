@@ -28,8 +28,16 @@ The tests ensure that:
 
 import pytest
 from unittest.mock import patch, MagicMock, call
-from src.cli.functions import interactive_add_visit
+from src.cli.interactive import interactive_add_visit
 from src.db.models import Onsen
+from src.testing.mocks import (
+    get_complete_flow_inputs,
+    get_exercise_flow_inputs,
+    get_invalid_onsen_retry_inputs,
+    get_invalid_rating_retry_inputs,
+    get_cancellation_inputs,
+    get_minimal_flow_inputs,
+)
 import subprocess
 import sys
 
@@ -38,7 +46,7 @@ class TestInteractiveAddVisit:
     """Test the interactive_add_visit function."""
 
     @patch("builtins.input")
-    @patch("src.cli.functions.get_db")
+    @patch("src.cli.interactive.get_db")
     @patch("subprocess.run")
     @patch("builtins.print")
     def test_interactive_add_visit_complete_flow(
@@ -60,58 +68,8 @@ class TestInteractiveAddVisit:
         mock_subprocess.return_value.stdout = "Visit added successfully"
 
         # Mock user inputs for complete flow
-        mock_input.side_effect = [
-            "1",  # onsen_id
-            "500",  # entry_fee_yen
-            "cash",  # payment_method
-            "",  # visit_time (use current time)
-            "sunny",  # weather
-            "afternoon",  # time_of_day
-            "25.5",  # temperature_outside_celsius
-            "60",  # stay_length_minutes
-            "alone",  # visited_with
-            "car",  # travel_mode
-            "15",  # travel_time_minutes
-            "n",  # exercise_before_onsen
-            "8",  # accessibility_rating
-            "9",  # cleanliness_rating
-            "7",  # navigability_rating
-            "8",  # view_rating
-            "9",  # atmosphere_rating
-            "open air",  # main_bath_type
-            "42.0",  # main_bath_temperature
-            "sulfur",  # main_bath_water_type
-            "clear",  # water_color
-            "6",  # smell_intensity_rating
-            "8",  # changing_room_cleanliness_rating
-            "7",  # locker_availability_rating
-            "y",  # had_soap
-            "y",  # had_sauna
-            "y",  # sauna_visited
-            "85.0",  # sauna_temperature
-            "y",  # sauna_steam
-            "15",  # sauna_duration_minutes
-            "8",  # sauna_rating
-            "y",  # had_outdoor_bath
-            "y",  # outdoor_bath_visited
-            "40.0",  # outdoor_bath_temperature
-            "9",  # outdoor_bath_rating
-            "y",  # had_rest_area
-            "8",  # rest_area_rating
-            "n",  # had_food_service
-            "n",  # massage_chair_available
-            "moderate",  # crowd_level
-            "relaxed",  # pre_visit_mood
-            "very relaxed",  # post_visit_mood
-            "2",  # energy_level_change
-            "7",  # hydration_level
-            "n",  # multi_onsen_day
-            "9",  # personal_rating
-            "",  # heart_rate_data
-            "y",  # confirm
-        ]
+        mock_input.side_effect = get_complete_flow_inputs()
 
-        # Call the function
         interactive_add_visit()
 
         # Verify database was queried for onsen (called twice: once for validation, once for summary)
@@ -143,7 +101,7 @@ class TestInteractiveAddVisit:
         mock_print.assert_any_call("✅ Visit successfully added!")
 
     @patch("builtins.input")
-    @patch("src.cli.functions.get_db")
+    @patch("src.cli.interactive.get_db")
     @patch("subprocess.run")
     @patch("builtins.print")
     def test_interactive_add_visit_with_exercise(
@@ -164,49 +122,7 @@ class TestInteractiveAddVisit:
         mock_subprocess.return_value.returncode = 0
 
         # Mock user inputs with exercise
-        mock_input.side_effect = [
-            "1",  # onsen_id
-            "300",  # entry_fee_yen
-            "card",  # payment_method
-            "",  # visit_time
-            "cloudy",  # weather
-            "morning",  # time_of_day
-            "20.0",  # temperature_outside_celsius
-            "45",  # stay_length_minutes
-            "friend",  # visited_with
-            "walk",  # travel_mode
-            "10",  # travel_time_minutes
-            "y",  # exercise_before_onsen
-            "running",  # exercise_type
-            "30",  # exercise_length_minutes
-            "7",  # accessibility_rating
-            "8",  # cleanliness_rating
-            "6",  # navigability_rating
-            "7",  # view_rating
-            "8",  # atmosphere_rating
-            "indoor",  # main_bath_type
-            "40.0",  # main_bath_temperature
-            "salt",  # main_bath_water_type
-            "brown",  # water_color
-            "5",  # smell_intensity_rating
-            "7",  # changing_room_cleanliness_rating
-            "6",  # locker_availability_rating
-            "n",  # had_soap
-            "n",  # had_sauna
-            "n",  # had_outdoor_bath
-            "n",  # had_rest_area
-            "n",  # had_food_service
-            "n",  # massage_chair_available
-            "quiet",  # crowd_level
-            "stressed",  # pre_visit_mood
-            "relaxed",  # post_visit_mood
-            "3",  # energy_level_change
-            "6",  # hydration_level
-            "n",  # multi_onsen_day
-            "8",  # personal_rating
-            "",  # heart_rate_data
-            "y",  # confirm
-        ]
+        mock_input.side_effect = get_exercise_flow_inputs()
 
         # Call the function
         interactive_add_visit()
@@ -228,7 +144,7 @@ class TestInteractiveAddVisit:
         assert "--outdoor_bath_visited" not in cmd_args
 
     @patch("builtins.input")
-    @patch("src.cli.functions.get_db")
+    @patch("src.cli.interactive.get_db")
     @patch("builtins.print")
     def test_interactive_add_visit_invalid_onsen_id(
         self, mock_print, mock_get_db, mock_input
@@ -242,48 +158,7 @@ class TestInteractiveAddVisit:
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
         # Mock user inputs with invalid onsen ID
-        mock_input.side_effect = [
-            "999",  # invalid onsen_id
-            "1",  # valid onsen_id (second attempt)
-            "500",  # entry_fee_yen
-            "cash",  # payment_method
-            "",  # visit_time
-            "sunny",  # weather
-            "afternoon",  # time_of_day
-            "25.0",  # temperature_outside_celsius
-            "60",  # stay_length_minutes
-            "alone",  # visited_with
-            "car",  # travel_mode
-            "15",  # travel_time_minutes
-            "n",  # exercise_before_onsen
-            "8",  # accessibility_rating
-            "9",  # cleanliness_rating
-            "7",  # navigability_rating
-            "8",  # view_rating
-            "9",  # atmosphere_rating
-            "open air",  # main_bath_type
-            "42.0",  # main_bath_temperature
-            "sulfur",  # main_bath_water_type
-            "clear",  # water_color
-            "6",  # smell_intensity_rating
-            "8",  # changing_room_cleanliness_rating
-            "7",  # locker_availability_rating
-            "y",  # had_soap
-            "n",  # had_sauna
-            "n",  # had_outdoor_bath
-            "n",  # had_rest_area
-            "n",  # had_food_service
-            "n",  # massage_chair_available
-            "moderate",  # crowd_level
-            "relaxed",  # pre_visit_mood
-            "relaxed",  # post_visit_mood
-            "1",  # energy_level_change
-            "7",  # hydration_level
-            "n",  # multi_onsen_day
-            "8",  # personal_rating
-            "",  # heart_rate_data
-            "y",  # confirm
-        ]
+        mock_input.side_effect = get_invalid_onsen_retry_inputs()
 
         # Mock onsen for second attempt
         mock_onsen = MagicMock()
@@ -312,7 +187,7 @@ class TestInteractiveAddVisit:
             mock_subprocess.assert_called_once()
 
     @patch("builtins.input")
-    @patch("src.cli.functions.get_db")
+    @patch("src.cli.interactive.get_db")
     @patch("builtins.print")
     def test_interactive_add_visit_invalid_rating(
         self, mock_print, mock_get_db, mock_input
@@ -329,48 +204,7 @@ class TestInteractiveAddVisit:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_onsen
 
         # Mock user inputs with invalid rating
-        mock_input.side_effect = [
-            "1",  # onsen_id
-            "500",  # entry_fee_yen
-            "cash",  # payment_method
-            "",  # visit_time
-            "sunny",  # weather
-            "afternoon",  # time_of_day
-            "25.0",  # temperature_outside_celsius
-            "60",  # stay_length_minutes
-            "alone",  # visited_with
-            "car",  # travel_mode
-            "15",  # travel_time_minutes
-            "n",  # exercise_before_onsen
-            "15",  # accessibility_rating (invalid - should be 1-10)
-            "8",  # accessibility_rating (valid retry)
-            "9",  # cleanliness_rating
-            "7",  # navigability_rating
-            "8",  # view_rating
-            "9",  # atmosphere_rating
-            "open air",  # main_bath_type
-            "42.0",  # main_bath_temperature
-            "sulfur",  # main_bath_water_type
-            "clear",  # water_color
-            "6",  # smell_intensity_rating
-            "8",  # changing_room_cleanliness_rating
-            "7",  # locker_availability_rating
-            "y",  # had_soap
-            "n",  # had_sauna
-            "n",  # had_outdoor_bath
-            "n",  # had_rest_area
-            "n",  # had_food_service
-            "n",  # massage_chair_available
-            "moderate",  # crowd_level
-            "relaxed",  # pre_visit_mood
-            "relaxed",  # post_visit_mood
-            "1",  # energy_level_change
-            "7",  # hydration_level
-            "n",  # multi_onsen_day
-            "8",  # personal_rating
-            "",  # heart_rate_data
-            "y",  # confirm
-        ]
+        mock_input.side_effect = get_invalid_rating_retry_inputs()
 
         # Mock subprocess
         with patch("subprocess.run") as mock_subprocess:
@@ -386,7 +220,7 @@ class TestInteractiveAddVisit:
             mock_subprocess.assert_called_once()
 
     @patch("builtins.input")
-    @patch("src.cli.functions.get_db")
+    @patch("src.cli.interactive.get_db")
     @patch("subprocess.run")
     @patch("builtins.print")
     def test_interactive_add_visit_user_cancels(
@@ -404,47 +238,7 @@ class TestInteractiveAddVisit:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_onsen
 
         # Mock user inputs with cancellation at the end
-        mock_input.side_effect = [
-            "1",  # onsen_id
-            "500",  # entry_fee_yen
-            "cash",  # payment_method
-            "",  # visit_time
-            "sunny",  # weather
-            "afternoon",  # time_of_day
-            "25.0",  # temperature_outside_celsius
-            "60",  # stay_length_minutes
-            "alone",  # visited_with
-            "car",  # travel_mode
-            "15",  # travel_time_minutes
-            "n",  # exercise_before_onsen
-            "8",  # accessibility_rating
-            "9",  # cleanliness_rating
-            "7",  # navigability_rating
-            "8",  # view_rating
-            "9",  # atmosphere_rating
-            "open air",  # main_bath_type
-            "42.0",  # main_bath_temperature
-            "sulfur",  # main_bath_water_type
-            "clear",  # water_color
-            "6",  # smell_intensity_rating
-            "8",  # changing_room_cleanliness_rating
-            "7",  # locker_availability_rating
-            "y",  # had_soap
-            "n",  # had_sauna
-            "n",  # had_outdoor_bath
-            "n",  # had_rest_area
-            "n",  # had_food_service
-            "n",  # massage_chair_available
-            "moderate",  # crowd_level
-            "relaxed",  # pre_visit_mood
-            "relaxed",  # post_visit_mood
-            "1",  # energy_level_change
-            "7",  # hydration_level
-            "n",  # multi_onsen_day
-            "8",  # personal_rating
-            "",  # heart_rate_data
-            "n",  # confirm (cancel)
-        ]
+        mock_input.side_effect = get_cancellation_inputs()
 
         # Mock sys.exit
         with patch("sys.exit") as mock_exit:
@@ -461,7 +255,7 @@ class TestInteractiveAddVisit:
             mock_subprocess.assert_not_called()
 
     @patch("builtins.input")
-    @patch("src.cli.functions.get_db")
+    @patch("src.cli.interactive.get_db")
     @patch("subprocess.run")
     @patch("builtins.print")
     def test_interactive_add_visit_subprocess_error(
@@ -484,47 +278,7 @@ class TestInteractiveAddVisit:
         )
 
         # Mock user inputs
-        mock_input.side_effect = [
-            "1",  # onsen_id
-            "500",  # entry_fee_yen
-            "cash",  # payment_method
-            "",  # visit_time
-            "sunny",  # weather
-            "afternoon",  # time_of_day
-            "25.0",  # temperature_outside_celsius
-            "60",  # stay_length_minutes
-            "alone",  # visited_with
-            "car",  # travel_mode
-            "15",  # travel_time_minutes
-            "n",  # exercise_before_onsen
-            "8",  # accessibility_rating
-            "9",  # cleanliness_rating
-            "7",  # navigability_rating
-            "8",  # view_rating
-            "9",  # atmosphere_rating
-            "open air",  # main_bath_type
-            "42.0",  # main_bath_temperature
-            "sulfur",  # main_bath_water_type
-            "clear",  # water_color
-            "6",  # smell_intensity_rating
-            "8",  # changing_room_cleanliness_rating
-            "7",  # locker_availability_rating
-            "y",  # had_soap
-            "n",  # had_sauna
-            "n",  # had_outdoor_bath
-            "n",  # had_rest_area
-            "n",  # had_food_service
-            "n",  # massage_chair_available
-            "moderate",  # crowd_level
-            "relaxed",  # pre_visit_mood
-            "relaxed",  # post_visit_mood
-            "1",  # energy_level_change
-            "7",  # hydration_level
-            "n",  # multi_onsen_day
-            "8",  # personal_rating
-            "",  # heart_rate_data
-            "y",  # confirm
-        ]
+        mock_input.side_effect = get_minimal_flow_inputs()
 
         # Mock sys.exit
         with patch("sys.exit") as mock_exit:
