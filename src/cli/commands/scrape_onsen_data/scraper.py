@@ -320,17 +320,19 @@ def extract_detailed_onsen_data(driver) -> Dict[str, Any]:
             # Split the ban number and name
             import re
 
-            match = re.match(r"^(\d+)\s+(.+)$", ban_number_and_name_text)
+            # Pattern to match: number + 番 + space + name
+            match = re.match(r"^(\d+)番\s+(.+)$", ban_number_and_name_text)
             if match:
                 extracted_data["ban_number"] = match.group(1)
                 extracted_data["name"] = match.group(2).strip()
             else:
-                # Fallback: try to extract just the number
+                # Fallback: try to extract just the number (without 番)
                 number_match = re.match(r"^(\d+)", ban_number_and_name_text)
                 if number_match:
                     extracted_data["ban_number"] = number_match.group(1)
+                    # Remove the number, 番 character, and any spaces
                     extracted_data["name"] = re.sub(
-                        r"^\d+\s*", "", ban_number_and_name_text
+                        r"^\d+番\s*", "", ban_number_and_name_text
                     )
                 else:
                     extracted_data["ban_number"] = ""

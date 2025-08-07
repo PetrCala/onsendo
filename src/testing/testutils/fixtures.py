@@ -75,7 +75,7 @@ def mock_selenium_driver():
                 element.text = "別府"  # This is now the region
             elif value == "/html/body/div[3]":
                 element.text = (
-                    "123 別府温泉 海地獄"  # This contains ban number and name
+                    "123番 別府温泉 海地獄"  # This contains ban number and name
                 )
             elif value == "/html/body/div[4]/iframe":
                 element.get_attribute = Mock(
@@ -237,7 +237,7 @@ def mock_selenium_patch():
                 if value == "/html/body/div[2]":
                     element.text = "別府温泉 海地獄"
                 elif value == "/html/body/div[3]":
-                    element.text = "123 別府温泉 海地獄"
+                    element.text = "123番 別府温泉 海地獄"
                 elif value == "/html/body/div[4]/iframe":
                     element.get_attribute = Mock(
                         return_value="https://maps.google.co.jp/maps?q=33.2797,131.5011&z=15"

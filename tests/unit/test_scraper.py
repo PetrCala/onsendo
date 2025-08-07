@@ -267,7 +267,7 @@ class TestScraper:
             # Return other elements normally
             element = Mock()
             if by == By.XPATH and value == "/html/body/div[3]":
-                element.text = "123 温泉名"
+                element.text = "123番 温泉名"
             elif by == By.XPATH and value == "/html/body/div[4]/iframe":
                 element.get_attribute.return_value = (
                     "https://maps.google.co.jp/maps?q=33.2797,131.5011&z=15"
@@ -294,7 +294,7 @@ class TestScraper:
             if by == By.XPATH and value == "/html/body/div[2]":
                 element.text = "別府"
             elif by == By.XPATH and value == "/html/body/div[3]":
-                element.text = "123 温泉名"
+                element.text = "123番 温泉名"
             return element
 
         mock_selenium_driver.find_element.side_effect = mock_find_element

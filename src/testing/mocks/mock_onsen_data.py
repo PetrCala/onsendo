@@ -107,7 +107,7 @@ MOCK_ONSEN_DETAIL_HTML = """
 <head><title>Onsen Detail</title></head>
 <body>
     <div>別府温泉 海地獄</div>
-    <div>123 別府温泉 海地獄</div>
+    <div>123番 別府温泉 海地獄</div>
     <div>
         <iframe src="https://maps.google.co.jp/maps?q=33.2797,131.5011&z=15"></iframe>
     </div>
