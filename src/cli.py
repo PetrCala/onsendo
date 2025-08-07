@@ -33,64 +33,12 @@ def add_visit(args):
             logger.error(f"No onsen with id={args.onsen_id} found!")
             return
 
-        visit = OnsenVisit(
-            onsen_id=onsen.id,
-            entry_fee_yen=args.entry_fee_yen,
-            payment_method=args.payment_method,
-            weather=args.weather,
-            time_of_day=args.time_of_day,
-            temperature_outside_celsius=args.temperature_outside_celsius,
-            visit_time=args.visit_time,
-            stay_length_minutes=args.stay_length_minutes,
-            visited_with=args.visited_with,
-            travel_mode=args.travel_mode,
-            travel_time_minutes=args.travel_time_minutes,
-            accessibility_rating=args.accessibility_rating,
-            excercise_before_onsen=args.excercise_before_onsen,
-            excercise_type=args.excercise_type,
-            excercise_length_minutes=args.excercise_length_minutes,
-            crowd_level=args.crowd_level,
-            heart_rate_data=args.heart_rate_data,
-            cleanliness_rating=args.cleanliness_rating,
-            navigability_rating=args.navigability_rating,
-            view_rating=args.view_rating,
-            main_bath_type=args.main_bath_type,
-            main_bath_temperature=args.main_bath_temperature,
-            main_bath_water_type=args.main_bath_water_type,
-            water_color=args.water_color,
-            smell_intensity_rating=args.smell_intensity_rating,
-            changing_room_cleanliness_rating=args.changing_room_cleanliness_rating,
-            locker_availability_rating=args.locker_availability_rating,
-            had_soap=args.had_soap,
-            had_sauna=args.had_sauna,
-            had_outdoor_bath=args.had_outdoor_bath,
-            had_rest_area=args.had_rest_area,
-            had_food_service=args.had_food_service,
-            rest_area_rating=args.rest_area_rating,
-            food_quality_rating=args.food_quality_rating,
-            massage_chair_available=args.massage_chair_available,
-            outdoor_bath_visited=args.outdoor_bath_visited,
-            outdoor_bath_temperature=args.outdoor_bath_temperature,
-            sauna_visited=args.sauna_visited,
-            sauna_temperature=args.sauna_temperature,
-            sauna_steam=args.sauna_steam,
-            sauna_duration_minutes=args.sauna_duration_minutes,
-            sauna_rating=args.sauna_rating,
-            had_outdoor_bath=args.had_outdoor_bath,
-            outdoor_bath_visited=args.outdoor_bath_visited,
-            outdoor_bath_temperature=args.outdoor_bath_temperature,
-            outdoor_bath_rating=args.outdoor_bath_rating,
-            pre_visit_mood=args.pre_visit_mood,
-            post_visit_mood=args.post_visit_mood,
-            energy_level_change=args.energy_level_change,
-            hydration_level=args.hydration_level,
-            previous_location=args.previous_location,
-            next_location=args.next_location,
-            multi_onsen_day=args.multi_onsen_day,
-            visit_order=args.visit_order,
-            atmosphere_rating=args.atmosphere_rating,
-            personal_rating=args.personal_rating,
-        )
+        args_dict = vars(args)
+        args_dict.pop("onsen_id", None)
+        args_dict.pop("func", None)  # Not a model field
+
+        # Create the visit with dynamic arguments
+        visit = OnsenVisit(onsen_id=onsen.id, **args_dict)
         db.add(visit)
         db.commit()
         logger.info(f"Added a visit to onsen {onsen.name} (id={onsen.id})")
