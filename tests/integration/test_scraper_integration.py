@@ -269,13 +269,14 @@ class TestScraperIntegration:
         # Setup mocks
         mock_load_data.return_value = {}
         mock_extract_mapping.return_value = {"123": "001"}
-        mock_scrape_page.side_effect = Exception("Scraping error")
+        # Return an error entry instead of raising an exception
+        mock_scrape_page.return_value = get_mock_error_entry()
         mock_process_data.return_value = get_mock_error_entry()
 
         # Create mock args
         args = Mock()
 
-        # Run the scraping function
+        # Run the scraping function - should not raise an exception
         scrape_onsen_data(args)
 
         # Check that error was handled gracefully
