@@ -216,19 +216,14 @@ def scrape_onsen_page_with_selenium(onsen_id: str) -> Dict[str, Any]:
         # Get the page source after JavaScript execution
         page_source = driver.page_source
 
-        # Placeholder for onsen data extraction
-        # This will be filled in with specific paths when provided
+        # Extract detailed onsen data
+        extracted_data = extract_detailed_onsen_data(driver)
+
         onsen_data = {
             "onsen_id": onsen_id,
             "url": url,
             "raw_html": page_source,
-            "extracted_data": {
-                # Placeholder for specific data fields
-                "name": "TODO",
-                "address": "TODO",
-                "description": "TODO",
-                # Add more fields as needed
-            },
+            "extracted_data": extracted_data,
         }
 
         logging.info(f"Successfully scraped onsen ID: {onsen_id}")
@@ -239,3 +234,125 @@ def scrape_onsen_page_with_selenium(onsen_id: str) -> Dict[str, Any]:
         return {"onsen_id": onsen_id, "url": url, "error": str(e), "extracted_data": {}}
     finally:
         driver.quit()
+
+
+def extract_detailed_onsen_data(driver) -> Dict[str, Any]:
+    """
+    Extract detailed onsen data using the provided XPath selectors.
+
+    Args:
+        driver: Selenium WebDriver instance
+
+    Returns:
+        Dict containing extracted onsen data
+    """
+    extracted_data = {}
+
+    try:
+        # 1. Extract onsen name from /html/body/div[2]
+        try:
+            name_element = driver.find_element(By.XPATH, "/html/body/div[2]")
+            extracted_data["name"] = name_element.text.strip()
+            logging.debug(f"Extracted name: {extracted_data['name']}")
+        except Exception as e:
+            logging.debug(f"Error extracting name: {e}")
+            extracted_data["name"] = ""
+
+        # 2. Extract ban number and full name from /html/body/div[3]
+        try:
+            ban_element = driver.find_element(By.XPATH, "/html/body/div[3]")
+            extracted_data["ban_number_and_name"] = ban_element.text.strip()
+            logging.debug(
+                f"Extracted ban number and name: {extracted_data['ban_number_and_name']}"
+            )
+        except Exception as e:
+            logging.debug(f"Error extracting ban number and name: {e}")
+            extracted_data["ban_number_and_name"] = ""
+
+        # 3. Extract map iframe and coordinates from /html/body/div[4]/iframe
+        try:
+            iframe_element = driver.find_element(By.XPATH, "/html/body/div[4]/iframe")
+            iframe_src = iframe_element.get_attribute("src")
+
+            if iframe_src:
+                extracted_data["map_url"] = iframe_src
+
+                # Extract coordinates from the URL
+                # Look for &q=xx.xx,yy.yy pattern
+                import re
+
+                coord_match = re.search(r"&q=([\d.-]+),([\d.-]+)", iframe_src)
+                if coord_match:
+                    lat = float(coord_match.group(1))
+                    lon = float(coord_match.group(2))
+                    extracted_data["latitude"] = lat
+                    extracted_data["longitude"] = lon
+                    logging.debug(f"Extracted coordinates: {lat}, {lon}")
+                else:
+                    extracted_data["latitude"] = None
+                    extracted_data["longitude"] = None
+                    logging.debug("No coordinates found in map URL")
+            else:
+                extracted_data["map_url"] = ""
+                extracted_data["latitude"] = None
+                extracted_data["longitude"] = None
+
+        except Exception as e:
+            logging.debug(f"Error extracting map data: {e}")
+            extracted_data["map_url"] = ""
+            extracted_data["latitude"] = None
+            extracted_data["longitude"] = None
+
+        # 4. Extract table data from /html/body/div[5]/table
+        try:
+            table_element = driver.find_element(By.XPATH, "/html/body/div[5]/table")
+            table_data = extract_table_data(table_element)
+            extracted_data.update(table_data)
+            logging.debug(f"Extracted {len(table_data)} table entries")
+        except Exception as e:
+            logging.debug(f"Error extracting table data: {e}")
+
+    except Exception as e:
+        logging.error(f"Error in detailed data extraction: {e}")
+
+    return extracted_data
+
+
+def extract_table_data(table_element) -> Dict[str, str]:
+    """
+    Extract key-value pairs from the onsen information table.
+
+    Args:
+        table_element: The table element containing onsen information
+
+    Returns:
+        Dict mapping table keys to values
+    """
+    table_data = {}
+
+    try:
+        # Find all rows in the table
+        rows = table_element.find_elements(By.XPATH, ".//tbody/tr")
+
+        for row in rows:
+            try:
+                # Each row has two td elements: key and value
+                cells = row.find_elements(By.TAG_NAME, "td")
+                if len(cells) >= 2:
+                    key = cells[0].text.strip()
+                    value = cells[1].text.strip()
+
+                    if key and value:  # Only add non-empty key-value pairs
+                        # Clean up the key (remove any special characters or formatting)
+                        clean_key = key.replace(":", "").strip()
+                        table_data[clean_key] = value
+                        logging.debug(f"Table entry: {clean_key} = {value}")
+
+            except Exception as e:
+                logging.debug(f"Error extracting row data: {e}")
+                continue
+
+    except Exception as e:
+        logging.debug(f"Error processing table: {e}")
+
+    return table_data

@@ -20,6 +20,10 @@ def test_imports():
             extract_all_onsen_mapping,
             scrape_onsen_page_with_selenium,
         )
+        from src.cli.commands.scrape_onsen_data.data_mapper import (
+            map_scraped_data_to_onsen_model,
+            get_mapping_summary,
+        )
 
         print("✓ All imports successful")
         return True
@@ -69,7 +73,13 @@ def test_file_structure():
     """Test that all required files exist."""
     print("Testing file structure...")
 
-    required_files = ["__init__.py", "scraper.py", "test_scraper.py", "README.md"]
+    required_files = [
+        "__init__.py",
+        "scraper.py",
+        "test_scraper.py",
+        "README.md",
+        "data_mapper.py",
+    ]
 
     current_dir = os.path.dirname(__file__)
 
@@ -84,10 +94,54 @@ def test_file_structure():
     return True
 
 
+def test_data_mapper():
+    """Test the data mapper functionality."""
+    print("Testing data mapper...")
+
+    try:
+        from src.cli.commands.scrape_onsen_data.data_mapper import (
+            map_scraped_data_to_onsen_model,
+            get_mapping_summary,
+        )
+
+        # Test with sample data
+        sample_data = {
+            "name": "テスト温泉",
+            "ban_number_and_name": "123 テスト温泉",
+            "latitude": 33.123,
+            "longitude": 131.456,
+            "住所": "大分県別府市テスト町1-1",
+            "電話": "0977-12-3456",
+            "入浴料金": "500円",
+        }
+
+        mapped_data = map_scraped_data_to_onsen_model(sample_data)
+        summary = get_mapping_summary(sample_data)
+
+        # Check that mapping worked
+        assert "name" in mapped_data
+        assert "ban_number" in mapped_data
+        assert "address" in mapped_data
+        assert "phone" in mapped_data
+
+        print("✓ Data mapper functionality works")
+        return True
+
+    except Exception as e:
+        print(f"✗ Data mapper error: {e}")
+        return False
+
+
 if __name__ == "__main__":
     print("Running basic tests for onsen scraper...")
 
-    tests = [test_imports, test_paths, test_constants, test_file_structure]
+    tests = [
+        test_imports,
+        test_paths,
+        test_constants,
+        test_file_structure,
+        test_data_mapper,
+    ]
 
     all_passed = True
     for test in tests:
