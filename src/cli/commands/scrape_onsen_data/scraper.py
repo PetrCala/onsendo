@@ -171,7 +171,23 @@ def extract_all_onsen_mapping(driver: webdriver.Chrome) -> Dict[str, str]:
     Returns:
         Dict mapping onsen ID to ban number
     """
+    from src.const import CONST
+
     onsen_mapping = {}
+
+    # Navigate to the main onsen list page
+    logger.info(f"Navigating to onsen list page: {CONST.ONSEN_URL}")
+    driver.get(CONST.ONSEN_URL)
+
+    # Wait for the page to load
+    try:
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "areaDIV11"))
+        )
+        logger.info("Page loaded successfully")
+    except Exception as e:
+        logger.error(f"Timeout waiting for page to load: {e}")
+        return onsen_mapping
 
     # Find all divs that contain onsen data
     onsen_divs = find_all_onsen_divs(driver)
