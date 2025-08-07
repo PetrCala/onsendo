@@ -16,6 +16,7 @@ from src.testing.mocks.mock_onsen_data import (
     get_mock_mapped_data,
     get_mock_incomplete_data,
     get_mock_yufuin_data,
+    get_mock_deleted_onsen_data,
 )
 
 
@@ -32,6 +33,7 @@ class TestDataMapper:
         assert result["name"] == "別府温泉 海地獄"
         assert result["ban_number"] == "123"
         assert result["region"] == "別府"
+        assert result["deleted"] is False
         assert result["latitude"] == 33.2797
         assert result["longitude"] == 131.5011
 
@@ -55,6 +57,7 @@ class TestDataMapper:
         assert result["name"] == "テスト温泉"
         assert result["ban_number"] == "456"
         assert result["region"] == "大分"
+        assert result["deleted"] is False
         assert result["address"] == "大分県大分市テスト町1-1"
         assert result["phone"] == "097-123-4567"
 
@@ -63,6 +66,23 @@ class TestDataMapper:
         assert result["longitude"] is None
         assert result["admission_fee"] is None
         assert result["spring_quality"] is None
+
+    def test_map_scraped_data_to_onsen_model_deleted(self):
+        """Test mapping deleted onsen data."""
+        deleted_data = get_mock_deleted_onsen_data()
+        result = map_scraped_data_to_onsen_model(deleted_data)
+
+        # Check that deleted field is properly mapped
+        assert result["deleted"] is True
+        assert result["name"] == "廃止温泉"
+        assert result["ban_number"] == "999"
+        assert result["region"] == "別府"
+
+        # Check that other fields are mapped as expected for deleted onsen
+        assert result["latitude"] is None
+        assert result["longitude"] is None
+        assert result["address"] == ""
+        assert result["phone"] == ""
 
     def test_create_description_with_all_fields(self, mock_extracted_data):
         """Test creating description with all available fields."""
@@ -110,8 +130,8 @@ class TestDataMapper:
         """Test getting mapping summary for complete data."""
         summary = get_mapping_summary(mock_extracted_data)
 
-        assert summary["total_fields"] == 18
-        assert summary["filled_fields"] == 18
+        assert summary["total_fields"] == 19
+        assert summary["filled_fields"] == 19
         assert summary["required_fields_present"] is True
         assert summary["has_coordinates"] is True
         assert summary["table_entries_mapped"] == 12
@@ -121,8 +141,8 @@ class TestDataMapper:
         incomplete_data = get_mock_incomplete_data()
         summary = get_mapping_summary(incomplete_data)
 
-        assert summary["total_fields"] == 18
-        assert summary["filled_fields"] < 18  # Some fields are missing
+        assert summary["total_fields"] == 19
+        assert summary["filled_fields"] < 19  # Some fields are missing
         assert summary["required_fields_present"] is True
         assert summary["has_coordinates"] is False
         assert summary["table_entries_mapped"] < 12  # Fewer table entries

@@ -127,8 +127,8 @@ class TestScraperIntegration:
 
         # Check mapping summary
         summary = result["mapping_summary"]
-        assert summary["total_fields"] == 18
-        assert summary["filled_fields"] == 18
+        assert summary["total_fields"] == 19
+        assert summary["filled_fields"] == 19
         assert summary["required_fields_present"] is True
         assert summary["has_coordinates"] is True
 

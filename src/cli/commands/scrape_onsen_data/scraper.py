@@ -345,7 +345,17 @@ def extract_detailed_onsen_data(driver) -> Dict[str, Any]:
             extracted_data["ban_number"] = ""
             extracted_data["name"] = ""
 
-        # 3. Extract map iframe and coordinates from /html/body/div[4]/iframe
+        # 3. Check if onsen is deleted by looking for deleted.jpg image
+        try:
+            img_element = driver.find_element(By.XPATH, "/html/body/div[4]/div[1]/img")
+            img_src = img_element.get_attribute("src")
+            extracted_data["deleted"] = img_src == "thumbnail/deleted.jpg"
+            logger.debug(f"Onsen deleted status: {extracted_data['deleted']}")
+        except Exception as e:
+            logger.debug(f"Error checking deleted status: {e}")
+            extracted_data["deleted"] = False
+
+        # 4. Extract map iframe and coordinates from /html/body/div[4]/iframe
         try:
             iframe_element = driver.find_element(By.XPATH, "/html/body/div[4]/iframe")
             iframe_src = iframe_element.get_attribute("src")
@@ -379,7 +389,7 @@ def extract_detailed_onsen_data(driver) -> Dict[str, Any]:
             extracted_data["latitude"] = None
             extracted_data["longitude"] = None
 
-        # 4. Extract table data from /html/body/div[5]/table
+        # 5. Extract table data from /html/body/div[5]/table
         try:
             table_element = driver.find_element(By.XPATH, "/html/body/div[5]/table")
             table_data = extract_table_data(table_element)

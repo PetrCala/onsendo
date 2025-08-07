@@ -175,6 +175,7 @@ MOCK_EXTRACTED_ONSEN_DATA = {
     "region": "別府",
     "ban_number": "123",
     "name": "別府温泉 海地獄",
+    "deleted": False,
     "latitude": 33.2797,
     "longitude": 131.5011,
     "map_url": "https://maps.google.co.jp/maps?q=33.2797,131.5011&z=15",
@@ -198,6 +199,7 @@ MOCK_MAPPED_ONSEN_DATA = {
     "name": "別府温泉 海地獄",
     "ban_number": "123",
     "region": "別府",
+    "deleted": False,
     "latitude": 33.2797,
     "longitude": 131.5011,
     "description": "温泉名: 別府温泉 海地獄 | 泉質: 含硫黄-ナトリウム-塩化物泉 | 営業形態: 日帰り入浴 | 入浴料金: 大人400円、小人200円 | 利用時間: 8:30～17:00（年中無休） | 備考: 観光地としても人気の温泉施設",
@@ -247,6 +249,7 @@ MOCK_INCOMPLETE_ONSEN_DATA = {
     "region": "大分",  # This is the region
     "ban_number": "456",
     "name": "テスト温泉",
+    "deleted": False,
     "latitude": None,
     "longitude": None,
     "map_url": "",
@@ -261,6 +264,7 @@ MOCK_YUFUIN_ONSEN_DATA = {
     "region": "湯布院",  # This is the region
     "ban_number": "789",
     "name": "湯布院温泉 金鱗湖",
+    "deleted": False,
     "latitude": 33.2633,
     "longitude": 131.3544,
     "map_url": "https://maps.google.co.jp/maps?q=33.2633,131.3544&z=15",
@@ -312,6 +316,35 @@ def get_mock_incomplete_data() -> Dict[str, Any]:
 def get_mock_yufuin_data() -> Dict[str, Any]:
     """Get mock Yufuin onsen data."""
     return MOCK_YUFUIN_ONSEN_DATA.copy()
+
+
+# Sample data for a deleted onsen
+MOCK_DELETED_ONSEN_DATA = {
+    "region": "別府",
+    "ban_number": "999",
+    "name": "廃止温泉",
+    "deleted": True,
+    "latitude": None,
+    "longitude": None,
+    "map_url": "",
+    "住所": "",
+    "電話": "",
+    "営業形態": "",
+    "入浴料金": "",
+    "利用時間": "",
+    "定休日ほか": "",
+    "家族湯(貸切湯)": "",
+    "泉質": "",
+    "最寄バス停": "",
+    "最寄駅(徒歩)": "",
+    "駐車場": "",
+    "備考": "",
+}
+
+
+def get_mock_deleted_onsen_data() -> Dict[str, Any]:
+    """Get mock deleted onsen data."""
+    return MOCK_DELETED_ONSEN_DATA.copy()
 
 
 def get_mock_onsen_list_html() -> str:

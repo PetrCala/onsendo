@@ -21,6 +21,7 @@ def map_scraped_data_to_onsen_model(scraped_data: Dict[str, Any]) -> Dict[str, A
     mapped_data["region"] = scraped_data.get("region", "")
     mapped_data["ban_number"] = scraped_data.get("ban_number", "")
     mapped_data["name"] = scraped_data.get("name", "")
+    mapped_data["deleted"] = scraped_data.get("deleted", False)
 
     # Coordinates
     mapped_data["latitude"] = scraped_data.get("latitude")

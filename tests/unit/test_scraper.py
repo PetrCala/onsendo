@@ -305,6 +305,88 @@ class TestScraper:
         assert result["longitude"] is None
         assert result["map_url"] == ""
 
+    def test_extract_detailed_onsen_data_deleted_onsen(self, mock_selenium_driver):
+        """Test extracting detailed data for a deleted onsen."""
+
+        # Mock deleted onsen with deleted.jpg image
+        def mock_find_element(by, value):
+            element = Mock()
+            if by == By.XPATH and value == "/html/body/div[2]":
+                element.text = "別府"
+            elif by == By.XPATH and value == "/html/body/div[3]":
+                element.text = "999番 廃止温泉"
+            elif by == By.XPATH and value == "/html/body/div[4]/div[1]/img":
+                element.get_attribute.return_value = "thumbnail/deleted.jpg"
+            elif by == By.XPATH and value == "/html/body/div[4]/iframe":
+                element.get_attribute.return_value = ""
+            return element
+
+        mock_selenium_driver.find_element.side_effect = mock_find_element
+
+        result = extract_detailed_onsen_data(mock_selenium_driver)
+
+        assert result["deleted"] is True
+        assert result["region"] == "別府"
+        assert result["ban_number"] == "999"
+        assert result["name"] == "廃止温泉"
+
+    def test_extract_detailed_onsen_data_not_deleted_onsen(self, mock_selenium_driver):
+        """Test extracting detailed data for a non-deleted onsen."""
+
+        # Mock non-deleted onsen with different image
+        def mock_find_element(by, value):
+            element = Mock()
+            if by == By.XPATH and value == "/html/body/div[2]":
+                element.text = "別府"
+            elif by == By.XPATH and value == "/html/body/div[3]":
+                element.text = "123番 温泉名"
+            elif by == By.XPATH and value == "/html/body/div[4]/div[1]/img":
+                element.get_attribute.return_value = "thumbnail/other.jpg"
+            elif by == By.XPATH and value == "/html/body/div[4]/iframe":
+                element.get_attribute.return_value = (
+                    "https://maps.google.co.jp/maps?q=33.2797,131.5011&z=15"
+                )
+            return element
+
+        mock_selenium_driver.find_element.side_effect = mock_find_element
+
+        result = extract_detailed_onsen_data(mock_selenium_driver)
+
+        assert result["deleted"] is False
+        assert result["region"] == "別府"
+        assert result["ban_number"] == "123"
+        assert result["name"] == "温泉名"
+
+    def test_extract_detailed_onsen_data_missing_deleted_image(
+        self, mock_selenium_driver
+    ):
+        """Test extracting detailed data when deleted image element is missing."""
+
+        # Mock missing deleted image element
+        def mock_find_element(by, value):
+            if by == By.XPATH and value == "/html/body/div[4]/div[1]/img":
+                raise NoSuchElementException("Element not found")
+            # Return other elements normally
+            element = Mock()
+            if by == By.XPATH and value == "/html/body/div[2]":
+                element.text = "別府"
+            elif by == By.XPATH and value == "/html/body/div[3]":
+                element.text = "123番 温泉名"
+            elif by == By.XPATH and value == "/html/body/div[4]/iframe":
+                element.get_attribute.return_value = (
+                    "https://maps.google.co.jp/maps?q=33.2797,131.5011&z=15"
+                )
+            return element
+
+        mock_selenium_driver.find_element.side_effect = mock_find_element
+
+        result = extract_detailed_onsen_data(mock_selenium_driver)
+
+        assert result["deleted"] is False
+        assert result["region"] == "別府"
+        assert result["ban_number"] == "123"
+        assert result["name"] == "温泉名"
+
     def test_extract_table_data_success(self):
         """Test extracting table data successfully."""
         # Create mock table with rows
