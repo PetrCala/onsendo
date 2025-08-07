@@ -12,8 +12,7 @@ def import_onsen_data(db: Session):
     For demonstration, this is a stub that does something minimal.
     """
 
-    # Example: If you have a known URL or set of URLs
-    url = "https://example.com/beppu-onsen-list"  # Pseudocode only
+    url = CONST.ONSEN_URL
     response = requests.get(url)
     if response.status_code != 200:
         logger.error(f"Failed to fetch onsen data from {url}")
