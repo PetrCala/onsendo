@@ -94,60 +94,101 @@ def process_scraped_onsen_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
 def scrape_onsen_data(args: argparse.Namespace) -> None:
     """
     Scrape onsen data from the web.
+
+    Args:
+        args: Command line arguments containing:
+            - fetch_mapping_only: If True, only fetch the onsen mapping
+            - scrape_individual_only: If True, only scrape individual onsens (requires existing mapping)
     """
     setup_logging()
     ensure_output_directory()
 
     logger.info("Starting onsen data scraping process...")
 
+    # Determine which parts to run
+    run_mapping = not args.scrape_individual_only
+    run_individual = not args.fetch_mapping_only
+
+    if args.fetch_mapping_only and args.scrape_individual_only:
+        logger.error(
+            "Cannot specify both --fetch-mapping-only and --scrape-individual-only"
+        )
+        return
+
     # Load existing data
     existing_data = load_existing_data()
     logger.info(f"Loaded {len(existing_data)} existing onsen records")
 
-    # Extract onsen mapping
-    driver = setup_selenium_driver()
-    try:
-        onsen_mapping = extract_all_onsen_mapping(driver)
-    finally:
-        driver.quit()
+    onsen_mapping = {}
 
-    # Save the mapping
-    save_data(onsen_mapping, PATHS.ONSEN_MAPPING_FILE)
-    logger.info(f"Saved onsen mapping to {PATHS.ONSEN_MAPPING_FILE}")
+    # Step 1: Extract onsen mapping (if requested)
+    if run_mapping:
+        logger.info("Step 1: Extracting onsen mapping...")
+        driver = setup_selenium_driver()
+        try:
+            onsen_mapping = extract_all_onsen_mapping(driver)
+        finally:
+            driver.quit()
 
-    # Scrape individual onsens
-    scraped_count = 0
-    skipped_count = 0
+        # Save the mapping
+        save_data(onsen_mapping, PATHS.ONSEN_MAPPING_FILE)
+        logger.info(f"Saved onsen mapping to {PATHS.ONSEN_MAPPING_FILE}")
+        logger.info(f"Found {len(onsen_mapping)} onsens in mapping")
+    else:
+        # Load existing mapping for individual scraping
+        if os.path.exists(PATHS.ONSEN_MAPPING_FILE):
+            with open(PATHS.ONSEN_MAPPING_FILE, "r", encoding="utf-8") as f:
+                onsen_mapping = json.load(f)
+            logger.info(
+                f"Loaded existing onsen mapping with {len(onsen_mapping)} onsens"
+            )
+        else:
+            logger.error(
+                "No existing onsen mapping file found. Please run without --scrape-individual-only first."
+            )
+            return
 
-    for onsen_id, ban_number in onsen_mapping.items():
-        if onsen_id in existing_data:
-            logger.debug(f"Skipping onsen ID {onsen_id} (already scraped)")
-            skipped_count += 1
-            continue
+    # Step 2: Scrape individual onsens (if requested)
+    if run_individual:
+        logger.info("Step 2: Scraping individual onsen pages...")
+        scraped_count = 0
+        skipped_count = 0
 
-        logger.info(f"Scraping new onsen ID: {onsen_id} (Ban: {ban_number})")
-        raw_onsen_data = scrape_onsen_page_with_selenium(onsen_id)
+        for onsen_id, ban_number in onsen_mapping.items():
+            if onsen_id in existing_data:
+                logger.debug(f"Skipping onsen ID {onsen_id} (already scraped)")
+                skipped_count += 1
+                continue
 
-        # Process the data to include mapped fields
-        processed_onsen_data = process_scraped_onsen_data(raw_onsen_data)
+            logger.info(f"Scraping new onsen ID: {onsen_id} (Ban: {ban_number})")
+            raw_onsen_data = scrape_onsen_page_with_selenium(onsen_id)
 
-        existing_data[onsen_id] = processed_onsen_data
-        scraped_count += 1
+            # Process the data to include mapped fields
+            processed_onsen_data = process_scraped_onsen_data(raw_onsen_data)
 
-        # Save progress after each onsen
-        save_data(existing_data, PATHS.SCRAPED_ONSEN_DATA_FILE)
+            existing_data[onsen_id] = processed_onsen_data
+            scraped_count += 1
 
-        # Add delay to be respectful to the server
-        time.sleep(1)
+            # Save progress after each onsen
+            save_data(existing_data, PATHS.SCRAPED_ONSEN_DATA_FILE)
 
-    logger.info(
-        f"Scraping completed. Scraped: {scraped_count}, Skipped: {skipped_count}"
-    )
-    logger.info(f"Total onsens in database: {len(existing_data)}")
-    logger.info(f"Data saved to: {PATHS.SCRAPED_ONSEN_DATA_FILE}")
+            # Add delay to be respectful to the server
+            time.sleep(1)
 
-    # Print summary statistics
-    print_summary_statistics(existing_data)
+        logger.info(
+            f"Individual scraping completed. Scraped: {scraped_count}, Skipped: {skipped_count}"
+        )
+        logger.info(f"Total onsens in database: {len(existing_data)}")
+        logger.info(f"Data saved to: {PATHS.SCRAPED_ONSEN_DATA_FILE}")
+
+        # Print summary statistics
+        print_summary_statistics(existing_data)
+    else:
+        logger.info(
+            "Skipping individual onsen scraping (--fetch-mapping-only specified)"
+        )
+        logger.info(f"Onsen mapping saved to: {PATHS.ONSEN_MAPPING_FILE}")
+        logger.info(f"Found {len(onsen_mapping)} onsens in total")
 
 
 def print_summary_statistics(data: Dict[str, Any]) -> None:

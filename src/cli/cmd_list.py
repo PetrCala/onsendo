@@ -138,7 +138,16 @@ CLI_COMMANDS = {
     "scrape-onsen-data": CommandConfig(
         func=commands.scrape_onsen_data,
         help="Scrape onsen data from the web.",
-        args={},
+        args={
+            "fetch_mapping_only": ArgumentConfig(
+                action="store_true",
+                help="Only fetch the onsen mapping (list of all onsens), skip individual scraping",
+            ),
+            "scrape_individual_only": ArgumentConfig(
+                action="store_true",
+                help="Only scrape individual onsen pages, skip fetching the mapping (requires existing mapping file)",
+            ),
+        },
     ),
 }
 

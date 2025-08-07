@@ -191,8 +191,10 @@ class TestScraperIntegration:
         mock_scrape_page.return_value = get_mock_complete_entry()
         mock_process_data.return_value = get_mock_complete_entry()
 
-        # Create mock args
+        # Create mock args with default values (run both mapping and individual scraping)
         args = Mock()
+        args.fetch_mapping_only = False
+        args.scrape_individual_only = False
 
         # Run the scraping function
         scrape_onsen_data(args)
@@ -235,8 +237,10 @@ class TestScraperIntegration:
         mock_scrape_page.return_value = get_mock_complete_entry()
         mock_process_data.return_value = get_mock_complete_entry()
 
-        # Create mock args
+        # Create mock args with default values (run both mapping and individual scraping)
         args = Mock()
+        args.fetch_mapping_only = False
+        args.scrape_individual_only = False
 
         # Run the scraping function
         scrape_onsen_data(args)
@@ -273,8 +277,10 @@ class TestScraperIntegration:
         mock_scrape_page.return_value = get_mock_error_entry()
         mock_process_data.return_value = get_mock_error_entry()
 
-        # Create mock args
+        # Create mock args with default values (run both mapping and individual scraping)
         args = Mock()
+        args.fetch_mapping_only = False
+        args.scrape_individual_only = False
 
         # Run the scraping function - should not raise an exception
         scrape_onsen_data(args)
@@ -398,3 +404,149 @@ class TestScraperIntegration:
 
             mapped_data = processed_data["mapped_data"]
             assert mapped_data["region"] == expected_region
+
+    @patch("src.cli.commands.scrape_onsen_data.setup_logging")
+    @patch("src.cli.commands.scrape_onsen_data.ensure_output_directory")
+    @patch("src.cli.commands.scrape_onsen_data.load_existing_data")
+    @patch("src.cli.commands.scrape_onsen_data.extract_all_onsen_mapping")
+    @patch("src.cli.commands.scrape_onsen_data.save_data")
+    @patch("src.cli.commands.scrape_onsen_data.print_summary_statistics")
+    def test_scrape_onsen_data_fetch_mapping_only(
+        self,
+        mock_print_summary,
+        mock_save_data,
+        mock_extract_mapping,
+        mock_load_data,
+        mock_ensure_dir,
+        mock_setup_logging,
+        temp_output_dir,
+    ):
+        """Test scraping with --fetch-mapping-only flag."""
+        # Setup mocks
+        mock_load_data.return_value = {}
+        mock_extract_mapping.return_value = {"123": "001", "456": "002"}
+
+        # Create mock args with fetch_mapping_only=True
+        args = Mock()
+        args.fetch_mapping_only = True
+        args.scrape_individual_only = False
+
+        # Run the scraping function
+        scrape_onsen_data(args)
+
+        # Check that mapping was extracted and saved
+        mock_setup_logging.assert_called_once()
+        mock_ensure_dir.assert_called_once()
+        mock_load_data.assert_called_once()
+        mock_extract_mapping.assert_called_once()
+        mock_save_data.assert_called_once()  # Should save mapping file
+
+        # Should not call individual scraping functions
+        mock_print_summary.assert_not_called()
+
+    @patch("src.cli.commands.scrape_onsen_data.setup_logging")
+    @patch("src.cli.commands.scrape_onsen_data.ensure_output_directory")
+    @patch("src.cli.commands.scrape_onsen_data.load_existing_data")
+    @patch("src.cli.commands.scrape_onsen_data.save_data")
+    @patch("src.cli.commands.scrape_onsen_data.scrape_onsen_page_with_selenium")
+    @patch("src.cli.commands.scrape_onsen_data.process_scraped_onsen_data")
+    @patch("src.cli.commands.scrape_onsen_data.print_summary_statistics")
+    @patch("builtins.open", create=True)
+    @patch("os.path.exists")
+    def test_scrape_onsen_data_scrape_individual_only(
+        self,
+        mock_exists,
+        mock_open,
+        mock_print_summary,
+        mock_process_data,
+        mock_scrape_page,
+        mock_save_data,
+        mock_load_data,
+        mock_ensure_dir,
+        mock_setup_logging,
+        temp_output_dir,
+    ):
+        """Test scraping with --scrape-individual-only flag."""
+        # Setup mocks
+        mock_load_data.return_value = {}
+        mock_exists.return_value = True  # Mapping file exists
+        mock_open.return_value.__enter__.return_value.read.return_value = (
+            '{"123": "001", "456": "002"}'
+        )
+        mock_scrape_page.return_value = get_mock_complete_entry()
+        mock_process_data.return_value = get_mock_complete_entry()
+
+        # Create mock args with scrape_individual_only=True
+        args = Mock()
+        args.fetch_mapping_only = False
+        args.scrape_individual_only = True
+
+        # Run the scraping function
+        scrape_onsen_data(args)
+
+        # Check that individual scraping was performed
+        mock_setup_logging.assert_called_once()
+        mock_ensure_dir.assert_called_once()
+        mock_load_data.assert_called_once()
+        mock_scrape_page.assert_called()
+        mock_process_data.assert_called()
+        mock_save_data.assert_called()
+        mock_print_summary.assert_called_once()
+
+    @patch("src.cli.commands.scrape_onsen_data.setup_logging")
+    @patch("src.cli.commands.scrape_onsen_data.ensure_output_directory")
+    @patch("src.cli.commands.scrape_onsen_data.load_existing_data")
+    @patch("os.path.exists")
+    def test_scrape_onsen_data_scrape_individual_only_no_mapping_file(
+        self,
+        mock_exists,
+        mock_load_data,
+        mock_ensure_dir,
+        mock_setup_logging,
+        temp_output_dir,
+    ):
+        """Test scraping with --scrape-individual-only flag when mapping file doesn't exist."""
+        # Setup mocks
+        mock_load_data.return_value = {}
+        mock_exists.return_value = False  # Mapping file doesn't exist
+
+        # Create mock args with scrape_individual_only=True
+        args = Mock()
+        args.fetch_mapping_only = False
+        args.scrape_individual_only = True
+
+        # Run the scraping function - should return early with error
+        scrape_onsen_data(args)
+
+        # Check that setup was called but no scraping occurred
+        mock_setup_logging.assert_called_once()
+        mock_ensure_dir.assert_called_once()
+        mock_load_data.assert_called_once()
+
+    @patch("src.cli.commands.scrape_onsen_data.setup_logging")
+    @patch("src.cli.commands.scrape_onsen_data.ensure_output_directory")
+    @patch("src.cli.commands.scrape_onsen_data.load_existing_data")
+    def test_scrape_onsen_data_conflicting_flags(
+        self,
+        mock_load_data,
+        mock_ensure_dir,
+        mock_setup_logging,
+        temp_output_dir,
+    ):
+        """Test scraping with both --fetch-mapping-only and --scrape-individual-only flags."""
+        # Setup mocks
+        mock_load_data.return_value = {}
+
+        # Create mock args with both flags set to True
+        args = Mock()
+        args.fetch_mapping_only = True
+        args.scrape_individual_only = True
+
+        # Run the scraping function - should return early with error
+        scrape_onsen_data(args)
+
+        # Check that setup was called but no processing occurred
+        mock_setup_logging.assert_called_once()
+        mock_ensure_dir.assert_called_once()
+        # load_existing_data should not be called when both flags are True (early return)
+        mock_load_data.assert_not_called()
