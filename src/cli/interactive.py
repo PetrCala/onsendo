@@ -304,6 +304,7 @@ def interactive_add_visit() -> None:
     # 10. Rest area and food
     print("\nStep 10: Rest area and food")
 
+    # TODO add if I had visited a rest area
     had_rest_area = get_valid_input("Was there a rest area? (y/n): ", validate_yes_no)
     visit_data["had_rest_area"] = had_rest_area.lower() in ["y", "yes"]
 
@@ -313,6 +314,7 @@ def interactive_add_visit() -> None:
             int(rest_area_rating) if rest_area_rating else 0
         )
 
+    # TODO add if I had tried the food
     had_food_service = get_valid_input(
         "Was there food service? (y/n): ", validate_yes_no
     )
