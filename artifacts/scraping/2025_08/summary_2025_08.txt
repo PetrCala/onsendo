@@ -1,0 +1,16 @@
+==================================================
+SCRAPING SUMMARY STATISTICS
+==================================================
+Total onsens processed: 177
+Successful scrapes: 177
+Failed scrapes: 0
+Success rate: 100.0%
+Onsens with coordinates: 149
+Average fields filled per onsen: 15.5
+Average table entries per onsen: 8.8
+==================================================
+
+# Other data
+Total entries: 177
+Entries with 'deleted' == True: 28 (15.82%)
+Entries with '宿泊限定': 9 (5.08%)
