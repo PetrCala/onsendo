@@ -17,6 +17,7 @@ matplotlib = "^3.10.1"
 sqlalchemy = "^2.0.39"
 sqlalchemy-utils = "^0.41.2"
 pillow = "^11.3.0"
+selenium = "^4.20.0"
 
 
 [tool.poetry.group.dev.dependencies]

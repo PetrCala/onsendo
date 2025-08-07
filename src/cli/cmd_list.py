@@ -135,6 +135,11 @@ CLI_COMMANDS = {
         help="Add a new onsen visit using an interactive questionnaire.",
         args={},
     ),
+    "scrape-onsen-data": CommandConfig(
+        func=commands.scrape_onsen_data,
+        help="Scrape onsen data from the web.",
+        args={},
+    ),
 }
 
 
