@@ -23,6 +23,7 @@ info "Merging from branch $current_branch to branch $target_branch_name..."
 git checkout $target_branch_name
 git merge $current_branch
 git push origin $target_branch_name
-git checkout $current_branch
+git branch -D $current_branch
+git push origin --delete $current_branch
 
 success "Merge complete!"
