@@ -8,10 +8,10 @@ from typing import Dict, Any
 # Sample onsen mapping data (what would be extracted from the main page)
 MOCK_ONSEN_MAPPING = {
     "123": "001",
-    "456": "002", 
+    "456": "002",
     "789": "003",
     "101": "004",
-    "202": "005"
+    "202": "005",
 }
 
 
@@ -227,8 +227,8 @@ MOCK_COMPLETE_ONSEN_ENTRY = {
         "filled_fields": 18,
         "required_fields_present": True,
         "has_coordinates": True,
-        "table_entries_mapped": 12
-    }
+        "table_entries_mapped": 12,
+    },
 }
 
 
@@ -237,7 +237,7 @@ MOCK_ERROR_ONSEN_ENTRY = {
     "onsen_id": "999",
     "url": "https://onsen-hunter.oita-apc.co.jp/dhunter/details_onsen.jsp?d=f8a23e58-f16b-4bb0-8b22-2e6acc46c5d5&o=onsendo&e=onsendo&f=list_onsen.jsp%3Fd%3Df8a23e58-f16b-4bb0-8b22-2e6acc46c5d5%26o%3Donsendo%26e%3Donsendo&t=999",
     "error": "Page not found",
-    "extracted_data": {}
+    "extracted_data": {},
 }
 
 

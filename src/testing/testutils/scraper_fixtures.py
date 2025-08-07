@@ -81,15 +81,7 @@ def temp_output_dir():
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create the output directory structure
         os.makedirs(temp_dir, exist_ok=True)
-
-        # Temporarily patch PATHS.OUTPUT_DIR
-        original_output_dir = PATHS.OUTPUT_DIR
-        PATHS.OUTPUT_DIR = temp_dir
-
         yield temp_dir
-
-        # Restore original path
-        PATHS.OUTPUT_DIR = original_output_dir
 
 
 @pytest.fixture
