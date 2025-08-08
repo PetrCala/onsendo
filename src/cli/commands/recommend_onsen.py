@@ -113,10 +113,10 @@ def recommend_onsen_interactive() -> None:
 
         # Get distance category
         print("\nDistance categories:")
-        print("  1: Very close (within 5km)")
-        print("  2: Close (within 15km)")
-        print("  3: Medium (within 50km)")
-        print("  4: Far (any distance)")
+        print("  1: Very close")
+        print("  2: Close")
+        print("  3: Medium")
+        print("  4: Far")
 
         while True:
             distance_choice = input("Choose distance category (1-4): ").strip()
