@@ -304,7 +304,7 @@ def add_visit_interactive() -> None:
         },
         {
             "name": "exercise_type",
-            "prompt": "Excercise type (running, walking, cycling, other): ",
+            "prompt": "Exercise type (running, walking, cycling, other): ",
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "condition": lambda session: session.visit_data.get(
@@ -314,7 +314,7 @@ def add_visit_interactive() -> None:
         },
         {
             "name": "exercise_length_minutes",
-            "prompt": "Excercise duration in minutes: ",
+            "prompt": "Exercise duration in minutes: ",
             "validator": lambda x: not x or validate_integer(x),
             "processor": lambda x: int(x) if x else None,
             "condition": lambda session: session.visit_data.get(
