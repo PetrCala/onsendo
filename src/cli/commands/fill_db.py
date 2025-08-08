@@ -9,6 +9,7 @@ import os
 from loguru import logger
 from src.db.conn import get_db
 from src.db.import_data import import_onsen_data
+from src.const import CONST
 
 
 def fill_db(args: argparse.Namespace) -> None:
@@ -22,6 +23,18 @@ def fill_db(args: argparse.Namespace) -> None:
         logger.error(f"Database file {file_path} does not exist!")
         return
 
-    logger.info(f"Scraping onsen data and filling database at {database_url}...")
     with get_db(url=database_url) as db:
+        json_path = args.json_path
+        if not os.path.isabs(json_path):
+            json_path = os.path.abspath(json_path)
+        if not os.path.exists(json_path):
+            logger.error(f"JSON file not found: {json_path}")
+            return
+        logger.info(
+            f"Importing onsen data from JSON at {json_path} into {database_url}..."
+        )
+        summary = import_onsen_data(db, json_path)
+        logger.info(
+            f"Import finished. Inserted={summary['inserted']}, Updated={summary['updated']}, Skipped={summary['skipped']}"
+        )
         import_onsen_data(db)

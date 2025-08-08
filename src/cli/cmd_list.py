@@ -50,6 +50,11 @@ CLI_COMMANDS = {
                 default=CONST.DATABASE_NAME,
                 help=f"Database file name, including the .db extension. Default: {CONST.DATABASE_NAME}",
             ),
+            "json_path": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Full path to scraped onsen JSON (output of individual scraping). If provided, data will be imported from this file.",
+            ),
         },
     ),
     "add-onsen": CommandConfig(

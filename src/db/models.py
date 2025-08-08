@@ -31,7 +31,8 @@ class Onsen(Base):
 
     __tablename__ = "onsens"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    # Allow explicit assignment of IDs from scraped data
+    id = Column(Integer, primary_key=True, autoincrement=False)
     ban_number = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=False)
     region = Column(String)
