@@ -67,7 +67,7 @@ def calculate_milestones(args):
 
                     print(f"\n{category.upper()} onsens (limit 5):")
                     if recommendations:
-                        for onsen, distance, metadata in recommendations:
+                        for onsen, distance, _ in recommendations:
                             print(f"  - {onsen.name}: {distance:.2f} km")
                     else:
                         print(f"  No onsens found in {category} category")

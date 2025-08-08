@@ -12,11 +12,11 @@ from src.lib.parsers.usage_time import parse_usage_time
 from src.lib.parsers.closed_days import parse_closed_days
 from src.lib.distance import (
     filter_onsens_by_distance,
-    calculate_distance_to_onsen,
     update_distance_categories,
     DistanceMilestones,
 )
 from src.lib.milestone_calculator import calculate_location_milestones
+from src.lib.utils import generate_google_maps_link
 
 
 class OnsenRecommendationEngine:
@@ -209,6 +209,7 @@ class OnsenRecommendationEngine:
                     else True
                 ),
                 "has_been_visited": self._has_been_visited(onsen),
+                "google_maps_link": self._generate_google_maps_link(onsen),
             }
             recommendations.append((onsen, distance, metadata))
 
@@ -276,6 +277,10 @@ class OnsenRecommendationEngine:
             .first()
             is not None
         )
+
+    def _generate_google_maps_link(self, onsen: Onsen) -> str:
+        """Generate a Google Maps link for an onsen."""
+        return generate_google_maps_link(onsen)
 
     def get_location_by_name_or_id(self, identifier: str) -> Optional[Location]:
         """

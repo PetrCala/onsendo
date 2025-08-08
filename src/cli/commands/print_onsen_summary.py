@@ -13,6 +13,7 @@ from loguru import logger
 from src.const import CONST
 from src.db.conn import get_db
 from src.db.models import Onsen, OnsenVisit
+from src.lib.utils import generate_google_maps_link
 
 
 def _format_datetime(dt: Optional[datetime]) -> str:
@@ -109,6 +110,8 @@ def print_onsen_summary(args: argparse.Namespace) -> None:
         )
         if onsen.address:
             print(f"Address        : {onsen.address}")
+        if (link := generate_google_maps_link(onsen)) != "N/A":
+            print(f"Google Maps    : {link}")
         if onsen.phone:
             print(f"Phone          : {onsen.phone}")
         if onsen.business_form:

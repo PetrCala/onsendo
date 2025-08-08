@@ -62,6 +62,7 @@ def recommend_onsen(args: argparse.Namespace) -> None:
             print(f"{i}. {onsen.name} (ID: {onsen.id}, BAN: {onsen.ban_number})")
             print(f"   Distance: {distance:.1f} km ({metadata['distance_category']})")
             print(f"   Address: {onsen.address or 'N/A'}")
+            print(f"   Maps: {metadata['google_maps_link']}")
             if onsen.usage_time:
                 print(f"   Hours: {onsen.usage_time}")
             if onsen.admission_fee:
