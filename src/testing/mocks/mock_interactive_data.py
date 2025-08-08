@@ -11,10 +11,6 @@ from faker import Faker
 
 fake = Faker()
 
-# TODO
-# - Use faker to generate more realistic data
-# - Use keys to access values instead of indices
-
 
 def get_complete_flow_inputs() -> List[str]:
     """
@@ -70,7 +66,9 @@ def get_complete_flow_inputs() -> List[str]:
         "y",  # had_sauna
         "y",  # had_outdoor_bath
         "y",  # had_rest_area
-        "n",  # had_food_service
+        "y",  # rest_area_used
+        "y",  # had_food_service
+        "n",  # food_service_used
         "n",  # massage_chair_available
         "y",  # sauna_visited
         "y",  # sauna_steam
@@ -202,7 +200,9 @@ def get_minimal_flow_inputs() -> List[str]:
         "n",  # had_sauna
         "n",  # had_outdoor_bath
         "n",  # had_rest_area
+        "n",  # rest_area_used
         "n",  # had_food_service
+        "n",  # food_service_used
         "n",  # massage_chair_available
         "n",  # sauna_visited
         "n",  # sauna_steam
@@ -269,7 +269,9 @@ def get_invalid_onsen_retry_inputs() -> List[str]:
         "n",  # had_sauna
         "n",  # had_outdoor_bath
         "n",  # had_rest_area
+        "n",  # rest_area_used
         "n",  # had_food_service
+        "n",  # food_service_used
         "n",  # massage_chair_available
         "n",  # sauna_visited
         "n",  # sauna_steam
@@ -336,7 +338,9 @@ def get_invalid_rating_retry_inputs() -> List[str]:
         "n",  # had_sauna
         "n",  # had_outdoor_bath
         "n",  # had_rest_area
+        "n",  # rest_area_used
         "n",  # had_food_service
+        "n",  # food_service_used
         "n",  # massage_chair_available
         "n",  # sauna_visited
         "n",  # sauna_steam
@@ -401,7 +405,9 @@ def get_multi_onsen_day_inputs() -> List[str]:
         "y",  # had_sauna
         "n",  # had_outdoor_bath
         "y",  # had_rest_area
+        "y",  # rest_area_used
         "y",  # had_food_service
+        "y",  # food_service_used
         "y",  # massage_chair_available
         "n",  # sauna_visited (didn't use it this time)
         "n",  # sauna_steam

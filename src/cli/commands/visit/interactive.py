@@ -215,9 +215,59 @@ def add_visit_interactive() -> None:
         except ValueError:
             return False
 
-    # Define all steps in the workflow
+    # Helper function to get input with navigation support
+    def get_input_with_nav(
+        prompt: str,
+        validator: Callable,
+        field_name: str,
+        allow_empty: bool = True,
+        processor: Callable = None,
+    ) -> Optional[Any]:
+        """Get input with navigation support and processing."""
+        while True:
+            result = session.get_valid_input_with_navigation(
+                prompt, validator, field_name
+            )
+            if result is None:  # Navigation occurred
+                return None
+
+            if not result and allow_empty:
+                return None
+
+            if processor:
+                return processor(result)
+            return result
+
+    # Helper function to get simple text input
+    def get_text_input(prompt: str, field_name: str) -> Optional[str]:
+        """Get simple text input with navigation support."""
+        return session.get_simple_input_with_navigation(
+            prompt, field_name, allow_empty=True
+        )
+
+    # Helper function to get yes/no input
+    def get_yes_no_input(prompt: str, field_name: str) -> Optional[bool]:
+        """Get yes/no input with navigation support."""
+        while True:
+            result = session.get_valid_input_with_navigation(
+                prompt, validate_yes_no, field_name
+            )
+            if result is None:  # Navigation occurred
+                return None
+
+            return result.lower() in ["y", "yes"]
+
+    # Helper function to store data and handle navigation
+    def store_data(field_name: str, value: Any, prompt: str) -> bool:
+        """Store data and handle navigation. Returns True if navigation occurred."""
+        if value is None:  # Navigation occurred
+            return True
+
+        session.visit_data[field_name] = value
+        session.add_to_history(field_name, value, prompt)
+        return False
+
     steps = [
-        # Step 1: Onsen ID
         {
             "name": "onsen_id",
             "prompt": "Enter the onsen ID: ",
@@ -226,7 +276,6 @@ def add_visit_interactive() -> None:
             "required": True,
             "step_title": "Step 1: Select the onsen",
         },
-        # Step 2: Visit time
         {
             "name": "visit_time",
             "prompt": "Enter visit time (YYYY-MM-DD HH:MM) or press Enter for now: ",
@@ -237,7 +286,6 @@ def add_visit_interactive() -> None:
             "required": True,
             "step_title": "Step 2: Visit time",
         },
-        # Step 3: Entry fee
         {
             "name": "entry_fee_yen",
             "prompt": "Entry fee (yen): ",
@@ -246,7 +294,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 3: Basic information",
         },
-        # Step 4: Stay length
         {
             "name": "stay_length_minutes",
             "prompt": "Stay length (minutes): ",
@@ -255,7 +302,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 3: Basic information",
         },
-        # Step 5: Travel time
         {
             "name": "travel_time_minutes",
             "prompt": "Travel time (minutes): ",
@@ -264,7 +310,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 3: Basic information",
         },
-        # Step 6: Accessibility rating
         {
             "name": "accessibility_rating",
             "prompt": "Accessibility Rating: ",
@@ -273,7 +318,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 7: Cleanliness rating
         {
             "name": "cleanliness_rating",
             "prompt": "Cleanliness Rating: ",
@@ -282,7 +326,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 8: Navigability rating
         {
             "name": "navigability_rating",
             "prompt": "Navigability Rating: ",
@@ -291,7 +334,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 9: View rating
         {
             "name": "view_rating",
             "prompt": "View Rating: ",
@@ -300,7 +342,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 10: Smell intensity rating
         {
             "name": "smell_intensity_rating",
             "prompt": "Smell Intensity Rating: ",
@@ -309,7 +350,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 11: Changing room cleanliness rating
         {
             "name": "changing_room_cleanliness_rating",
             "prompt": "Changing Room Cleanliness Rating: ",
@@ -318,7 +358,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 12: Locker availability rating
         {
             "name": "locker_availability_rating",
             "prompt": "Locker Availability Rating: ",
@@ -327,7 +366,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 13: Rest area rating
         {
             "name": "rest_area_rating",
             "prompt": "Rest Area Rating: ",
@@ -336,7 +374,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 14: Food quality rating
         {
             "name": "food_quality_rating",
             "prompt": "Food Quality Rating: ",
@@ -345,7 +382,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 15: Sauna rating
         {
             "name": "sauna_rating",
             "prompt": "Sauna Rating: ",
@@ -354,7 +390,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 16: Outdoor bath rating
         {
             "name": "outdoor_bath_rating",
             "prompt": "Outdoor Bath Rating: ",
@@ -363,7 +398,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 17: Energy level change
         {
             "name": "energy_level_change",
             "prompt": "Energy Level Change: ",
@@ -372,7 +406,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 18: Hydration level
         {
             "name": "hydration_level",
             "prompt": "Hydration Level: ",
@@ -381,7 +414,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 19: Atmosphere rating
         {
             "name": "atmosphere_rating",
             "prompt": "Atmosphere Rating: ",
@@ -390,7 +422,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 20: Personal rating
         {
             "name": "personal_rating",
             "prompt": "Personal Rating: ",
@@ -399,7 +430,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
-        # Step 21: Main bath temperature
         {
             "name": "main_bath_temperature",
             "prompt": "Main bath temperature (°C): ",
@@ -408,7 +438,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 5: Temperatures (press Enter to skip)",
         },
-        # Step 22: Sauna temperature
         {
             "name": "sauna_temperature",
             "prompt": "Sauna temperature (°C): ",
@@ -417,7 +446,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 5: Temperatures (press Enter to skip)",
         },
-        # Step 23: Outdoor bath temperature
         {
             "name": "outdoor_bath_temperature",
             "prompt": "Outdoor bath temperature (°C): ",
@@ -426,7 +454,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 5: Temperatures (press Enter to skip)",
         },
-        # Step 24: Outside temperature
         {
             "name": "temperature_outside_celsius",
             "prompt": "Outside temperature (°C): ",
@@ -435,16 +462,13 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 5: Temperatures (press Enter to skip)",
         },
-        # Step 25: Payment method
         {
             "name": "payment_method",
             "prompt": "Payment Method: ",
-            "validator": lambda x: True,  # Any text is valid
             "processor": lambda x: x if x else None,
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 26: Weather
         {
             "name": "weather",
             "prompt": "Weather: ",
@@ -453,7 +477,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 27: Time of day
         {
             "name": "time_of_day",
             "prompt": "Time Of Day: ",
@@ -462,7 +485,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 28: Visited with
         {
             "name": "visited_with",
             "prompt": "Visited With: ",
@@ -471,7 +493,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 29: Travel mode
         {
             "name": "travel_mode",
             "prompt": "Travel Mode: ",
@@ -480,7 +501,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 30: Exercise type
         {
             "name": "excercise_type",
             "prompt": "Excercise Type: ",
@@ -489,7 +509,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 31: Crowd level
         {
             "name": "crowd_level",
             "prompt": "Crowd Level: ",
@@ -498,7 +517,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 32: Heart rate data
         {
             "name": "heart_rate_data",
             "prompt": "Heart Rate Data: ",
@@ -507,7 +525,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 33: Main bath type
         {
             "name": "main_bath_type",
             "prompt": "Main Bath Type: ",
@@ -516,7 +533,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 34: Main bath water type
         {
             "name": "main_bath_water_type",
             "prompt": "Main Bath Water Type: ",
@@ -525,7 +541,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 35: Water color
         {
             "name": "water_color",
             "prompt": "Water Color: ",
@@ -534,7 +549,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 36: Pre visit mood
         {
             "name": "pre_visit_mood",
             "prompt": "Pre Visit Mood: ",
@@ -543,7 +557,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 37: Post visit mood
         {
             "name": "post_visit_mood",
             "prompt": "Post Visit Mood: ",
@@ -552,7 +565,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 6: Additional information (press Enter to skip)",
         },
-        # Step 38: Exercise before onsen
         {
             "name": "excercise_before_onsen",
             "prompt": "Excercise Before Onsen? (y/n): ",
@@ -561,7 +573,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 7: Yes/No questions",
         },
-        # Step 39: Had soap
         {
             "name": "had_soap",
             "prompt": "Had Soap? (y/n): ",
@@ -570,7 +581,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 7: Yes/No questions",
         },
-        # Step 40: Had sauna
         {
             "name": "had_sauna",
             "prompt": "Had Sauna? (y/n): ",
@@ -579,7 +589,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 7: Yes/No questions",
         },
-        # Step 41: Had outdoor bath
         {
             "name": "had_outdoor_bath",
             "prompt": "Had Outdoor Bath? (y/n): ",
@@ -588,7 +597,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 7: Yes/No questions",
         },
-        # Step 42: Had rest area
         {
             "name": "had_rest_area",
             "prompt": "Had Rest Area? (y/n): ",
@@ -597,7 +605,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 7: Yes/No questions",
         },
-        # Step 43: Had food service
         {
             "name": "had_food_service",
             "prompt": "Had Food Service? (y/n): ",
@@ -606,7 +613,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 7: Yes/No questions",
         },
-        # Step 44: Massage chair available
         {
             "name": "massage_chair_available",
             "prompt": "Massage Chair Available? (y/n): ",
@@ -615,7 +621,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 7: Yes/No questions",
         },
-        # Step 45: Sauna visited
         {
             "name": "sauna_visited",
             "prompt": "Sauna Visited? (y/n): ",
@@ -624,7 +629,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 7: Yes/No questions",
         },
-        # Step 46: Sauna steam
         {
             "name": "sauna_steam",
             "prompt": "Sauna Steam? (y/n): ",
@@ -633,7 +637,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 7: Yes/No questions",
         },
-        # Step 47: Outdoor bath visited
         {
             "name": "outdoor_bath_visited",
             "prompt": "Outdoor Bath Visited? (y/n): ",
@@ -642,7 +645,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 7: Yes/No questions",
         },
-        # Step 48: Multi onsen day
         {
             "name": "multi_onsen_day",
             "prompt": "Multi Onsen Day? (y/n): ",
@@ -651,7 +653,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 7: Yes/No questions",
         },
-        # Step 49: Exercise length minutes
         {
             "name": "excercise_length_minutes",
             "prompt": "Excercise Length Minutes: ",
@@ -660,7 +661,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 8: Additional details (press Enter to skip)",
         },
-        # Step 50: Sauna duration minutes
         {
             "name": "sauna_duration_minutes",
             "prompt": "Sauna Duration Minutes: ",
@@ -669,7 +669,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 8: Additional details (press Enter to skip)",
         },
-        # Step 51: Previous location
         {
             "name": "previous_location",
             "prompt": "Previous Location: ",
@@ -678,7 +677,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 8: Additional details (press Enter to skip)",
         },
-        # Step 52: Next location
         {
             "name": "next_location",
             "prompt": "Next Location: ",
@@ -687,7 +685,6 @@ def add_visit_interactive() -> None:
             "required": False,
             "step_title": "Step 8: Additional details (press Enter to skip)",
         },
-        # Step 53: Visit order
         {
             "name": "visit_order",
             "prompt": "Visit Order: ",
@@ -771,6 +768,347 @@ def add_visit_interactive() -> None:
             else:
                 print("Invalid input. Please try again.")
 
+        # # 1. Get onsen ID
+        # print("Step 1: Select the onsen")
+        # onsen_id_input = get_valid_input(
+        #     "Enter the onsen ID: ", validate_onsen_id, max_attempts=3
+        # )
+        # if onsen_id_input is None:
+        #     sys.exit(1)
+        # visit_data["onsen_id"] = int(onsen_id_input)
+
+        # # 2. Basic visit information
+        # print("\nStep 2: Basic visit information")
+
+        # # Entry fee
+        # entry_fee = get_valid_input(
+        #     "What was the entry fee in yen? (0 if free): ", validate_integer
+        # )
+        # visit_data["entry_fee_yen"] = int(entry_fee) if entry_fee else 0
+
+        # # Payment method
+        # payment_method = input("Payment method (cash/card/etc.): ").strip()
+        # visit_data["payment_method"] = payment_method if payment_method else ""
+
+        # # Visit time
+        # visit_time = get_valid_input(
+        #     "Visit time (YYYY-MM-DD HH:MM, or press Enter for now): ",
+        #     lambda x: x == "" or validate_datetime(x),
+        # )
+        # if visit_time:
+        #     visit_data["visit_time"] = visit_time
+        # else:
+        #     visit_data["visit_time"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+        # # Weather
+        # weather = input("Weather conditions: ").strip()
+        # visit_data["weather"] = weather if weather else ""
+
+        # # Time of day
+        # time_of_day = input("Time of day (morning/afternoon/evening): ").strip()
+        # visit_data["time_of_day"] = time_of_day if time_of_day else ""
+
+        # # Temperature outside
+        # temp_outside = get_valid_input("Temperature outside in Celsius: ", validate_float)
+        # visit_data["temperature_outside_celsius"] = (
+        #     float(temp_outside) if temp_outside else 0.0
+        # )
+
+        # # Stay length
+        # stay_length = get_valid_input("How long did you stay (minutes): ", validate_integer)
+        # visit_data["stay_length_minutes"] = int(stay_length) if stay_length else 0
+
+        # # 3. Travel information
+        # print("\nStep 3: Travel information")
+
+        # visited_with = input("Who did you visit with (alone/friend/group): ").strip()
+        # visit_data["visited_with"] = visited_with if visited_with else ""
+
+        # travel_mode = input("Travel mode (car/train/bus/walk/run/bike): ").strip()
+        # visit_data["travel_mode"] = travel_mode if travel_mode else ""
+
+        # travel_time = get_valid_input("Travel time in minutes: ", validate_integer)
+        # visit_data["travel_time_minutes"] = int(travel_time) if travel_time else 0
+
+        # # 4. Exercise information
+        # print("\nStep 4: Exercise information")
+
+        # exercise_before = get_valid_input(
+        #     "Did you exercise before the onsen? (y/n): ", validate_yes_no
+        # )
+        # visit_data["excercise_before_onsen"] = exercise_before.lower() in ["y", "yes"]
+
+        # if visit_data["excercise_before_onsen"]:
+        #     exercise_type = input("Exercise type (running/walking/cycling/other): ").strip()
+        #     visit_data["excercise_type"] = exercise_type if exercise_type else ""
+
+        #     exercise_length = get_valid_input(
+        #         "Exercise duration in minutes: ", validate_integer
+        #     )
+        #     visit_data["excercise_length_minutes"] = (
+        #         int(exercise_length) if exercise_length else 0
+        #     )
+
+        # # 5. Facility ratings
+        # print("\nStep 5: Facility ratings (1-10 scale)")
+
+        # accessibility = get_valid_input("Accessibility rating (1-10): ", validate_rating)
+        # visit_data["accessibility_rating"] = int(accessibility) if accessibility else 0
+
+        # cleanliness = get_valid_input("Cleanliness rating (1-10): ", validate_rating)
+        # visit_data["cleanliness_rating"] = int(cleanliness) if cleanliness else 0
+
+        # navigability = get_valid_input("Navigability rating (1-10): ", validate_rating)
+        # visit_data["navigability_rating"] = int(navigability) if navigability else 0
+
+        # view_rating = get_valid_input("View rating (1-10): ", validate_rating)
+        # visit_data["view_rating"] = int(view_rating) if view_rating else 0
+
+        # atmosphere = get_valid_input("Atmosphere rating (1-10): ", validate_rating)
+        # visit_data["atmosphere_rating"] = int(atmosphere) if atmosphere else 0
+
+        # # 6. Main bath information
+        # print("\nStep 6: Main bath information")
+
+        # main_bath_type = input("Main bath type (open air/indoor/other): ").strip()
+        # visit_data["main_bath_type"] = main_bath_type if main_bath_type else ""
+
+        # main_bath_temp = get_valid_input(
+        #     "Main bath temperature in Celsius: ", validate_float
+        # )
+        # visit_data["main_bath_temperature"] = (
+        #     float(main_bath_temp) if main_bath_temp else 0.0
+        # )
+
+        # main_bath_water = input("Main bath water type (sulfur/salt/other): ").strip()
+        # visit_data["main_bath_water_type"] = main_bath_water if main_bath_water else ""
+
+        # water_color = input("Water color (clear/brown/green/other): ").strip()
+        # visit_data["water_color"] = water_color if water_color else ""
+
+        # smell_intensity = get_valid_input(
+        #     "Smell intensity rating (1-10): ", validate_rating
+        # )
+        # visit_data["smell_intensity_rating"] = (
+        #     int(smell_intensity) if smell_intensity else 0
+        # )
+
+        # # 7. Changing room and facilities
+        # print("\nStep 7: Changing room and facilities")
+
+        # changing_cleanliness = get_valid_input(
+        #     "Changing room cleanliness rating (1-10): ", validate_rating
+        # )
+        # visit_data["changing_room_cleanliness_rating"] = (
+        #     int(changing_cleanliness) if changing_cleanliness else 0
+        # )
+
+        # locker_availability = get_valid_input(
+        #     "Locker availability rating (1-10): ", validate_rating
+        # )
+        # visit_data["locker_availability_rating"] = (
+        #     int(locker_availability) if locker_availability else 0
+        # )
+
+        # had_soap = get_valid_input("Was soap available? (y/n): ", validate_yes_no)
+        # visit_data["had_soap"] = had_soap.lower() in ["y", "yes"]
+
+        # # 8. Sauna information
+        # print("\nStep 8: Sauna information")
+
+        # had_sauna = get_valid_input(
+        #     "Was there a sauna at the facility? (y/n): ", validate_yes_no
+        # )
+        # visit_data["had_sauna"] = had_sauna.lower() in ["y", "yes"]
+
+        # if visit_data["had_sauna"]:
+        #     sauna_visited = get_valid_input(
+        #         "Did you use the sauna? (y/n): ", validate_yes_no
+        #     )
+        #     visit_data["sauna_visited"] = sauna_visited.lower() in ["y", "yes"]
+
+        #     if visit_data["sauna_visited"]:
+        #         sauna_temp = get_valid_input(
+        #             "Sauna temperature in Celsius: ", validate_float
+        #         )
+        #         visit_data["sauna_temperature"] = float(sauna_temp) if sauna_temp else 0.0
+
+        #         sauna_steam = get_valid_input(
+        #             "Did the sauna have steam? (y/n): ", validate_yes_no
+        #         )
+        #         visit_data["sauna_steam"] = sauna_steam.lower() in ["y", "yes"]
+
+        #         sauna_duration = get_valid_input(
+        #             "How long did you stay in the sauna (minutes): ", validate_integer
+        #         )
+        #         visit_data["sauna_duration_minutes"] = (
+        #             int(sauna_duration) if sauna_duration else 0
+        #         )
+
+        #         sauna_rating = get_valid_input("Sauna rating (1-10): ", validate_rating)
+        #         visit_data["sauna_rating"] = int(sauna_rating) if sauna_rating else 0
+
+        # # 9. Outdoor bath information
+        # print("\nStep 9: Outdoor bath information")
+
+        # had_outdoor_bath = get_valid_input(
+        #     "Was there an outdoor bath at the facility? (y/n): ", validate_yes_no
+        # )
+        # visit_data["had_outdoor_bath"] = had_outdoor_bath.lower() in ["y", "yes"]
+
+        # if visit_data["had_outdoor_bath"]:
+        #     outdoor_bath_visited = get_valid_input(
+        #         "Did you use the outdoor bath? (y/n): ", validate_yes_no
+        #     )
+        #     visit_data["outdoor_bath_visited"] = outdoor_bath_visited.lower() in [
+        #         "y",
+        #         "yes",
+        #     ]
+
+        #     if visit_data["outdoor_bath_visited"]:
+        #         outdoor_bath_temp = get_valid_input(
+        #             "Outdoor bath temperature in Celsius: ", validate_float
+        #         )
+        #         visit_data["outdoor_bath_temperature"] = (
+        #             float(outdoor_bath_temp) if outdoor_bath_temp else 0.0
+        #         )
+
+        #         outdoor_bath_rating = get_valid_input(
+        #             "Outdoor bath rating (1-10): ", validate_rating
+        #         )
+        #         visit_data["outdoor_bath_rating"] = (
+        #             int(outdoor_bath_rating) if outdoor_bath_rating else 0
+        #         )
+
+        # # 10. Rest area and food
+        # print("\nStep 10: Rest area and food")
+
+        # # TODO add if I had visited a rest area
+        # had_rest_area = get_valid_input("Was there a rest area? (y/n): ", validate_yes_no)
+        # visit_data["had_rest_area"] = had_rest_area.lower() in ["y", "yes"]
+
+        # if visit_data["had_rest_area"]:
+        #     rest_area_rating = get_valid_input("Rest area rating (1-10): ", validate_rating)
+        #     visit_data["rest_area_rating"] = (
+        #         int(rest_area_rating) if rest_area_rating else 0
+        #     )
+
+        # # TODO add if I had tried the food
+        # had_food_service = get_valid_input(
+        #     "Was there food service? (y/n): ", validate_yes_no
+        # )
+        # visit_data["had_food_service"] = had_food_service.lower() in ["y", "yes"]
+
+        # if visit_data["had_food_service"]:
+        #     food_quality = get_valid_input("Food quality rating (1-10): ", validate_rating)
+        #     visit_data["food_quality_rating"] = int(food_quality) if food_quality else 0
+
+        # massage_chair = get_valid_input(
+        #     "Were massage chairs available? (y/n): ", validate_yes_no
+        # )
+        # visit_data["massage_chair_available"] = massage_chair.lower() in ["y", "yes"]
+
+        # # 11. Crowd and mood
+        # print("\nStep 11: Crowd and mood")
+
+        # crowd_level = input("Crowd level (busy/moderate/quiet/empty): ").strip()
+        # visit_data["crowd_level"] = crowd_level if crowd_level else ""
+
+        # pre_visit_mood = input(
+        #     "Mood before visit (relaxed/stressed/anxious/other): "
+        # ).strip()
+        # visit_data["pre_visit_mood"] = pre_visit_mood if pre_visit_mood else ""
+
+        # post_visit_mood = input(
+        #     "Mood after visit (relaxed/stressed/anxious/other): "
+        # ).strip()
+        # visit_data["post_visit_mood"] = post_visit_mood if post_visit_mood else ""
+
+        # # 12. Health and energy
+        # print("\nStep 12: Health and energy")
+
+        # energy_change = get_valid_input(
+        #     "Energy level change (-5 to +5, negative = less energy): ",
+        #     lambda x: validate_integer(x) and -5 <= int(x) <= 5,
+        # )
+        # visit_data["energy_level_change"] = int(energy_change) if energy_change else 0
+
+        # hydration = get_valid_input(
+        #     "Hydration level before entering (1-10): ", validate_rating
+        # )
+        # visit_data["hydration_level"] = int(hydration) if hydration else 0
+
+        # # 13. Multi-onsen day
+        # print("\nStep 13: Multi-onsen day")
+
+        # multi_onsen = get_valid_input(
+        #     "Was this part of a multi-onsen day? (y/n): ", validate_yes_no
+        # )
+        # visit_data["multi_onsen_day"] = multi_onsen.lower() in ["y", "yes"]
+
+        # if visit_data["multi_onsen_day"]:
+        #     visit_order = get_valid_input(
+        #         "Visit order (1st, 2nd, etc.): ", validate_integer
+        #     )
+        #     visit_data["visit_order"] = int(visit_order) if visit_order else 0
+
+        # # 14. Personal rating
+        # print("\nStep 14: Personal rating")
+
+        # personal_rating = get_valid_input(
+        #     "Personal overall rating (1-10): ", validate_rating
+        # )
+        # visit_data["personal_rating"] = int(personal_rating) if personal_rating else 0
+
+        # # 15. Additional information
+        # print("\nStep 15: Additional information")
+
+        # heart_rate_data = input("Heart rate data (optional): ").strip()
+        # visit_data["heart_rate_data"] = heart_rate_data if heart_rate_data else ""
+
+        # # Set defaults for fields that weren't explicitly set
+        # defaults = {
+        #     "previous_location": 0,
+        #     "next_location": 0,
+        # }
+
+        # for key, default_value in defaults.items():
+        #     if key not in visit_data:
+        #         visit_data[key] = default_value
+
+        # # Build the command
+        # print("\n" + "=" * 50)
+        # print("SUMMARY OF YOUR VISIT")
+        # print("=" * 50)
+
+        # # Show key information
+        # with get_db(url=CONST.DATABASE_URL) as db:
+        #     onsen = db.query(Onsen).filter(Onsen.id == visit_data["onsen_id"]).first()
+        #     print(f"Onsen: {onsen.name} (ID: {onsen.id})")
+
+        # print(f"Entry fee: {visit_data['entry_fee_yen']} yen")
+        # print(f"Stay length: {visit_data['stay_length_minutes']} minutes")
+        # print(f"Personal rating: {visit_data['personal_rating']}/10")
+
+        # # Ask for confirmation
+        # confirm = get_valid_input(
+        #     "\nProceed with adding this visit? (y/n): ", validate_yes_no
+        # )
+
+        # if confirm.lower() in ["y", "yes"]:
+        #     # Build command arguments
+        #     cmd_args = ["onsendo", "add-visit"]
+
+        #     for key, value in visit_data.items():
+        #         if isinstance(value, bool):
+        #             if value:
+        #                 cmd_args.append(f"--{key}")
+        #         elif value is not None and value != "":
+        #             cmd_args.append(f"--{key}")
+        #             cmd_args.append(str(value))
+
+        #     print(f"\nExecuting command: {' '.join(cmd_args)}")
+
     # Save the visit
     print("\nSaving visit data...")
     with get_db(url=CONST.DATABASE_URL) as db:
@@ -778,8 +1116,9 @@ def add_visit_interactive() -> None:
             db.query(Onsen).filter(Onsen.id == session.visit_data["onsen_id"]).first()
         )
         visit = OnsenVisit(**session.visit_data)
-        db.add(visit)
-        db.commit()
+        # TODO Disable for now
+        # db.add(visit)
+        # db.commit()
 
         print(f"✅ Successfully recorded visit to {onsen.name}!")
         print(f"Visit ID: {visit.id}")

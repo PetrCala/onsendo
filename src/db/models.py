@@ -114,8 +114,10 @@ class OnsenVisit(Base):
     - had_sauna: whether there was a sauna at the onsen
     - had_outdoor_bath: whether there was an outdoor bath at the onsen
     - had_rest_area: whether there was a rest area at the onsen
+    - rest_area_used: whether I used the rest area
     - rest_area_rating: my rating of the rest area (1-10)
     - had_food_service: whether there was food service at the onsen
+    - food_service_used: whether I used the food service
     - food_quality_rating: my rating of the quality of the food (1-10)
     - massage_chair_available: whether there was a massage chair at the onsen
     - sauna_visited: whether I used the sauna
@@ -172,8 +174,10 @@ class OnsenVisit(Base):
     had_sauna = Column(Boolean)
     had_outdoor_bath = Column(Boolean)
     had_rest_area = Column(Boolean)
+    rest_area_used = Column(Boolean)
     rest_area_rating = Column(Integer)
     had_food_service = Column(Boolean)
+    food_service_used = Column(Boolean)
     food_quality_rating = Column(Integer)
     massage_chair_available = Column(Boolean)
     sauna_visited = Column(Boolean)
