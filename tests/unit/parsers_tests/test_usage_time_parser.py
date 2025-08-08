@@ -35,17 +35,31 @@ def test_seasonal():
         "(5～10月)6:00～11:50／14:00～22:50、(11～4月)6:30～11:50／14:00～22:50"
     )
     assert len(p.windows) >= 4
-    # May at 7:00 open, April at 7:00 closed
-    assert p.is_open(dt(2025, 5, 2, 7, 0))
-    assert not p.is_open(dt(2025, 4, 2, 7, 0))
+    scenarios = [
+        # (datetime, expected_is_open, description)
+        (dt(2025, 5, 2, 6, 0), True, "May at 6:00 open"),
+        (dt(2025, 4, 2, 6, 0), False, "April at 6:00 closed"),
+        (dt(2025, 5, 2, 12, 0), False, "May at 12:00 closed"),
+        (dt(2025, 4, 2, 12, 0), False, "April at 12:00 closed"),
+        (dt(2025, 5, 2, 20, 0), True, "May at 20:00 open"),
+        (dt(2025, 4, 2, 20, 0), True, "April at 20:00 open"),
+    ]
+    for when, expected, desc in scenarios:
+        assert p.is_open(when) == expected, desc
 
 
 def test_weekday_weekend():
     p = parse_usage_time("平日14:00～17:00 日・祝15:00～17:00")
     # Friday
     assert p.is_open(dt(2025, 1, 3, 16, 0))
-    # Sunday
+
+    # Sunday 14:00 closed, 15:00 open
+    assert not p.is_open(dt(2025, 1, 5, 14, 0))
     assert p.is_open(dt(2025, 1, 5, 16, 0))
+
+    # Holiday 14:00 closed, 15:00 open
+    assert not p.is_open(dt(2025, 1, 6, 14, 0))
+    assert p.is_open(dt(2025, 1, 6, 15, 0))
 
 
 def test_hotel_in_out():
