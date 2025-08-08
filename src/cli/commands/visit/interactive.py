@@ -233,7 +233,7 @@ def add_visit_interactive() -> None:
             "prompt": "Enter the onsen ID: ",
             "validator": validate_onsen_id,
             "processor": lambda x: int(x),
-            "step_title": "Step 1: Select the onsen",
+            "step_title": "Step 111: Select the onsen",
         },
         {
             "name": "entry_fee_yen",
@@ -660,7 +660,7 @@ def add_visit_interactive() -> None:
             print(f"\n{step['step_title']}")
             last_step_title = step["step_title"]
 
-        if hasattr(step, "condition") and not step["condition"](session):
+        if "condition" in step and not step["condition"](session):
             current_step_index += 1
             continue
 
