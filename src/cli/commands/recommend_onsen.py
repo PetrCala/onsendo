@@ -105,9 +105,8 @@ def recommend_onsen_interactive() -> None:
         # Create recommendation engine with the location to calculate dynamic milestones
         engine = OnsenRecommendationEngine(db, location)
 
-        # Show the calculated distance milestones
-        engine.print_distance_milestones()
-        print()
+        # Get distance milestones for display in the prompt
+        distance_milestones = engine.get_distance_milestones()
 
         # Get target time
         time_input = input(
@@ -122,10 +121,16 @@ def recommend_onsen_interactive() -> None:
 
         # Get distance category
         print("\nDistance categories:")
-        print("  1: Very close")
-        print("  2: Close")
-        print("  3: Medium")
-        print("  4: Far")
+        if distance_milestones:
+            print(f"  1: Very close (≤ {distance_milestones.very_close_max:.1f} km)")
+            print(f"  2: Close (≤ {distance_milestones.close_max:.1f} km)")
+            print(f"  3: Medium (≤ {distance_milestones.medium_max:.1f} km)")
+            print(f"  4: Far (> {distance_milestones.medium_max:.1f} km)")
+        else:
+            print("  1: Very close (≤ 5.0 km)")
+            print("  2: Close (≤ 15.0 km)")
+            print("  3: Medium (≤ 50.0 km)")
+            print("  4: Far (> 50.0 km)")
 
         while True:
             distance_choice = input("Choose distance category (1-4): ").strip()
