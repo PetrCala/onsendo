@@ -189,22 +189,54 @@ def filter_onsens_by_distance(
         distance_category: Distance category key (very_close, close, medium, far)
 
     Returns:
-        List of tuples (onsen, distance_km) within the specified distance
+        List of tuples (onsen, distance_km) within the specified distance category
     """
     if distance_category not in DISTANCE_CATEGORIES:
         raise ValueError(f"Invalid distance category: {distance_category}")
 
-    category = DISTANCE_CATEGORIES[distance_category]
     filtered_onsens = []
 
     for onsen in onsens:
         distance = calculate_distance_to_onsen(location, onsen)
-        if distance is not None and distance <= category.max_distance_km:
+        if distance is None:
+            continue
+
+        # Check if the onsen falls within the requested distance category
+        if _is_distance_in_category(distance, distance_category):
             filtered_onsens.append((onsen, distance))
 
     # Sort by distance (closest first)
     filtered_onsens.sort(key=lambda x: x[1])
     return filtered_onsens
+
+
+def _is_distance_in_category(distance_km: float, category: str) -> bool:
+    """
+    Check if a distance falls within a specific distance category.
+
+    Args:
+        distance_km: Distance in kilometers
+        category: Distance category (very_close, close, medium, far)
+
+    Returns:
+        True if distance is within the category, False otherwise
+    """
+    if category == "very_close":
+        return distance_km <= DISTANCE_CATEGORIES["very_close"].max_distance_km
+    elif category == "close":
+        return (
+            distance_km > DISTANCE_CATEGORIES["very_close"].max_distance_km
+            and distance_km <= DISTANCE_CATEGORIES["close"].max_distance_km
+        )
+    elif category == "medium":
+        return (
+            distance_km > DISTANCE_CATEGORIES["close"].max_distance_km
+            and distance_km <= DISTANCE_CATEGORIES["medium"].max_distance_km
+        )
+    elif category == "far":
+        return distance_km > DISTANCE_CATEGORIES["medium"].max_distance_km
+    else:
+        return False
 
 
 def get_distance_category_name(distance_km: float) -> str:
@@ -217,7 +249,11 @@ def get_distance_category_name(distance_km: float) -> str:
     Returns:
         Distance category name
     """
-    for category_key, category in DISTANCE_CATEGORIES.items():
-        if distance_km <= category.max_distance_km:
-            return category_key
-    return "far"
+    if distance_km <= DISTANCE_CATEGORIES["very_close"].max_distance_km:
+        return "very_close"
+    elif distance_km <= DISTANCE_CATEGORIES["close"].max_distance_km:
+        return "close"
+    elif distance_km <= DISTANCE_CATEGORIES["medium"].max_distance_km:
+        return "medium"
+    else:
+        return "far"
