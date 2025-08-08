@@ -210,28 +210,27 @@ def test_weekday_and_holiday_windows():
         # Test "平日14:00～17:00 日・祝15:00～17:00" - weekdays 14-17, Sundays/holidays 15-17
         p = parse_usage_time("平日14:00～17:00 日・祝15:00～17:00")
 
-        # Regular weekday (2025-01-02 is a Thursday)
-        assert p.is_open(dt(2025, 1, 2, 16, 0))  # Thursday at 16:00
-        assert p.is_open(dt(2025, 1, 2, 14, 30))  # Thursday at 14:30
-        assert not p.is_open(
-            dt(2025, 1, 2, 13, 0)
-        )  # Thursday at 13:00 (before opening)
-
-        # Holiday (2025-01-01 is New Year's Day)
-        assert p.is_open(dt(2025, 1, 1, 16, 0))  # Holiday at 16:00
-        assert not p.is_open(
-            dt(2025, 1, 1, 14, 30)
-        )  # Holiday at 14:30 (before holiday opening)
-        assert not p.is_open(dt(2025, 1, 1, 13, 0))  # Holiday at 13:00 (before opening)
-
-        # Sunday (2025-01-05 is a Sunday, but not a holiday)
-        assert p.is_open(dt(2025, 1, 5, 16, 0))  # Sunday at 16:00
-        assert not p.is_open(
-            dt(2025, 1, 5, 14, 30)
-        )  # Sunday at 14:30 (before Sunday opening)
-
-        # Saturday (2025-01-04 is a Saturday)
-        assert not p.is_open(dt(2025, 1, 4, 16, 0))  # Saturday at 16:00
+        scenarios = [
+            # (datetime, expected_is_open, description)
+            (dt(2025, 1, 2, 16, 0), True, "Thursday at 16:00"),
+            (dt(2025, 1, 2, 14, 30), True, "Thursday at 14:30"),
+            (dt(2025, 1, 2, 13, 0), False, "Thursday at 13:00 (before opening)"),
+            (dt(2025, 1, 5, 16, 0), True, "Sunday at 16:00"),
+            (dt(2025, 1, 5, 14, 30), False, "Sunday at 14:30"),
+            (dt(2025, 1, 5, 13, 0), False, "Sunday at 13:00 (before opening)"),
+            (dt(2025, 1, 4, 16, 0), False, "Saturday at 16:00"),
+            (dt(2025, 1, 4, 14, 30), False, "Saturday at 14:30"),
+            (dt(2025, 1, 4, 13, 0), False, "Saturday at 13:00 (before opening)"),
+            (dt(2025, 1, 1, 16, 0), True, "Holiday at 16:00 (New Year's Day)"),
+            (dt(2025, 1, 1, 14, 30), False, "Holiday at 14:30 (New Year's Day)"),
+            (
+                dt(2025, 1, 1, 13, 0),
+                False,
+                "Holiday at 13:00 (New Year's Day) (before opening)",
+            ),
+        ]
+        for test_dt, expected, desc in scenarios:
+            assert p.is_open(test_dt) == expected, f"Failed: {desc}"
 
     finally:
         set_holiday_service(original_service)
