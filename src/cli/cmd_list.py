@@ -245,6 +245,12 @@ CLI_COMMANDS = {
             "exclude_visited": ArgumentConfig(
                 action="store_true", default=False, help="Exclude visited onsens"
             ),
+            "min_hours_after": ArgumentConfig(
+                type=int,
+                required=False,
+                default=2,
+                help="Minimum hours onsen should be open after target time (0 to disable)",
+            ),
             "limit": ArgumentConfig(
                 type=int, required=False, help="Maximum number of recommendations"
             ),

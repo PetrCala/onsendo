@@ -2,7 +2,7 @@
 Onsen recommendation engine.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
@@ -19,12 +19,15 @@ class OnsenRecommendationEngine:
     def __init__(self, db_session: Session):
         self.db_session = db_session
 
-    def get_available_onsens(self, target_time: datetime) -> List[Onsen]:
+    def get_available_onsens(
+        self, target_time: datetime, min_hours_after: Optional[int] = None
+    ) -> List[Onsen]:
         """
         Get onsens that are open at the specified time.
 
         Args:
             target_time: The time to check availability for
+            min_hours_after: Minimum hours the onsen should be open after target_time (None to disable)
 
         Returns:
             List of available onsens
@@ -34,18 +37,21 @@ class OnsenRecommendationEngine:
         available_onsens = []
 
         for onsen in onsens:
-            if self._is_onsen_available(onsen, target_time):
+            if self._is_onsen_available(onsen, target_time, min_hours_after):
                 available_onsens.append(onsen)
 
         return available_onsens
 
-    def _is_onsen_available(self, onsen: Onsen, target_time: datetime) -> bool:
+    def _is_onsen_available(
+        self, onsen: Onsen, target_time: datetime, min_hours_after: Optional[int] = None
+    ) -> bool:
         """
         Check if an onsen is available at the specified time.
 
         Args:
             onsen: Onsen to check
             target_time: Time to check availability for
+            min_hours_after: Minimum hours the onsen should be open after target_time (None to disable)
 
         Returns:
             True if the onsen is available, False otherwise
@@ -56,6 +62,13 @@ class OnsenRecommendationEngine:
             if not usage_parsed.is_open(target_time, assume_unknown_closed=True):
                 return False
 
+            # Check if onsen is open for minimum hours after target time
+            if min_hours_after is not None:
+                if not self._is_onsen_open_for_minimum_hours(
+                    onsen, target_time, min_hours_after
+                ):
+                    return False
+
         # Check closed days
         if onsen.closed_days:
             closed_parsed = parse_closed_days(onsen.closed_days)
@@ -63,6 +76,48 @@ class OnsenRecommendationEngine:
                 return False
 
         return True
+
+    def _is_onsen_open_for_minimum_hours(
+        self, onsen: Onsen, target_time: datetime, min_hours: int
+    ) -> bool:
+        """
+        Check if an onsen is open for at least the specified number of hours after the target time.
+
+        Args:
+            onsen: Onsen to check
+            target_time: The time to check from
+            min_hours: Minimum hours the onsen should be open
+
+        Returns:
+            True if the onsen is open for at least min_hours after target_time
+        """
+        if not onsen.usage_time:
+            return False
+
+        usage_parsed = parse_usage_time(onsen.usage_time)
+
+        # Check each time window
+        for window in usage_parsed.windows:
+            if not window.applies_on(target_time):
+                continue
+
+            # If window has no end time, assume it's open long enough
+            if window.end_time is None:
+                return True
+
+            # Calculate end time of the window
+            window_end = datetime.combine(target_time.date(), window.end_time)
+            if window.end_next_day:
+                window_end = window_end + timedelta(days=1)
+
+            # Calculate target end time
+            target_end = target_time + timedelta(hours=min_hours)
+
+            # Check if window extends far enough
+            if window_end >= target_end:
+                return True
+
+        return False
 
     def get_unvisited_onsens(self, onsens: List[Onsen]) -> List[Onsen]:
         """
@@ -94,6 +149,7 @@ class OnsenRecommendationEngine:
         distance_category: str = "medium",
         exclude_closed: bool = True,
         exclude_visited: bool = False,
+        min_hours_after: Optional[int] = None,
         limit: Optional[int] = None,
     ) -> List[Tuple[Onsen, float, dict]]:
         """
@@ -105,6 +161,7 @@ class OnsenRecommendationEngine:
             distance_category: Distance category (very_close, close, medium, far)
             exclude_closed: Whether to exclude closed onsens
             exclude_visited: Whether to exclude visited onsens
+            min_hours_after: Minimum hours the onsen should be open after target_time (None to disable)
             limit: Maximum number of recommendations to return
 
         Returns:
@@ -118,7 +175,7 @@ class OnsenRecommendationEngine:
 
         # Filter by availability if requested
         if exclude_closed:
-            onsens = self.get_available_onsens(target_time)
+            onsens = self.get_available_onsens(target_time, min_hours_after)
 
         # Filter by visit history if requested
         if exclude_visited:
@@ -135,7 +192,7 @@ class OnsenRecommendationEngine:
             metadata = {
                 "distance_category": self._get_distance_category_name(distance),
                 "is_available": (
-                    self._is_onsen_available(onsen, target_time)
+                    self._is_onsen_available(onsen, target_time, min_hours_after)
                     if not exclude_closed
                     else True
                 ),
