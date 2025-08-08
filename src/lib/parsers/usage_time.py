@@ -122,12 +122,23 @@ class TimeWindow:
     notes: Optional[str] = None
 
     def applies_on(self, dt: datetime) -> bool:
-        if self.days_of_week is not None and dt.weekday() not in self.days_of_week:
-            # Check if it's a holiday and holidays are included
-            if self.includes_holidays and is_holiday(dt):
-                pass  # Holiday overrides day-of-week restriction
-            else:
-                return False
+        # Check if it's a holiday
+        is_holiday_date = is_holiday(dt)
+
+        # If it's a holiday and this window doesn't include holidays, it doesn't apply
+        if is_holiday_date and not self.includes_holidays:
+            return False
+
+        # Check if the day-of-week applies
+        day_applies = self.days_of_week is None or dt.weekday() in self.days_of_week
+
+        # If it's a holiday and holidays are included, it applies regardless of day-of-week
+        if is_holiday_date and self.includes_holidays:
+            day_applies = True
+
+        if not day_applies:
+            return False
+
         if self.month_ranges:
             if not any(r.includes(dt.month) for r in self.month_ranges):
                 return False
@@ -314,7 +325,7 @@ def extract_dow_set(segment: str) -> Tuple[Optional[Set[int]], bool]:
         weekend = WEEKEND_SET
         days = weekend if days is None else days.intersection(weekend)
     # Holidays
-    if "祝日" in segment or re.search(r"(^|[^\w])祝($|[^\w])", segment):
+    if "祝日" in segment or "祝" in segment:
         includes_holidays = True
         # Common shorthand: 日・祝 -> Sundays and holidays (restrict days to Sunday)
         if re.search(r"日\s*[・,、/]\s*祝", segment):
@@ -346,6 +357,18 @@ def _split_statements(text: str) -> List[str]:
 def _split_windows(segment: str) -> List[str]:
     # Split multiple windows using / or ／ or comma
     parts = re.split(r"\s*[／/，,]\s*", segment)
+
+    # If no splits found, try splitting on spaces when there are multiple time patterns
+    if len(parts) == 1 and "～" in segment:
+        # Look for patterns like "平日14:00～17:00 日・祝15:00～17:00"
+        # Split on spaces that separate different time windows
+        time_patterns = re.findall(
+            r"[^\s]*\d{1,2}:\d{2}[～~\-〜]\d{1,2}:\d{2}[^\s]*", segment
+        )
+        if len(time_patterns) > 1:
+            # Split on spaces that are between time patterns
+            parts = re.split(r"\s+(?=[^\s]*\d{1,2}:\d{2})", segment)
+
     return [p.strip() for p in parts if p.strip()]
 
 
