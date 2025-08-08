@@ -404,6 +404,66 @@ def extract_last_admission(segment: str) -> Optional[time]:
 
 
 def parse_usage_time(value: Optional[str]) -> UsageTimeParsed:
+    """
+    Parse a Japanese usage time string into a structured UsageTimeParsed object.
+
+    This function interprets a wide variety of Japanese time expressions for business hours,
+    including regular hours, seasonal hours, weekday/weekend/holiday variations, hotel check-in/out,
+    and special flags such as "closed", "inquiry required", or "reservation required".
+
+    Parameters
+    ----------
+    value : str or None
+        The raw usage time string (in Japanese) to parse. Can be None.
+
+    Returns
+    -------
+    UsageTimeParsed
+        An object containing the parsed and normalized usage time information, including
+        time windows, check-in/out times, and various flags.
+
+    Examples
+    --------
+    Basic single window:
+        >>> parse_usage_time("11:00～21:00").windows
+        [TimeWindow(start_time=datetime.time(11, 0), end_time=datetime.time(21, 0), ...)]
+
+    Multiple windows:
+        >>> parse_usage_time("6:30～14:00/15:00～22:30").windows
+        [TimeWindow(...), TimeWindow(...)]
+
+    Seasonal hours:
+        >>> parse_usage_time("(5～10月)6:00～11:50／14:00～22:50、(11～4月)6:30～11:50／14:00～22:50").windows
+        [TimeWindow(...), ...]
+
+    Weekday/weekend/holiday:
+        >>> parse_usage_time("平日14:00～17:00 日・祝15:00～17:00").windows
+        [TimeWindow(...), TimeWindow(...)]
+
+    Hotel check-in/out:
+        >>> p = parse_usage_time("IN15:00 OUT10:00")
+        >>> p.check_in_time
+        datetime.time(15, 0)
+        >>> p.check_out_time
+        datetime.time(10, 0)
+
+    Closed or unknown:
+        >>> parse_usage_time("休業中").is_closed
+        True
+        >>> parse_usage_time(None).unknown_or_non_time
+        True
+
+    Special flags:
+        >>> parse_usage_time("11:00～15:00(要問合せ)").requires_inquiry
+        True
+        >>> parse_usage_time("11:00～15:00(要予約)").requires_reservation
+        True
+
+    Notes
+    -----
+    - Holiday/weekend logic depends on the configured holiday service.
+    """
+
     raw = value
     normalized = normalize_text(value)
     result = UsageTimeParsed(raw=raw, normalized=normalized)
