@@ -224,16 +224,18 @@ def add_visit_interactive() -> None:
             "validator": validate_onsen_id,
             "processor": lambda x: int(x),
             "required": True,
-            "step_title": "Step 1: Select the onsen"
+            "step_title": "Step 1: Select the onsen",
         },
         # Step 2: Visit time
         {
             "name": "visit_time",
             "prompt": "Enter visit time (YYYY-MM-DD HH:MM) or press Enter for now: ",
             "validator": lambda x: not x or validate_datetime(x),
-            "processor": lambda x: datetime.now() if not x else datetime.strptime(x, "%Y-%m-%d %H:%M"),
+            "processor": lambda x: (
+                datetime.now() if not x else datetime.strptime(x, "%Y-%m-%d %H:%M")
+            ),
             "required": True,
-            "step_title": "Step 2: Visit time"
+            "step_title": "Step 2: Visit time",
         },
         # Step 3: Entry fee
         {
@@ -242,7 +244,7 @@ def add_visit_interactive() -> None:
             "validator": validate_integer,
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 3: Basic information"
+            "step_title": "Step 3: Basic information",
         },
         # Step 4: Stay length
         {
@@ -251,7 +253,7 @@ def add_visit_interactive() -> None:
             "validator": validate_integer,
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 3: Basic information"
+            "step_title": "Step 3: Basic information",
         },
         # Step 5: Travel time
         {
@@ -260,7 +262,7 @@ def add_visit_interactive() -> None:
             "validator": validate_integer,
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 3: Basic information"
+            "step_title": "Step 3: Basic information",
         },
         # Step 6: Accessibility rating
         {
@@ -269,7 +271,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 7: Cleanliness rating
         {
@@ -278,7 +280,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 8: Navigability rating
         {
@@ -287,7 +289,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 9: View rating
         {
@@ -296,7 +298,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 10: Smell intensity rating
         {
@@ -305,7 +307,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 11: Changing room cleanliness rating
         {
@@ -314,7 +316,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 12: Locker availability rating
         {
@@ -323,7 +325,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 13: Rest area rating
         {
@@ -332,7 +334,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 14: Food quality rating
         {
@@ -341,7 +343,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 15: Sauna rating
         {
@@ -350,7 +352,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 16: Outdoor bath rating
         {
@@ -359,7 +361,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 17: Energy level change
         {
@@ -368,7 +370,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 18: Hydration level
         {
@@ -377,7 +379,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 19: Atmosphere rating
         {
@@ -386,7 +388,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 20: Personal rating
         {
@@ -395,7 +397,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)"
+            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
         },
         # Step 21: Main bath temperature
         {
@@ -404,7 +406,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_float(x),
             "processor": lambda x: float(x) if x else None,
             "required": False,
-            "step_title": "Step 5: Temperatures (press Enter to skip)"
+            "step_title": "Step 5: Temperatures (press Enter to skip)",
         },
         # Step 22: Sauna temperature
         {
@@ -413,7 +415,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_float(x),
             "processor": lambda x: float(x) if x else None,
             "required": False,
-            "step_title": "Step 5: Temperatures (press Enter to skip)"
+            "step_title": "Step 5: Temperatures (press Enter to skip)",
         },
         # Step 23: Outdoor bath temperature
         {
@@ -422,7 +424,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_float(x),
             "processor": lambda x: float(x) if x else None,
             "required": False,
-            "step_title": "Step 5: Temperatures (press Enter to skip)"
+            "step_title": "Step 5: Temperatures (press Enter to skip)",
         },
         # Step 24: Outside temperature
         {
@@ -431,7 +433,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_float(x),
             "processor": lambda x: float(x) if x else None,
             "required": False,
-            "step_title": "Step 5: Temperatures (press Enter to skip)"
+            "step_title": "Step 5: Temperatures (press Enter to skip)",
         },
         # Step 25: Payment method
         {
@@ -440,7 +442,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,  # Any text is valid
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 26: Weather
         {
@@ -449,7 +451,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 27: Time of day
         {
@@ -458,7 +460,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 28: Visited with
         {
@@ -467,7 +469,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 29: Travel mode
         {
@@ -476,7 +478,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 30: Exercise type
         {
@@ -485,7 +487,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 31: Crowd level
         {
@@ -494,7 +496,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 32: Heart rate data
         {
@@ -503,7 +505,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 33: Main bath type
         {
@@ -512,7 +514,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 34: Main bath water type
         {
@@ -521,7 +523,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 35: Water color
         {
@@ -530,7 +532,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 36: Pre visit mood
         {
@@ -539,7 +541,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 37: Post visit mood
         {
@@ -548,7 +550,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
             "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)"
+            "step_title": "Step 6: Additional information (press Enter to skip)",
         },
         # Step 38: Exercise before onsen
         {
@@ -557,7 +559,7 @@ def add_visit_interactive() -> None:
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
             "required": False,
-            "step_title": "Step 7: Yes/No questions"
+            "step_title": "Step 7: Yes/No questions",
         },
         # Step 39: Had soap
         {
@@ -566,7 +568,7 @@ def add_visit_interactive() -> None:
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
             "required": False,
-            "step_title": "Step 7: Yes/No questions"
+            "step_title": "Step 7: Yes/No questions",
         },
         # Step 40: Had sauna
         {
@@ -575,7 +577,7 @@ def add_visit_interactive() -> None:
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
             "required": False,
-            "step_title": "Step 7: Yes/No questions"
+            "step_title": "Step 7: Yes/No questions",
         },
         # Step 41: Had outdoor bath
         {
@@ -584,7 +586,7 @@ def add_visit_interactive() -> None:
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
             "required": False,
-            "step_title": "Step 7: Yes/No questions"
+            "step_title": "Step 7: Yes/No questions",
         },
         # Step 42: Had rest area
         {
@@ -593,7 +595,7 @@ def add_visit_interactive() -> None:
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
             "required": False,
-            "step_title": "Step 7: Yes/No questions"
+            "step_title": "Step 7: Yes/No questions",
         },
         # Step 43: Had food service
         {
@@ -602,7 +604,7 @@ def add_visit_interactive() -> None:
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
             "required": False,
-            "step_title": "Step 7: Yes/No questions"
+            "step_title": "Step 7: Yes/No questions",
         },
         # Step 44: Massage chair available
         {
@@ -611,7 +613,7 @@ def add_visit_interactive() -> None:
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
             "required": False,
-            "step_title": "Step 7: Yes/No questions"
+            "step_title": "Step 7: Yes/No questions",
         },
         # Step 45: Sauna visited
         {
@@ -620,7 +622,7 @@ def add_visit_interactive() -> None:
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
             "required": False,
-            "step_title": "Step 7: Yes/No questions"
+            "step_title": "Step 7: Yes/No questions",
         },
         # Step 46: Sauna steam
         {
@@ -629,7 +631,7 @@ def add_visit_interactive() -> None:
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
             "required": False,
-            "step_title": "Step 7: Yes/No questions"
+            "step_title": "Step 7: Yes/No questions",
         },
         # Step 47: Outdoor bath visited
         {
@@ -638,7 +640,7 @@ def add_visit_interactive() -> None:
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
             "required": False,
-            "step_title": "Step 7: Yes/No questions"
+            "step_title": "Step 7: Yes/No questions",
         },
         # Step 48: Multi onsen day
         {
@@ -647,7 +649,7 @@ def add_visit_interactive() -> None:
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
             "required": False,
-            "step_title": "Step 7: Yes/No questions"
+            "step_title": "Step 7: Yes/No questions",
         },
         # Step 49: Exercise length minutes
         {
@@ -656,7 +658,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_integer(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 8: Additional details (press Enter to skip)"
+            "step_title": "Step 8: Additional details (press Enter to skip)",
         },
         # Step 50: Sauna duration minutes
         {
@@ -665,7 +667,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_integer(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 8: Additional details (press Enter to skip)"
+            "step_title": "Step 8: Additional details (press Enter to skip)",
         },
         # Step 51: Previous location
         {
@@ -674,7 +676,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_integer(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 8: Additional details (press Enter to skip)"
+            "step_title": "Step 8: Additional details (press Enter to skip)",
         },
         # Step 52: Next location
         {
@@ -683,7 +685,7 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_integer(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 8: Additional details (press Enter to skip)"
+            "step_title": "Step 8: Additional details (press Enter to skip)",
         },
         # Step 53: Visit order
         {
@@ -692,22 +694,22 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_integer(x),
             "processor": lambda x: int(x) if x else None,
             "required": False,
-            "step_title": "Step 8: Additional details (press Enter to skip)"
-        }
+            "step_title": "Step 8: Additional details (press Enter to skip)",
+        },
     ]
 
     # Execute the workflow
     current_step_index = 0
     last_step_title = None
-    
+
     while current_step_index < len(steps):
         step = steps[current_step_index]
-        
+
         # Print step title if it changed
         if step["step_title"] != last_step_title:
             print(f"\n{step['step_title']}")
             last_step_title = step["step_title"]
-        
+
         # Get input for this step
         while True:
             # Show current value if it exists
@@ -715,9 +717,9 @@ def add_visit_interactive() -> None:
             prompt = step["prompt"]
             if current_value is not None:
                 prompt = f"{prompt} (current: {current_value}) "
-            
+
             user_input = input(prompt).strip()
-            
+
             # Check for navigation commands
             if user_input.lower() in session.GO_BACK_COMMANDS:
                 steps_gone_back = session.go_back(1)
@@ -729,7 +731,7 @@ def add_visit_interactive() -> None:
                 else:
                     print("⚠️  Already at the beginning")
                     continue
-                    
+
             # Check for multiple step navigation
             if user_input.lower().startswith("back "):
                 try:
@@ -738,25 +740,31 @@ def add_visit_interactive() -> None:
                     if steps_gone_back > 0:
                         print(f"↩️  Went back {steps_gone_back} step(s)")
                         # Go back in the step index
-                        current_step_index = max(0, current_step_index - steps_gone_back)
+                        current_step_index = max(
+                            0, current_step_index - steps_gone_back
+                        )
                         break
                     else:
                         print("⚠️  Already at the beginning")
                         continue
                 except (ValueError, IndexError):
-                    print("⚠️  Invalid format. Use 'back' or 'back N' where N is a number")
+                    print(
+                        "⚠️  Invalid format. Use 'back' or 'back N' where N is a number"
+                    )
                     continue
-            
+
             # Validate input
             if step["validator"](user_input):
                 # Process the input
                 processed_value = step["processor"](user_input)
-                
+
                 # Store the value if it's not None
                 if processed_value is not None:
                     session.visit_data[step["name"]] = processed_value
-                    session.add_to_history(step["name"], processed_value, step["prompt"])
-                
+                    session.add_to_history(
+                        step["name"], processed_value, step["prompt"]
+                    )
+
                 # Move to next step
                 current_step_index += 1
                 break
