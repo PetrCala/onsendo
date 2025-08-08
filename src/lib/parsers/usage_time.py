@@ -130,6 +130,10 @@ class TimeWindow:
 
         # If days_of_week is None, it means "any day" (including holidays)
         if self.days_of_week is None:
+            # If includes_holidays=True but no specific days, it means "holidays only"
+            if self.includes_holidays:
+                if not is_holiday_date:
+                    return False
             # Only check month ranges
             if self.month_ranges:
                 if not any(r.includes(dt.month) for r in self.month_ranges):
