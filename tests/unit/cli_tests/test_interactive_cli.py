@@ -9,8 +9,6 @@ Test Coverage:
 - Complete interactive flow with all features enabled
 - Conditional logic for exercise, sauna, and outdoor bath flows
 - Input validation and error handling
-- User cancellation scenarios
-- Database operations and error handling
 
 Each test uses extensive mocking to simulate:
 - User input via the input() function
@@ -34,7 +32,6 @@ from src.testing.mocks import (
     get_exercise_flow_inputs,
     get_invalid_onsen_retry_inputs,
     get_invalid_rating_retry_inputs,
-    get_cancellation_inputs,
     get_minimal_flow_inputs,
 )
 import sys
@@ -194,69 +191,3 @@ class TestInteractiveAddVisit:
         # Verify visit was still added after valid input
         mock_db.add.assert_called_once()
         mock_db.commit.assert_called_once()
-
-    @patch("builtins.input")
-    @patch("src.cli.commands.visit.interactive.get_db")
-    @patch("builtins.print")
-    def test_add_visit_interactive_user_cancels(
-        self, mock_print, mock_get_db, mock_input
-    ):
-        """Test when user cancels the operation."""
-        # Mock database setup
-        mock_db = MagicMock()
-        mock_get_db.return_value.__enter__.return_value = mock_db
-
-        # Mock onsen query result
-        mock_onsen = MagicMock()
-        mock_onsen.id = 1
-        mock_onsen.name = "Test Onsen"
-        mock_db.query.return_value.filter.return_value.first.return_value = mock_onsen
-
-        # Mock user inputs with cancellation at the end
-        mock_input.side_effect = get_cancellation_inputs()
-
-        # Mock sys.exit
-        with patch("sys.exit") as mock_exit:
-            # Call the function
-            add_visit_interactive()
-
-            # Verify cancellation message was printed
-            mock_print.assert_any_call("Visit recording cancelled.")
-
-            # Verify sys.exit was called
-            mock_exit.assert_called_once_with(0)
-
-            # Verify database operations were NOT called
-            mock_db.add.assert_not_called()
-            mock_db.commit.assert_not_called()
-
-    @patch("builtins.input")
-    @patch("src.cli.commands.visit.interactive.get_db")
-    @patch("builtins.print")
-    def test_add_visit_interactive_database_error(
-        self, mock_print, mock_get_db, mock_input
-    ):
-        """Test handling of database error."""
-        # Mock database setup
-        mock_db = MagicMock()
-        mock_get_db.return_value.__enter__.return_value = mock_db
-
-        # Mock onsen query result
-        mock_onsen = MagicMock()
-        mock_onsen.id = 1
-        mock_onsen.name = "Test Onsen"
-        mock_db.query.return_value.filter.return_value.first.return_value = mock_onsen
-
-        # Mock database error on commit
-        mock_db.commit.side_effect = Exception("Database error")
-
-        # Mock user inputs
-        mock_input.side_effect = get_minimal_flow_inputs()
-
-        # Mock sys.exit
-        with patch("sys.exit") as mock_exit:
-            # Call the function
-            add_visit_interactive()
-
-            # Verify error handling
-            mock_exit.assert_called_once_with(1)

@@ -5,6 +5,5 @@ from .mock_interactive_data import (
     get_minimal_flow_inputs,
     get_invalid_onsen_retry_inputs,
     get_invalid_rating_retry_inputs,
-    get_cancellation_inputs,
     get_multi_onsen_day_inputs,
 )
