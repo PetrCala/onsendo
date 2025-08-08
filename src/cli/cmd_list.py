@@ -44,17 +44,7 @@ CLI_COMMANDS = {
         func=commands.fill_db,
         help="Fill the database with onsen data.",
         args={
-            "database_folder": ArgumentConfig(type=str, default=CONST.DATABASE_FOLDER),
-            "database_name": ArgumentConfig(
-                type=str,
-                default=CONST.DATABASE_NAME,
-                help=f"Database file name, including the .db extension. Default: {CONST.DATABASE_NAME}",
-            ),
-            "json_path": ArgumentConfig(
-                type=str,
-                required=True,
-                help="Full path to scraped onsen JSON (output of individual scraping). If provided, data will be imported from this file.",
-            ),
+            "json_path": ArgumentConfig(type=str, required=True),
         },
     ),
     "add-onsen": CommandConfig(

@@ -16,11 +16,11 @@ def fill_db(args: argparse.Namespace) -> None:
     """
     Scrape onsen data from the web and fill the database.
     """
-    file_path = os.path.join(args.database_folder, args.database_name)
-    database_url = f"sqlite:///{file_path}"
-
-    if not os.path.exists(file_path):
-        logger.error(f"Database file {file_path} does not exist!")
+    database_url = CONST.DATABASE_URL
+    if not os.path.exists(database_url):
+        logger.error(
+            f"Database file {database_url} does not exist! Run `init-db` first to create it."
+        )
         return
 
     with get_db(url=database_url) as db:
