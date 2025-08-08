@@ -157,6 +157,104 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    # Location management commands
+    "add-location": CommandConfig(
+        func=commands.add_location,
+        help="Add a new location for distance calculations.",
+        args={
+            "name": ArgumentConfig(type=str, required=True, help="Location name"),
+            "latitude": ArgumentConfig(
+                type=float, required=True, help="Latitude in decimal degrees"
+            ),
+            "longitude": ArgumentConfig(
+                type=float, required=True, help="Longitude in decimal degrees"
+            ),
+            "description": ArgumentConfig(
+                type=str, required=False, help="Optional description"
+            ),
+        },
+    ),
+    "add-location-interactive": CommandConfig(
+        func=lambda args: commands.add_location_interactive(),
+        help="Add a new location using interactive prompts.",
+        args={},
+    ),
+    "list-locations": CommandConfig(
+        func=commands.list_locations,
+        help="List all locations in the database.",
+        args={},
+    ),
+    "delete-location": CommandConfig(
+        func=commands.delete_location,
+        help="Delete a location from the database.",
+        args={
+            "identifier": ArgumentConfig(
+                type=str, required=True, help="Location ID or name"
+            ),
+            "force": ArgumentConfig(
+                action="store_true", help="Skip confirmation prompt"
+            ),
+        },
+    ),
+    "delete-location-interactive": CommandConfig(
+        func=lambda args: commands.delete_location_interactive(),
+        help="Delete a location using interactive prompts.",
+        args={},
+    ),
+    "modify-location": CommandConfig(
+        func=commands.modify_location,
+        help="Modify an existing location.",
+        args={
+            "identifier": ArgumentConfig(
+                type=str, required=True, help="Location ID or name"
+            ),
+            "name": ArgumentConfig(type=str, required=False, help="New location name"),
+            "latitude": ArgumentConfig(type=float, required=False, help="New latitude"),
+            "longitude": ArgumentConfig(
+                type=float, required=False, help="New longitude"
+            ),
+            "description": ArgumentConfig(
+                type=str, required=False, help="New description"
+            ),
+        },
+    ),
+    "modify-location-interactive": CommandConfig(
+        func=lambda args: commands.modify_location_interactive(),
+        help="Modify a location using interactive prompts.",
+        args={},
+    ),
+    # Recommendation commands
+    "recommend-onsen": CommandConfig(
+        func=commands.recommend_onsen,
+        help="Get onsen recommendations based on location and criteria.",
+        args={
+            "location": ArgumentConfig(
+                type=str, required=True, help="Location ID or name"
+            ),
+            "time": ArgumentConfig(
+                type=str, required=False, help="Target time (YYYY-MM-DD HH:MM)"
+            ),
+            "distance": ArgumentConfig(
+                type=str,
+                default="medium",
+                help="Distance category (very_close, close, medium, far)",
+            ),
+            "exclude_closed": ArgumentConfig(
+                action="store_true", default=True, help="Exclude closed onsens"
+            ),
+            "exclude_visited": ArgumentConfig(
+                action="store_true", default=False, help="Exclude visited onsens"
+            ),
+            "limit": ArgumentConfig(
+                type=int, required=False, help="Maximum number of recommendations"
+            ),
+        },
+    ),
+    "recommend-onsen-interactive": CommandConfig(
+        func=lambda args: commands.recommend_onsen_interactive(),
+        help="Get onsen recommendations using interactive prompts.",
+        args={},
+    ),
 }
 
 

@@ -4,6 +4,26 @@ from sqlalchemy.orm import declarative_base, relationship
 Base = declarative_base()
 
 
+class Location(Base):
+    """
+    The Location table. Stores user-defined locations for distance calculations.
+
+    Columns:
+    - id: primary key
+    - name: name of the location
+    - latitude, longitude: map coordinates
+    - description: optional description of the location
+    """
+
+    __tablename__ = "locations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False, unique=True)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    description = Column(String)
+
+
 class Onsen(Base):
     """
     The Onsen table. Stores info about each hot spring.
