@@ -243,7 +243,7 @@ CLI_COMMANDS = {
                 action="store_true", default=True, help="Exclude closed onsens"
             ),
             "exclude_visited": ArgumentConfig(
-                action="store_true", default=False, help="Exclude visited onsens"
+                action="store_true", default=True, help="Exclude visited onsens"
             ),
             "min_hours_after": ArgumentConfig(
                 type=int,

@@ -131,7 +131,7 @@ def recommend_onsen_interactive() -> None:
             input("Exclude closed onsens? (y/n, default: y): ").strip().lower() != "n"
         )
         exclude_visited = (
-            input("Exclude visited onsens? (y/n, default: n): ").strip().lower() == "y"
+            input("Exclude visited onsens? (y/n, default: y): ").strip().lower() != "n"
         )
 
         # Get minimum hours after target time
