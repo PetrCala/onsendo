@@ -7,6 +7,8 @@ import requests
 from typing import List, Optional, Set, Tuple, Dict
 from abc import ABC, abstractmethod
 
+from src.const import CONST
+
 
 # -------------------------------
 # Holiday Service
@@ -25,7 +27,7 @@ class HolidayService(ABC):
 class JapanHolidayService(HolidayService):
     """Service to fetch Japanese holidays from the internet."""
 
-    def __init__(self, base_url: str = "https://holidays-jp.github.io/api/v1"):
+    def __init__(self, base_url: str = CONST.HOLIDAY_SERVICE_URL):
         self.base_url = base_url
 
     def get_holidays(self, year: int) -> Set[date]:
