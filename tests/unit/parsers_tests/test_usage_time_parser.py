@@ -1,6 +1,13 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from src.lib.parsers import parse_usage_time
+from src.lib.parsers.usage_time import (
+    MockHolidayService,
+    JapanHolidayService,
+    set_holiday_service,
+    get_holiday_service,
+    is_holiday,
+)
 
 
 def dt(y, m, d, h, mi):
@@ -50,16 +57,16 @@ def test_seasonal():
 
 def test_weekday_weekend():
     p = parse_usage_time("平日14:00～17:00 日・祝15:00～17:00")
-    # Friday
-    assert p.is_open(dt(2025, 1, 3, 16, 0))
-
-    # Sunday 14:00 closed, 15:00 open
-    assert not p.is_open(dt(2025, 1, 5, 14, 0))
-    assert p.is_open(dt(2025, 1, 5, 16, 0))
-
-    # Holiday 14:00 closed, 15:00 open
-    assert not p.is_open(dt(2025, 1, 6, 14, 0))
-    assert p.is_open(dt(2025, 1, 6, 15, 0))
+    scenarios = [
+        # (datetime, expected_is_open, description)
+        (dt(2025, 1, 3, 16, 0), True, "Friday 16:00 open"),
+        (dt(2025, 1, 5, 14, 0), False, "Sunday 14:00 closed"),
+        (dt(2025, 1, 5, 16, 0), True, "Sunday 16:00 open"),
+        (dt(2025, 1, 1, 14, 0), False, "Holiday 14:00 closed"),
+        (dt(2025, 1, 1, 15, 0), True, "Holiday 15:00 open"),
+    ]
+    for when, expected, desc in scenarios:
+        assert p.is_open(when) == expected, desc
 
 
 def test_hotel_in_out():
@@ -77,3 +84,166 @@ def test_closed_and_inquiry():
 def test_unknown():
     p = parse_usage_time(None)
     assert p.unknown_or_non_time
+
+
+# Holiday-related tests
+def test_mock_holiday_service():
+    """Test the MockHolidayService class."""
+    # Create mock holidays for 2025
+    mock_holidays = {
+        2025: {
+            date(2025, 1, 1),  # New Year's Day
+            date(2025, 1, 6),  # Coming of Age Day
+            date(2025, 2, 11),  # National Foundation Day
+        }
+    }
+
+    service = MockHolidayService(mock_holidays)
+
+    # Test holiday detection
+    assert service.get_holidays(2025) == mock_holidays[2025]
+    assert service.get_holidays(2024) == set()  # No holidays for 2024
+    assert service.get_holidays(2026) == set()  # No holidays for 2026
+
+
+def test_holiday_service_global():
+    """Test the global holiday service functionality."""
+    # Set up mock service
+    mock_holidays = {2025: {date(2025, 1, 1), date(2025, 1, 6)}}
+    mock_service = MockHolidayService(mock_holidays)
+
+    # Store original service
+    original_service = get_holiday_service()
+
+    try:
+        # Set mock service
+        set_holiday_service(mock_service)
+
+        # Test holiday detection
+        assert is_holiday(dt(2025, 1, 1, 12, 0))  # New Year's Day
+        assert is_holiday(dt(2025, 1, 6, 12, 0))  # Coming of Age Day
+        assert not is_holiday(dt(2025, 1, 2, 12, 0))  # Regular day
+        assert not is_holiday(dt(2025, 2, 1, 12, 0))  # Regular day
+
+    finally:
+        # Restore original service
+        set_holiday_service(original_service)
+
+
+def test_holiday_aware_time_windows():
+    """Test that time windows with holiday markers work correctly."""
+    # Set up mock holidays
+    mock_holidays = {
+        2025: {
+            date(2025, 1, 1),
+            date(2025, 1, 6),
+        }  # New Year's Day and Coming of Age Day
+    }
+    mock_service = MockHolidayService(mock_holidays)
+
+    # Store original service
+    original_service = get_holiday_service()
+
+    try:
+        set_holiday_service(mock_service)
+
+        # Test "日・祝15:00～17:00" - should be open on Sundays and holidays
+        p = parse_usage_time("日・祝15:00～17:00")
+
+        # Sunday (2025-01-05 is a Sunday)
+        assert p.is_open(dt(2025, 1, 5, 16, 0))  # Sunday at 16:00
+        assert not p.is_open(dt(2025, 1, 5, 14, 0))  # Sunday at 14:00 (before opening)
+
+        # Holiday (2025-01-01 is New Year's Day)
+        assert p.is_open(dt(2025, 1, 1, 16, 0))  # Holiday at 16:00
+        assert not p.is_open(dt(2025, 1, 1, 14, 0))  # Holiday at 14:00 (before opening)
+
+        # Regular weekday (2025-01-02 is a Thursday)
+        assert not p.is_open(dt(2025, 1, 2, 16, 0))  # Thursday at 16:00
+
+        # Regular Saturday (2025-01-04 is a Saturday)
+        assert not p.is_open(dt(2025, 1, 4, 16, 0))  # Saturday at 16:00
+
+    finally:
+        set_holiday_service(original_service)
+
+
+def test_holiday_only_windows():
+    """Test time windows that are only open on holidays."""
+    # Set up mock holidays
+    mock_holidays = {2025: {date(2025, 1, 1), date(2025, 1, 6)}}
+    mock_service = MockHolidayService(mock_holidays)
+
+    # Store original service
+    original_service = get_holiday_service()
+
+    try:
+        set_holiday_service(mock_service)
+
+        # Test "祝15:00～17:00" - should only be open on holidays
+        p = parse_usage_time("祝15:00～17:00")
+
+        # Holiday (2025-01-01 is New Year's Day)
+        assert p.is_open(dt(2025, 1, 1, 16, 0))  # Holiday at 16:00
+        assert not p.is_open(dt(2025, 1, 1, 14, 0))  # Holiday at 14:00 (before opening)
+
+        # Regular weekday (2025-01-02 is a Thursday)
+        assert not p.is_open(dt(2025, 1, 2, 16, 0))  # Thursday at 16:00
+
+        # Sunday (2025-01-05 is a Sunday, but not a holiday)
+        assert not p.is_open(dt(2025, 1, 5, 16, 0))  # Sunday at 16:00
+
+    finally:
+        set_holiday_service(original_service)
+
+
+def test_weekday_and_holiday_windows():
+    """Test time windows that are open on weekdays and holidays."""
+    # Set up mock holidays
+    mock_holidays = {2025: {date(2025, 1, 1), date(2025, 1, 6)}}
+    mock_service = MockHolidayService(mock_holidays)
+
+    # Store original service
+    original_service = get_holiday_service()
+
+    try:
+        set_holiday_service(mock_service)
+
+        # Test "平日14:00～17:00 日・祝15:00～17:00" - weekdays 14-17, Sundays/holidays 15-17
+        p = parse_usage_time("平日14:00～17:00 日・祝15:00～17:00")
+
+        # Regular weekday (2025-01-02 is a Thursday)
+        assert p.is_open(dt(2025, 1, 2, 16, 0))  # Thursday at 16:00
+        assert p.is_open(dt(2025, 1, 2, 14, 30))  # Thursday at 14:30
+        assert not p.is_open(
+            dt(2025, 1, 2, 13, 0)
+        )  # Thursday at 13:00 (before opening)
+
+        # Holiday (2025-01-01 is New Year's Day)
+        assert p.is_open(dt(2025, 1, 1, 16, 0))  # Holiday at 16:00
+        assert not p.is_open(
+            dt(2025, 1, 1, 14, 30)
+        )  # Holiday at 14:30 (before holiday opening)
+        assert not p.is_open(dt(2025, 1, 1, 13, 0))  # Holiday at 13:00 (before opening)
+
+        # Sunday (2025-01-05 is a Sunday, but not a holiday)
+        assert p.is_open(dt(2025, 1, 5, 16, 0))  # Sunday at 16:00
+        assert not p.is_open(
+            dt(2025, 1, 5, 14, 30)
+        )  # Sunday at 14:30 (before Sunday opening)
+
+        # Saturday (2025-01-04 is a Saturday)
+        assert not p.is_open(dt(2025, 1, 4, 16, 0))  # Saturday at 16:00
+
+    finally:
+        set_holiday_service(original_service)
+
+
+def test_japan_holiday_service_initialization():
+    """Test that JapanHolidayService can be initialized."""
+    service = JapanHolidayService()
+    assert service.base_url == "https://holidays-jp.github.io/api/v1"
+
+    # Test with custom URL
+    custom_service = JapanHolidayService("https://custom-url.com")
+    assert custom_service.base_url == "https://custom-url.com"

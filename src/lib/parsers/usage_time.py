@@ -1,9 +1,89 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, time
+from datetime import datetime, time, date
 import re
-from typing import List, Optional, Set, Tuple
+import requests
+from typing import List, Optional, Set, Tuple, Dict
+from abc import ABC, abstractmethod
+
+
+# -------------------------------
+# Holiday Service
+# -------------------------------
+
+
+class HolidayService(ABC):
+    """Abstract base class for holiday services."""
+
+    @abstractmethod
+    def get_holidays(self, year: int) -> Set[date]:
+        """Return a set of holiday dates for the given year."""
+        pass
+
+
+class JapanHolidayService(HolidayService):
+    """Service to fetch Japanese holidays from the internet."""
+
+    def __init__(self, base_url: str = "https://holidays-jp.github.io/api/v1"):
+        self.base_url = base_url
+
+    def get_holidays(self, year: int) -> Set[date]:
+        """Fetch Japanese holidays for the given year from the internet."""
+        try:
+            url = f"{self.base_url}/{year}/date.json"
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+
+            holidays_data = response.json()
+            holidays = set()
+
+            for holiday_date_str in holidays_data.keys():
+                # Parse date string (format: "2025-01-01")
+                holiday_date = datetime.strptime(holiday_date_str, "%Y-%m-%d").date()
+                holidays.add(holiday_date)
+
+            return holidays
+        except Exception as e:
+            # Log error and return empty set as fallback
+            print(f"Warning: Failed to fetch holidays for {year}: {e}")
+            return set()
+
+
+class MockHolidayService(HolidayService):
+    """Mock holiday service for testing."""
+
+    def __init__(self, holidays: Optional[Dict[int, Set[date]]] = None):
+        self.holidays = holidays or {}
+
+    def get_holidays(self, year: int) -> Set[date]:
+        """Return mock holidays for the given year."""
+        return self.holidays.get(year, set())
+
+
+# Global holiday service instance
+_holiday_service: Optional[HolidayService] = None
+
+
+def get_holiday_service() -> HolidayService:
+    """Get the global holiday service instance."""
+    global _holiday_service
+    if _holiday_service is None:
+        _holiday_service = JapanHolidayService()
+    return _holiday_service
+
+
+def set_holiday_service(service: HolidayService) -> None:
+    """Set the global holiday service instance (useful for testing)."""
+    global _holiday_service
+    _holiday_service = service
+
+
+def is_holiday(dt: datetime) -> bool:
+    """Check if the given datetime is a holiday."""
+    holiday_service = get_holiday_service()
+    holidays = holiday_service.get_holidays(dt.year)
+    return dt.date() in holidays
 
 
 # -------------------------------
@@ -43,7 +123,11 @@ class TimeWindow:
 
     def applies_on(self, dt: datetime) -> bool:
         if self.days_of_week is not None and dt.weekday() not in self.days_of_week:
-            return False
+            # Check if it's a holiday and holidays are included
+            if self.includes_holidays and is_holiday(dt):
+                pass  # Holiday overrides day-of-week restriction
+            else:
+                return False
         if self.month_ranges:
             if not any(r.includes(dt.month) for r in self.month_ranges):
                 return False
@@ -484,4 +568,10 @@ __all__ = [
     "TimeWindow",
     "UsageTimeParsed",
     "parse_usage_time",
+    "HolidayService",
+    "JapanHolidayService",
+    "MockHolidayService",
+    "get_holiday_service",
+    "set_holiday_service",
+    "is_holiday",
 ]
