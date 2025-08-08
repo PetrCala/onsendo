@@ -215,58 +215,6 @@ def add_visit_interactive() -> None:
         except ValueError:
             return False
 
-    # Helper function to get input with navigation support
-    def get_input_with_nav(
-        prompt: str,
-        validator: Callable,
-        field_name: str,
-        allow_empty: bool = True,
-        processor: Callable = None,
-    ) -> Optional[Any]:
-        """Get input with navigation support and processing."""
-        while True:
-            result = session.get_valid_input_with_navigation(
-                prompt, validator, field_name
-            )
-            if result is None:  # Navigation occurred
-                return None
-
-            if not result and allow_empty:
-                return None
-
-            if processor:
-                return processor(result)
-            return result
-
-    # Helper function to get simple text input
-    def get_text_input(prompt: str, field_name: str) -> Optional[str]:
-        """Get simple text input with navigation support."""
-        return session.get_simple_input_with_navigation(
-            prompt, field_name, allow_empty=True
-        )
-
-    # Helper function to get yes/no input
-    def get_yes_no_input(prompt: str, field_name: str) -> Optional[bool]:
-        """Get yes/no input with navigation support."""
-        while True:
-            result = session.get_valid_input_with_navigation(
-                prompt, validate_yes_no, field_name
-            )
-            if result is None:  # Navigation occurred
-                return None
-
-            return result.lower() in ["y", "yes"]
-
-    # Helper function to store data and handle navigation
-    def store_data(field_name: str, value: Any, prompt: str) -> bool:
-        """Store data and handle navigation. Returns True if navigation occurred."""
-        if value is None:  # Navigation occurred
-            return True
-
-        session.visit_data[field_name] = value
-        session.add_to_history(field_name, value, prompt)
-        return False
-
     steps = [
         {
             "name": "onsen_id",
