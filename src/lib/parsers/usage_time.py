@@ -125,15 +125,23 @@ class TimeWindow:
         # Check if it's a holiday
         is_holiday_date = is_holiday(dt)
 
-        # If it's a holiday and this window doesn't include holidays, it doesn't apply
-        if is_holiday_date and not self.includes_holidays:
-            return False
-
         # Check if the day-of-week applies
         day_applies = self.days_of_week is None or dt.weekday() in self.days_of_week
 
-        # If it's a holiday and holidays are included, it applies regardless of day-of-week
-        if is_holiday_date and self.includes_holidays:
+        # If days_of_week is None, it means "any day" (including holidays)
+        if self.days_of_week is None:
+            # Only check month ranges
+            if self.month_ranges:
+                if not any(r.includes(dt.month) for r in self.month_ranges):
+                    return False
+            return True
+
+        # If days_of_week is specified, handle holiday logic
+        if is_holiday_date:
+            # If it's a holiday and this window doesn't include holidays, it doesn't apply
+            if not self.includes_holidays:
+                return False
+            # If it's a holiday and holidays are included, it applies regardless of day-of-week
             day_applies = True
 
         if not day_applies:
