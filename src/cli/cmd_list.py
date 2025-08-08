@@ -8,7 +8,10 @@ import argparse
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional
 from src.const import CONST
-import src.cli.commands as commands
+import src.cli.commands.location as location_commands
+import src.cli.commands.visit as visit_commands
+import src.cli.commands.onsen as onsen_commands
+import src.cli.commands.system as system_commands
 
 
 @dataclass
@@ -21,6 +24,7 @@ class ArgumentConfig:
     help: Optional[str] = None
     action: Optional[str] = None
     positional: bool = False
+    short: Optional[str] = None
 
 
 @dataclass
@@ -32,55 +36,85 @@ class CommandConfig:
     args: Dict[str, ArgumentConfig]
 
 
-# Define all CLI commands
+# Define all CLI commands with new grouped structure
 CLI_COMMANDS = {
-    "init-db": CommandConfig(
-        func=commands.init_db,
-        help="Initialize the database.",
+    # Location commands
+    "location-add": CommandConfig(
+        func=location_commands.add_location,
+        help="Add a new location for distance calculations.",
         args={
-            "force": ArgumentConfig(action="store_true"),
-        },
-    ),
-    "print-onsen-summary": CommandConfig(
-        func=commands.print_onsen_summary,
-        help="Print a summary for an onsen by ID or ban number.",
-        args={
-            "onsen_id": ArgumentConfig(type=int, required=False, help="Onsen ID"),
-            "ban_number": ArgumentConfig(
-                type=str, required=False, help="Onsen BAN number"
+            "no_interactive": ArgumentConfig(
+                action="store_true",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
             ),
-            "name": ArgumentConfig(
-                type=str, required=False, help="Onsen name (exact match)"
+            "name": ArgumentConfig(type=str, required=False, help="Location name"),
+            "latitude": ArgumentConfig(
+                type=float, required=False, help="Latitude in decimal degrees"
+            ),
+            "longitude": ArgumentConfig(
+                type=float, required=False, help="Longitude in decimal degrees"
+            ),
+            "description": ArgumentConfig(
+                type=str, required=False, help="Optional description"
             ),
         },
     ),
-    "fill-db": CommandConfig(
-        func=commands.fill_db,
-        help="Fill the database with onsen data.",
+    "location-list": CommandConfig(
+        func=location_commands.list_locations,
+        help="List all locations in the database.",
+        args={},
+    ),
+    "location-delete": CommandConfig(
+        func=location_commands.delete_location,
+        help="Delete a location from the database.",
         args={
-            "json_path": ArgumentConfig(type=str, required=True),
+            "no_interactive": ArgumentConfig(
+                action="store_true",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
+            ),
+            "identifier": ArgumentConfig(
+                type=str, required=False, help="Location ID or name"
+            ),
+            "force": ArgumentConfig(
+                action="store_true", help="Skip confirmation prompt"
+            ),
         },
     ),
-    "add-onsen": CommandConfig(
-        func=commands.add_onsen,
-        help="Add a new onsen.",
+    "location-modify": CommandConfig(
+        func=location_commands.modify_location,
+        help="Modify an existing location.",
         args={
-            "ban_number": ArgumentConfig(type=str, required=True),
-            "name": ArgumentConfig(type=str, required=True),
-            "address": ArgumentConfig(type=str, default=""),
+            "no_interactive": ArgumentConfig(
+                action="store_true",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
+            ),
+            "identifier": ArgumentConfig(
+                type=str, required=False, help="Location ID or name"
+            ),
+            "name": ArgumentConfig(type=str, required=False, help="New location name"),
+            "latitude": ArgumentConfig(type=float, required=False, help="New latitude"),
+            "longitude": ArgumentConfig(
+                type=float, required=False, help="New longitude"
+            ),
+            "description": ArgumentConfig(
+                type=str, required=False, help="New description"
+            ),
         },
     ),
-    "add-visit": CommandConfig(
-        func=commands.add_visit,
+    # Visit commands
+    "visit-add": CommandConfig(
+        func=visit_commands.add_visit,
         help="Add a new onsen visit.",
         args={
-            # Interactive mode flag
-            "interactive": ArgumentConfig(
-                action="store_true", help="Run in interactive mode"
+            "no_interactive": ArgumentConfig(
+                action="store_true",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
             ),
-            # Required fields (only required when not in interactive mode)
             "onsen_id": ArgumentConfig(type=int, required=False),
-            # Integer fields
             "entry_fee_yen": ArgumentConfig(type=int, default=0),
             "stay_length_minutes": ArgumentConfig(type=int, default=0),
             "travel_time_minutes": ArgumentConfig(type=int, default=0),
@@ -107,9 +141,7 @@ CLI_COMMANDS = {
             "visit_order": ArgumentConfig(type=int, default=0),
             "atmosphere_rating": ArgumentConfig(type=int, default=0),
             "personal_rating": ArgumentConfig(type=int, default=0),
-            # Float fields
             "temperature_outside_celsius": ArgumentConfig(type=float, default=0),
-            # String fields
             "payment_method": ArgumentConfig(type=str, default=""),
             "weather": ArgumentConfig(type=str, default=""),
             "time_of_day": ArgumentConfig(type=str, default=""),
@@ -123,9 +155,7 @@ CLI_COMMANDS = {
             "water_color": ArgumentConfig(type=str, default=""),
             "pre_visit_mood": ArgumentConfig(type=str, default=""),
             "post_visit_mood": ArgumentConfig(type=str, default=""),
-            # Special fields
             "visit_time": ArgumentConfig(help="YYYY-MM-DD HH:MM", default=None),
-            # Boolean fields
             "excercise_before_onsen": ArgumentConfig(action="store_true"),
             "had_soap": ArgumentConfig(action="store_true"),
             "had_sauna": ArgumentConfig(action="store_true"),
@@ -139,98 +169,85 @@ CLI_COMMANDS = {
             "multi_onsen_day": ArgumentConfig(action="store_true"),
         },
     ),
-    "add-visit-interactive": CommandConfig(
-        func=lambda args: commands.add_visit_interactive(),
-        help="Add a new onsen visit using an interactive questionnaire.",
+    "visit-list": CommandConfig(
+        func=visit_commands.list_visits,
+        help="List all visits in the database.",
         args={},
     ),
-    "scrape-onsen-data": CommandConfig(
-        func=commands.scrape_onsen_data,
-        help="Scrape onsen data from the web.",
+    "visit-delete": CommandConfig(
+        func=visit_commands.delete_visit,
+        help="Delete a visit from the database.",
         args={
-            "fetch_mapping_only": ArgumentConfig(
+            "no_interactive": ArgumentConfig(
                 action="store_true",
-                help="Only fetch the onsen mapping (list of all onsens), skip individual scraping",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
             ),
-            "scrape_individual_only": ArgumentConfig(
-                action="store_true",
-                help="Only scrape individual onsen pages, skip fetching the mapping (requires existing mapping file)",
-            ),
-        },
-    ),
-    # Location management commands
-    "add-location": CommandConfig(
-        func=commands.add_location,
-        help="Add a new location for distance calculations.",
-        args={
-            "name": ArgumentConfig(type=str, required=True, help="Location name"),
-            "latitude": ArgumentConfig(
-                type=float, required=True, help="Latitude in decimal degrees"
-            ),
-            "longitude": ArgumentConfig(
-                type=float, required=True, help="Longitude in decimal degrees"
-            ),
-            "description": ArgumentConfig(
-                type=str, required=False, help="Optional description"
-            ),
-        },
-    ),
-    "add-location-interactive": CommandConfig(
-        func=lambda args: commands.add_location_interactive(),
-        help="Add a new location using interactive prompts.",
-        args={},
-    ),
-    "list-locations": CommandConfig(
-        func=commands.list_locations,
-        help="List all locations in the database.",
-        args={},
-    ),
-    "delete-location": CommandConfig(
-        func=commands.delete_location,
-        help="Delete a location from the database.",
-        args={
-            "identifier": ArgumentConfig(
-                type=str, required=True, help="Location ID or name"
-            ),
+            "visit_id": ArgumentConfig(type=int, required=False, help="Visit ID"),
             "force": ArgumentConfig(
                 action="store_true", help="Skip confirmation prompt"
             ),
         },
     ),
-    "delete-location-interactive": CommandConfig(
-        func=lambda args: commands.delete_location_interactive(),
-        help="Delete a location using interactive prompts.",
-        args={},
-    ),
-    "modify-location": CommandConfig(
-        func=commands.modify_location,
-        help="Modify an existing location.",
+    "visit-modify": CommandConfig(
+        func=visit_commands.modify_visit,
+        help="Modify an existing visit.",
         args={
-            "identifier": ArgumentConfig(
-                type=str, required=True, help="Location ID or name"
+            "no_interactive": ArgumentConfig(
+                action="store_true",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
             ),
-            "name": ArgumentConfig(type=str, required=False, help="New location name"),
-            "latitude": ArgumentConfig(type=float, required=False, help="New latitude"),
-            "longitude": ArgumentConfig(
-                type=float, required=False, help="New longitude"
+            "visit_id": ArgumentConfig(type=int, required=False, help="Visit ID"),
+            "entry_fee_yen": ArgumentConfig(
+                type=int, required=False, help="New entry fee"
             ),
-            "description": ArgumentConfig(
-                type=str, required=False, help="New description"
+            "stay_length_minutes": ArgumentConfig(
+                type=int, required=False, help="New stay length"
+            ),
+            "personal_rating": ArgumentConfig(
+                type=int, required=False, help="New personal rating (1-10)"
+            ),
+            "weather": ArgumentConfig(type=str, required=False, help="New weather"),
+            "travel_mode": ArgumentConfig(
+                type=str, required=False, help="New travel mode"
             ),
         },
     ),
-    "modify-location-interactive": CommandConfig(
-        func=lambda args: commands.modify_location_interactive(),
-        help="Modify a location using interactive prompts.",
-        args={},
+    # Onsen commands
+    "onsen-add": CommandConfig(
+        func=onsen_commands.add_onsen,
+        help="Add a new onsen.",
+        args={
+            "ban_number": ArgumentConfig(type=str, required=True),
+            "name": ArgumentConfig(type=str, required=True),
+            "address": ArgumentConfig(type=str, default=""),
+        },
     ),
-    # Recommendation commands
-    "recommend-onsen": CommandConfig(
-        func=commands.recommend_onsen,
+    "onsen-print-summary": CommandConfig(
+        func=onsen_commands.print_summary,
+        help="Print a summary for an onsen by ID or ban number.",
+        args={
+            "onsen_id": ArgumentConfig(type=int, required=False, help="Onsen ID"),
+            "ban_number": ArgumentConfig(
+                type=str, required=False, help="Onsen BAN number"
+            ),
+            "name": ArgumentConfig(
+                type=str, required=False, help="Onsen name (exact match)"
+            ),
+        },
+    ),
+    "onsen-recommend": CommandConfig(
+        func=onsen_commands.recommend_onsen,
         help="Get onsen recommendations based on location and criteria.",
         args={
+            "no_interactive": ArgumentConfig(
+                action="store_true",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
+            ),
             "location": ArgumentConfig(
-                type=str, required=True, help="Location ID or name"
+                type=str, required=False, help="Location ID or name"
             ),
             "time": ArgumentConfig(
                 type=str, required=False, help="Target time (YYYY-MM-DD HH:MM)"
@@ -257,13 +274,37 @@ CLI_COMMANDS = {
             ),
         },
     ),
-    "recommend-onsen-interactive": CommandConfig(
-        func=lambda args: commands.recommend_onsen_interactive(),
-        help="Get onsen recommendations using interactive prompts.",
-        args={},
+    "onsen-scrape-data": CommandConfig(
+        func=onsen_commands.scrape_onsen_data,
+        help="Scrape onsen data from the web.",
+        args={
+            "fetch_mapping_only": ArgumentConfig(
+                action="store_true",
+                help="Only fetch the onsen mapping (list of all onsens), skip individual scraping",
+            ),
+            "scrape_individual_only": ArgumentConfig(
+                action="store_true",
+                help="Only scrape individual onsen pages, skip fetching the mapping (requires existing mapping file)",
+            ),
+        },
+    ),
+    # System commands
+    "init-db": CommandConfig(
+        func=system_commands.init_db,
+        help="Initialize the database.",
+        args={
+            "force": ArgumentConfig(action="store_true"),
+        },
+    ),
+    "fill-db": CommandConfig(
+        func=system_commands.fill_db,
+        help="Fill the database with onsen data.",
+        args={
+            "json_path": ArgumentConfig(type=str, required=True),
+        },
     ),
     "calculate-milestones": CommandConfig(
-        func=commands.calculate_milestones,
+        func=system_commands.calculate_milestones,
         help="Calculate distance milestones for a location based on onsen distribution.",
         args={
             "location_identifier": ArgumentConfig(

@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 
 from loguru import logger
 
-from src.cli.commands.scrape_onsen_data.scraper import (
+from src.cli.commands.onsen.scrape_data.scraper import (
     setup_selenium_driver,
     extract_all_onsen_mapping,
     scrape_onsen_page_with_selenium,
@@ -117,7 +117,7 @@ def test_data_mapper_integration():
     print("\nTesting data mapper integration...")
 
     try:
-        from src.cli.commands.scrape_onsen_data.data_mapper import (
+        from src.cli.commands.onsen.scrape_data.data_mapper import (
             map_scraped_data_to_onsen_model,
             get_mapping_summary,
         )

@@ -1,5 +1,5 @@
 """
-Add location command.
+Add location command with interactive support.
 """
 
 import argparse
@@ -10,6 +10,10 @@ from src.const import CONST
 
 def add_location(args: argparse.Namespace) -> None:
     """Add a new location to the database."""
+    if not hasattr(args, "no_interactive") or not args.no_interactive:
+        add_location_interactive()
+        return
+
     with get_db(url=CONST.DATABASE_URL) as db:
         # Check if location with this name already exists
         existing = db.query(Location).filter(Location.name == args.name).first()
@@ -74,5 +78,6 @@ def add_location_interactive() -> None:
     args.latitude = latitude
     args.longitude = longitude
     args.description = description if description else None
+    args.no_interactive = True  # Prevent recursion
 
     add_location(args)

@@ -18,7 +18,7 @@ def list_locations(args: argparse.Namespace) -> None:
             return
 
         print(f"Found {len(locations)} location(s):")
-        print()
+        print("-" * 80)
 
         for location in locations:
             print(f"ID: {location.id}")
@@ -26,4 +26,4 @@ def list_locations(args: argparse.Namespace) -> None:
             print(f"Coordinates: {location.latitude}, {location.longitude}")
             if location.description:
                 print(f"Description: {location.description}")
-            print("-" * 40)
+            print("-" * 80)

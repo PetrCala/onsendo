@@ -209,11 +209,11 @@ def create_mock_table_element() -> Mock:
 def mock_selenium_patch():
     """Patch Selenium imports for testing."""
     with patch(
-        "src.cli.commands.scrape_onsen_data.scraper.webdriver"
+        "src.cli.commands.onsen.scrape_data.scraper.webdriver"
     ) as mock_webdriver, patch(
-        "src.cli.commands.scrape_onsen_data.scraper.WebDriverWait"
+        "src.cli.commands.onsen.scrape_data.scraper.WebDriverWait"
     ) as mock_wait, patch(
-        "src.cli.commands.scrape_onsen_data.scraper.EC"
+        "src.cli.commands.onsen.scrape_data.scraper.EC"
     ) as mock_ec:
 
         # Mock Chrome driver

@@ -10,7 +10,6 @@ from typing import Dict, Any
 
 from loguru import logger
 
-from src.const import CONST
 from src.paths import PATHS
 from .scraper import (
     setup_selenium_driver,

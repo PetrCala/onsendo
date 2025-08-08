@@ -27,7 +27,7 @@ The tests ensure that:
 """
 
 from unittest.mock import patch, MagicMock
-from src.cli.commands.add_visit_interactive import add_visit_interactive
+from src.cli.commands.visit.add import add_visit_interactive
 from src.db.models import Onsen
 from src.testing.mocks import (
     get_complete_flow_inputs,
@@ -48,7 +48,7 @@ class TestInteractiveAddVisit:
     # - Rewrite common mock setup into fixtures
 
     @patch("builtins.input")
-    @patch("src.cli.commands.add_visit_interactive.get_db")
+    @patch("src.cli.commands.visit.add.get_db")
     @patch("subprocess.run")
     @patch("builtins.print")
     def test_add_visit_interactive_complete_flow(
@@ -103,7 +103,7 @@ class TestInteractiveAddVisit:
         mock_print.assert_any_call("✅ Visit successfully added!")
 
     @patch("builtins.input")
-    @patch("src.cli.commands.add_visit_interactive.get_db")
+    @patch("src.cli.commands.visit.add.get_db")
     @patch("subprocess.run")
     @patch("builtins.print")
     def test_add_visit_interactive_with_exercise(
@@ -146,7 +146,7 @@ class TestInteractiveAddVisit:
         assert "--outdoor_bath_visited" not in cmd_args
 
     @patch("builtins.input")
-    @patch("src.cli.commands.add_visit_interactive.get_db")
+    @patch("src.cli.commands.visit.add.get_db")
     @patch("builtins.print")
     def test_add_visit_interactive_invalid_onsen_id(
         self, mock_print, mock_get_db, mock_input
@@ -189,7 +189,7 @@ class TestInteractiveAddVisit:
             mock_subprocess.assert_called_once()
 
     @patch("builtins.input")
-    @patch("src.cli.commands.add_visit_interactive.get_db")
+    @patch("src.cli.commands.visit.add.get_db")
     @patch("builtins.print")
     def test_add_visit_interactive_invalid_rating(
         self, mock_print, mock_get_db, mock_input
@@ -222,7 +222,7 @@ class TestInteractiveAddVisit:
             mock_subprocess.assert_called_once()
 
     @patch("builtins.input")
-    @patch("src.cli.commands.add_visit_interactive.get_db")
+    @patch("src.cli.commands.visit.add.get_db")
     @patch("subprocess.run")
     @patch("builtins.print")
     def test_add_visit_interactive_user_cancels(
@@ -257,7 +257,7 @@ class TestInteractiveAddVisit:
             mock_subprocess.assert_not_called()
 
     @patch("builtins.input")
-    @patch("src.cli.commands.add_visit_interactive.get_db")
+    @patch("src.cli.commands.visit.add.get_db")
     @patch("subprocess.run")
     @patch("builtins.print")
     def test_add_visit_interactive_subprocess_error(

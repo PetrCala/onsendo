@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch, MagicMock
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-from src.cli.commands.scrape_onsen_data.scraper import (
+from src.cli.commands.onsen.scrape_data.scraper import (
     setup_selenium_driver,
     find_all_onsen_divs,
     is_onsen_div,
@@ -28,8 +28,8 @@ from src.const import CONST
 class TestScraper:
     """Test cases for scraper functionality."""
 
-    @patch("src.cli.commands.scrape_onsen_data.scraper.Options")
-    @patch("src.cli.commands.scrape_onsen_data.scraper.webdriver")
+    @patch("src.cli.commands.onsen.scrape_data.scraper.Options")
+    @patch("src.cli.commands.onsen.scrape_data.scraper.webdriver")
     def test_setup_selenium_driver(self, mock_webdriver, mock_options):
         """Test setting up Selenium driver."""
         mock_options_instance = Mock()
@@ -195,8 +195,8 @@ class TestScraper:
         # Note: The mock setup might not provide actual mappings, so we'll just check the type
         # In a real scenario, this would contain the extracted mappings
 
-    @patch("src.cli.commands.scrape_onsen_data.scraper.setup_selenium_driver")
-    @patch("src.cli.commands.scrape_onsen_data.scraper.extract_detailed_onsen_data")
+    @patch("src.cli.commands.onsen.scrape_data.scraper.setup_selenium_driver")
+    @patch("src.cli.commands.onsen.scrape_data.scraper.extract_detailed_onsen_data")
     def test_scrape_onsen_page_with_selenium_success(
         self, mock_extract_data, mock_setup_driver
     ):
@@ -218,7 +218,7 @@ class TestScraper:
         assert "raw_html" in result
         assert "extracted_data" in result
 
-    @patch("src.cli.commands.scrape_onsen_data.scraper.setup_selenium_driver")
+    @patch("src.cli.commands.onsen.scrape_data.scraper.setup_selenium_driver")
     def test_scrape_onsen_page_with_selenium_error(self, mock_setup_driver):
         """Test scraping individual onsen page with error."""
         # Setup mock to raise exception
@@ -491,7 +491,7 @@ class TestScraper:
 
         # Mock the is_onsen_div function to return True for onsen divs
         with patch(
-            "src.cli.commands.scrape_onsen_data.scraper.is_onsen_div"
+            "src.cli.commands.onsen.scrape_data.scraper.is_onsen_div"
         ) as mock_is_onsen:
             mock_is_onsen.side_effect = lambda div: div.get_attribute() in [
                 "onsen_div_1",
@@ -537,7 +537,7 @@ class TestScraper:
 
         # Mock the is_onsen_div function
         with patch(
-            "src.cli.commands.scrape_onsen_data.scraper.is_onsen_div"
+            "src.cli.commands.onsen.scrape_data.scraper.is_onsen_div"
         ) as mock_is_onsen:
             mock_is_onsen.side_effect = lambda div: div.get_attribute() in [
                 "onsen_div_1",
@@ -577,7 +577,7 @@ class TestScraper:
 
         # Mock the is_onsen_div function
         with patch(
-            "src.cli.commands.scrape_onsen_data.scraper.is_onsen_div"
+            "src.cli.commands.onsen.scrape_data.scraper.is_onsen_div"
         ) as mock_is_onsen:
             mock_is_onsen.return_value = True
 
@@ -613,7 +613,7 @@ class TestScraper:
 
         # Mock the is_onsen_div function
         with patch(
-            "src.cli.commands.scrape_onsen_data.scraper.is_onsen_div"
+            "src.cli.commands.onsen.scrape_data.scraper.is_onsen_div"
         ) as mock_is_onsen:
             mock_is_onsen.return_value = True
 
@@ -668,7 +668,7 @@ class TestScraper:
 
         # Mock the is_onsen_div function
         with patch(
-            "src.cli.commands.scrape_onsen_data.scraper.is_onsen_div"
+            "src.cli.commands.onsen.scrape_data.scraper.is_onsen_div"
         ) as mock_is_onsen:
             mock_is_onsen.side_effect = lambda div: div.get_attribute() in [
                 "onsen_div_1",
@@ -715,13 +715,13 @@ class TestScraper:
 
         # Mock the find_all_onsen_divs function
         with patch(
-            "src.cli.commands.scrape_onsen_data.scraper.find_all_onsen_divs"
+            "src.cli.commands.onsen.scrape_data.scraper.find_all_onsen_divs"
         ) as mock_find_divs:
             mock_find_divs.return_value = []
 
             # Mock WebDriverWait
             with patch(
-                "src.cli.commands.scrape_onsen_data.scraper.WebDriverWait"
+                "src.cli.commands.onsen.scrape_data.scraper.WebDriverWait"
             ) as mock_wait:
                 mock_wait.return_value.until.return_value = True
 
@@ -740,7 +740,7 @@ class TestScraper:
 
         # Mock WebDriverWait to raise TimeoutException
         with patch(
-            "src.cli.commands.scrape_onsen_data.scraper.WebDriverWait"
+            "src.cli.commands.onsen.scrape_data.scraper.WebDriverWait"
         ) as mock_wait:
             from selenium.common.exceptions import TimeoutException
 

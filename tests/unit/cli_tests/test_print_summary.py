@@ -1,12 +1,12 @@
 """
-Unit tests for the print_onsen_summary CLI command.
+Unit tests for the print_summary CLI command.
 """
 
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.cli.commands.print_onsen_summary import print_onsen_summary
+from src.cli.commands.onsen.print_summary import print_summary
 
 
 class Args:
@@ -17,11 +17,11 @@ class Args:
             setattr(self, k, v)
 
 
-@patch("src.cli.commands.print_onsen_summary.get_db")
+@patch("src.cli.commands.onsen.print_summary.get_db")
 @patch("loguru.logger.error")
 def test_error_when_no_identifier(mock_error, mock_get_db):
     args = Args()
-    print_onsen_summary(args)
+    print_summary(args)
 
     mock_error.assert_called_once()
     assert (
@@ -31,7 +31,7 @@ def test_error_when_no_identifier(mock_error, mock_get_db):
     mock_get_db.assert_not_called()
 
 
-@patch("src.cli.commands.print_onsen_summary.get_db")
+@patch("src.cli.commands.onsen.print_summary.get_db")
 @patch("loguru.logger.warning")
 def test_priority_when_multiple_identifiers(mock_warning, mock_get_db):
     # Arrange DB and query mocks
@@ -49,7 +49,7 @@ def test_priority_when_multiple_identifiers(mock_warning, mock_get_db):
     # Act
     args = Args(onsen_id=42, ban_number="B-001", name="Test")
     with patch("builtins.print"):
-        print_onsen_summary(args)
+        print_summary(args)
 
     # Assert: warning about multiple identifiers
     mock_warning.assert_called()
@@ -57,7 +57,7 @@ def test_priority_when_multiple_identifiers(mock_warning, mock_get_db):
     assert mock_session.query.return_value.filter.called
 
 
-@patch("src.cli.commands.print_onsen_summary.get_db")
+@patch("src.cli.commands.onsen.print_summary.get_db")
 def test_summary_by_id_with_visits(mock_get_db):
     # Arrange session
     mock_session = MagicMock()
@@ -107,7 +107,7 @@ def test_summary_by_id_with_visits(mock_get_db):
 
     args = Args(onsen_id=1)
     with patch("builtins.print") as mock_print:
-        print_onsen_summary(args)
+        print_summary(args)
 
     # Verify core lines printed
     printed = "\n".join(str(c[0][0]) for c in mock_print.call_args_list)
@@ -118,7 +118,7 @@ def test_summary_by_id_with_visits(mock_get_db):
     assert "Avg personal   : 7.0 / 10" in printed  # (8+6)/2
 
 
-@patch("src.cli.commands.print_onsen_summary.get_db")
+@patch("src.cli.commands.onsen.print_summary.get_db")
 @patch("loguru.logger.warning")
 def test_summary_by_name_multiple_matches(mock_warning, mock_get_db):
     mock_session = MagicMock()
@@ -146,12 +146,12 @@ def test_summary_by_name_multiple_matches(mock_warning, mock_get_db):
 
     args = Args(name="Same")
     with patch("builtins.print"):
-        print_onsen_summary(args)
+        print_summary(args)
 
     mock_warning.assert_called()
 
 
-@patch("src.cli.commands.print_onsen_summary.get_db")
+@patch("src.cli.commands.onsen.print_summary.get_db")
 @patch("loguru.logger.error")
 def test_not_found_by_name(mock_error, mock_get_db):
     mock_session = MagicMock()
@@ -163,7 +163,7 @@ def test_not_found_by_name(mock_error, mock_get_db):
     mock_order.all.return_value = []
 
     args = Args(name="Does Not Exist")
-    print_onsen_summary(args)
+    print_summary(args)
 
     mock_error.assert_called()
     assert "Onsen not found for name=Does Not Exist" in mock_error.call_args[0][0]

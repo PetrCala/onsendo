@@ -77,7 +77,7 @@ python -m src.cli scrape-onsen-data
 ### Programmatic Usage
 
 ```python
-from src.cli.commands.scrape_onsen_data import scrape_onsen_data
+from src.cli.commands.onsen.scrape_data import scrape_onsen_data
 import argparse
 
 args = argparse.Namespace()
@@ -152,7 +152,7 @@ The scraper uses constants defined in `src.const.CONST`:
 Run the basic test script to verify the scraping functionality:
 
 ```bash
-python src/cli/commands/scrape_onsen_data/test_basic.py
+python src/cli/commands/onsen/scrape_data/test_basic.py
 ```
 
 ## Notes

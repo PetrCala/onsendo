@@ -14,13 +14,13 @@ def test_imports():
     print("Testing imports...")
 
     try:
-        from src.cli.commands.scrape_onsen_data import scrape_onsen_data
-        from src.cli.commands.scrape_onsen_data.scraper import (
+        from src.cli.commands.onsen.scrape_data import scrape_onsen_data
+        from src.cli.commands.onsen.scrape_data.scraper import (
             setup_selenium_driver,
             extract_all_onsen_mapping,
             scrape_onsen_page_with_selenium,
         )
-        from src.cli.commands.scrape_onsen_data.data_mapper import (
+        from src.cli.commands.onsen.scrape_data.data_mapper import (
             map_scraped_data_to_onsen_model,
             get_mapping_summary,
         )
@@ -99,7 +99,7 @@ def test_data_mapper():
     print("Testing data mapper...")
 
     try:
-        from src.cli.commands.scrape_onsen_data.data_mapper import (
+        from src.cli.commands.onsen.scrape_data.data_mapper import (
             map_scraped_data_to_onsen_model,
             get_mapping_summary,
         )

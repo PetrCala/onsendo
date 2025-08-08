@@ -1,5 +1,5 @@
 """
-Recommend onsen command.
+Recommend onsen command with interactive support.
 """
 
 import argparse
@@ -10,7 +10,11 @@ from src.const import CONST
 
 
 def recommend_onsen(args: argparse.Namespace) -> None:
-    """Recommend onsens based on specified criteria."""
+    """Get onsen recommendations based on location and criteria."""
+    if not hasattr(args, "no_interactive") or not args.no_interactive:
+        recommend_onsen_interactive()
+        return
+
     with get_db(url=CONST.DATABASE_URL) as db:
         # Get the location first
         engine_temp = OnsenRecommendationEngine(db)
@@ -187,5 +191,6 @@ def recommend_onsen_interactive() -> None:
         args.exclude_visited = exclude_visited
         args.min_hours_after = min_hours_after if min_hours_after > 0 else None
         args.limit = limit
+        args.no_interactive = True
 
         recommend_onsen(args)

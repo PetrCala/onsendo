@@ -5,7 +5,7 @@ Unit tests for the data mapper functionality.
 import pytest
 from unittest.mock import patch
 
-from src.cli.commands.scrape_onsen_data.data_mapper import (
+from src.cli.commands.onsen.scrape_data.data_mapper import (
     map_scraped_data_to_onsen_model,
     create_description,
     validate_mapped_data,

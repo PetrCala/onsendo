@@ -9,7 +9,7 @@ from unittest.mock import patch, Mock
 
 import pytest
 
-from src.cli.commands.scrape_onsen_data import (
+from src.cli.commands.onsen.scrape_data import (
     scrape_onsen_data,
     setup_logging,
     ensure_output_directory,
@@ -18,7 +18,7 @@ from src.cli.commands.scrape_onsen_data import (
     process_scraped_onsen_data,
     print_summary_statistics,
 )
-from src.cli.commands.scrape_onsen_data.scraper import (
+from src.cli.commands.onsen.scrape_data.scraper import (
     setup_selenium_driver,
     extract_all_onsen_mapping,
     scrape_onsen_page_with_selenium,
@@ -164,14 +164,14 @@ class TestScraperIntegration:
         # This should not raise any exceptions
         print_summary_statistics(data)
 
-    @patch("src.cli.commands.scrape_onsen_data.setup_logging")
-    @patch("src.cli.commands.scrape_onsen_data.ensure_output_directory")
-    @patch("src.cli.commands.scrape_onsen_data.load_existing_data")
-    @patch("src.cli.commands.scrape_onsen_data.extract_all_onsen_mapping")
-    @patch("src.cli.commands.scrape_onsen_data.save_data")
-    @patch("src.cli.commands.scrape_onsen_data.scrape_onsen_page_with_selenium")
-    @patch("src.cli.commands.scrape_onsen_data.process_scraped_onsen_data")
-    @patch("src.cli.commands.scrape_onsen_data.print_summary_statistics")
+    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
+    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
+    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
+    @patch("src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping")
+    @patch("src.cli.commands.onsen.scrape_data.save_data")
+    @patch("src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium")
+    @patch("src.cli.commands.onsen.scrape_data.process_scraped_onsen_data")
+    @patch("src.cli.commands.onsen.scrape_data.print_summary_statistics")
     def test_scrape_onsen_data_full_flow(
         self,
         mock_print_summary,
@@ -209,14 +209,14 @@ class TestScraperIntegration:
         mock_process_data.assert_called()
         mock_print_summary.assert_called_once()
 
-    @patch("src.cli.commands.scrape_onsen_data.setup_logging")
-    @patch("src.cli.commands.scrape_onsen_data.ensure_output_directory")
-    @patch("src.cli.commands.scrape_onsen_data.load_existing_data")
-    @patch("src.cli.commands.scrape_onsen_data.extract_all_onsen_mapping")
-    @patch("src.cli.commands.scrape_onsen_data.save_data")
-    @patch("src.cli.commands.scrape_onsen_data.scrape_onsen_page_with_selenium")
-    @patch("src.cli.commands.scrape_onsen_data.process_scraped_onsen_data")
-    @patch("src.cli.commands.scrape_onsen_data.print_summary_statistics")
+    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
+    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
+    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
+    @patch("src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping")
+    @patch("src.cli.commands.onsen.scrape_data.save_data")
+    @patch("src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium")
+    @patch("src.cli.commands.onsen.scrape_data.process_scraped_onsen_data")
+    @patch("src.cli.commands.onsen.scrape_data.print_summary_statistics")
     def test_scrape_onsen_data_incremental(
         self,
         mock_print_summary,
@@ -249,14 +249,14 @@ class TestScraperIntegration:
         assert mock_scrape_page.call_count == 1
         mock_scrape_page.assert_called_with("456")
 
-    @patch("src.cli.commands.scrape_onsen_data.setup_logging")
-    @patch("src.cli.commands.scrape_onsen_data.ensure_output_directory")
-    @patch("src.cli.commands.scrape_onsen_data.load_existing_data")
-    @patch("src.cli.commands.scrape_onsen_data.extract_all_onsen_mapping")
-    @patch("src.cli.commands.scrape_onsen_data.save_data")
-    @patch("src.cli.commands.scrape_onsen_data.scrape_onsen_page_with_selenium")
-    @patch("src.cli.commands.scrape_onsen_data.process_scraped_onsen_data")
-    @patch("src.cli.commands.scrape_onsen_data.print_summary_statistics")
+    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
+    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
+    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
+    @patch("src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping")
+    @patch("src.cli.commands.onsen.scrape_data.save_data")
+    @patch("src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium")
+    @patch("src.cli.commands.onsen.scrape_data.process_scraped_onsen_data")
+    @patch("src.cli.commands.onsen.scrape_data.print_summary_statistics")
     def test_scrape_onsen_data_error_handling(
         self,
         mock_print_summary,
@@ -407,12 +407,12 @@ class TestScraperIntegration:
             mapped_data = processed_data["mapped_data"]
             assert mapped_data["region"] == expected_region
 
-    @patch("src.cli.commands.scrape_onsen_data.setup_logging")
-    @patch("src.cli.commands.scrape_onsen_data.ensure_output_directory")
-    @patch("src.cli.commands.scrape_onsen_data.load_existing_data")
-    @patch("src.cli.commands.scrape_onsen_data.extract_all_onsen_mapping")
-    @patch("src.cli.commands.scrape_onsen_data.save_data")
-    @patch("src.cli.commands.scrape_onsen_data.print_summary_statistics")
+    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
+    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
+    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
+    @patch("src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping")
+    @patch("src.cli.commands.onsen.scrape_data.save_data")
+    @patch("src.cli.commands.onsen.scrape_data.print_summary_statistics")
     def test_scrape_onsen_data_fetch_mapping_only(
         self,
         mock_print_summary,
@@ -446,13 +446,13 @@ class TestScraperIntegration:
         # Should not call individual scraping functions
         mock_print_summary.assert_not_called()
 
-    @patch("src.cli.commands.scrape_onsen_data.setup_logging")
-    @patch("src.cli.commands.scrape_onsen_data.ensure_output_directory")
-    @patch("src.cli.commands.scrape_onsen_data.load_existing_data")
-    @patch("src.cli.commands.scrape_onsen_data.save_data")
-    @patch("src.cli.commands.scrape_onsen_data.scrape_onsen_page_with_selenium")
-    @patch("src.cli.commands.scrape_onsen_data.process_scraped_onsen_data")
-    @patch("src.cli.commands.scrape_onsen_data.print_summary_statistics")
+    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
+    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
+    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
+    @patch("src.cli.commands.onsen.scrape_data.save_data")
+    @patch("src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium")
+    @patch("src.cli.commands.onsen.scrape_data.process_scraped_onsen_data")
+    @patch("src.cli.commands.onsen.scrape_data.print_summary_statistics")
     @patch("builtins.open", create=True)
     @patch("os.path.exists")
     def test_scrape_onsen_data_scrape_individual_only(
@@ -495,9 +495,9 @@ class TestScraperIntegration:
         mock_save_data.assert_called()
         mock_print_summary.assert_called_once()
 
-    @patch("src.cli.commands.scrape_onsen_data.setup_logging")
-    @patch("src.cli.commands.scrape_onsen_data.ensure_output_directory")
-    @patch("src.cli.commands.scrape_onsen_data.load_existing_data")
+    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
+    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
+    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
     @patch("os.path.exists")
     def test_scrape_onsen_data_scrape_individual_only_no_mapping_file(
         self,
@@ -525,9 +525,9 @@ class TestScraperIntegration:
         mock_ensure_dir.assert_called_once()
         mock_load_data.assert_called_once()
 
-    @patch("src.cli.commands.scrape_onsen_data.setup_logging")
-    @patch("src.cli.commands.scrape_onsen_data.ensure_output_directory")
-    @patch("src.cli.commands.scrape_onsen_data.load_existing_data")
+    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
+    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
+    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
     def test_scrape_onsen_data_conflicting_flags(
         self,
         mock_load_data,

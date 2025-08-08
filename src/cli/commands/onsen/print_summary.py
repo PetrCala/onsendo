@@ -25,7 +25,7 @@ def _format_datetime(dt: Optional[datetime]) -> str:
         return str(dt)
 
 
-def print_onsen_summary(args: argparse.Namespace) -> None:
+def print_summary(args: argparse.Namespace) -> None:
     """
     Print a human-readable summary for an onsen.
 

@@ -9,7 +9,7 @@ import os
 # Add the project root to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
 
-from src.cli.commands.scrape_onsen_data.data_mapper import (
+from src.cli.commands.onsen.scrape_data.data_mapper import (
     map_scraped_data_to_onsen_model,
     get_mapping_summary,
 )

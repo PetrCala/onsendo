@@ -1,7 +1,5 @@
 """
-add_visit.py
-
-Add a new onsen visit to the database.
+Add visit command with interactive support.
 """
 
 import argparse
@@ -9,15 +7,14 @@ from loguru import logger
 from src.db.conn import get_db
 from src.db.models import Onsen, OnsenVisit
 from src.const import CONST
-from .add_visit_interactive import add_visit_interactive
+from .interactive import add_visit_interactive
 
 
 def add_visit(args: argparse.Namespace) -> None:
     """
     Add a new onsen visit to the database.
     """
-    # Check if interactive mode is requested
-    if hasattr(args, "interactive") and args.interactive:
+    if not hasattr(args, "no_interactive") or not args.no_interactive:
         add_visit_interactive()
         return
 
@@ -34,7 +31,7 @@ def add_visit(args: argparse.Namespace) -> None:
         args_dict = vars(args)
         args_dict.pop("onsen_id", None)
         args_dict.pop("func", None)  # Not a model field
-        args_dict.pop("interactive", None)  # Not a model field
+        args_dict.pop("no_interactive", None)  # Not a model field
 
         # Create the visit with dynamic arguments
         visit = OnsenVisit(onsen_id=onsen.id, **args_dict)
