@@ -9,6 +9,7 @@ Test Coverage:
 - Complete interactive flow with all features enabled
 - Conditional logic for exercise, sauna, and outdoor bath flows
 - Input validation and error handling
+- Navigation functionality (going back to previous answers)
 
 Each test uses extensive mocking to simulate:
 - User input via the input() function
@@ -21,11 +22,12 @@ The tests ensure that:
 2. Conditional logic works correctly (e.g., sauna questions only asked if sauna exists)
 3. The final database operation is performed correctly with all arguments
 4. Error handling works as expected
-5. The user experience is smooth and informative
+5. Navigation functionality works correctly
+6. The user experience is smooth and informative
 """
 
 from unittest.mock import patch, MagicMock
-from src.cli.commands.visit.interactive import add_visit_interactive
+from src.cli.commands.visit.interactive import add_visit_interactive, InteractiveSession
 from src.db.models import Onsen, OnsenVisit
 from src.testing.mocks import (
     get_complete_flow_inputs,
@@ -35,6 +37,101 @@ from src.testing.mocks import (
     get_minimal_flow_inputs,
 )
 import sys
+
+
+class TestInteractiveSession:
+    """Test the InteractiveSession class functionality."""
+
+    def test_session_initialization(self):
+        """Test that InteractiveSession initializes correctly."""
+        session = InteractiveSession()
+        assert session.visit_data == {}
+        assert session.history == []
+        assert session.current_step == 0
+
+    def test_add_to_history(self):
+        """Test adding items to history."""
+        session = InteractiveSession()
+        session.add_to_history("test_field", "test_value", "test_prompt")
+
+        assert len(session.history) == 1
+        assert session.history[0] == ("test_field", "test_value", "test_prompt")
+        assert session.current_step == 1
+        assert session.visit_data == {}
+
+    def test_get_previous_answer(self):
+        """Test retrieving previous answers."""
+        session = InteractiveSession()
+        session.add_to_history("field1", "value1", "prompt1")
+        session.add_to_history("field2", "value2", "prompt2")
+        session.add_to_history("field1", "new_value1", "prompt1")
+
+        # Should get the most recent value for field1
+        assert session.get_previous_answer("field1") == "new_value1"
+        assert session.get_previous_answer("field2") == "value2"
+        assert session.get_previous_answer("nonexistent") is None
+
+    def test_go_back_single_step(self):
+        """Test going back one step."""
+        session = InteractiveSession()
+        session.add_to_history("field1", "value1", "prompt1")
+        session.add_to_history("field2", "value2", "prompt2")
+        session.visit_data["field1"] = "value1"
+        session.visit_data["field2"] = "value2"
+
+        steps_gone_back = session.go_back(1)
+
+        assert steps_gone_back == 1
+        assert session.current_step == 1
+        assert len(session.history) == 1
+        assert "field2" not in session.visit_data
+        assert "field1" in session.visit_data
+
+    def test_go_back_multiple_steps(self):
+        """Test going back multiple steps."""
+        session = InteractiveSession()
+        session.add_to_history("field1", "value1", "prompt1")
+        session.add_to_history("field2", "value2", "prompt2")
+        session.add_to_history("field3", "value3", "prompt3")
+        session.visit_data.update(
+            {"field1": "value1", "field2": "value2", "field3": "value3"}
+        )
+
+        steps_gone_back = session.go_back(2)
+
+        assert steps_gone_back == 2
+        assert session.current_step == 1
+        assert len(session.history) == 1
+        assert "field1" in session.visit_data
+        assert "field2" not in session.visit_data
+        assert "field3" not in session.visit_data
+
+    def test_go_back_beyond_history(self):
+        """Test going back more steps than available."""
+        session = InteractiveSession()
+        session.add_to_history("field1", "value1", "prompt1")
+        session.add_to_history("field2", "value2", "prompt2")
+        session.visit_data.update({"field1": "value1", "field2": "value2"})
+
+        steps_gone_back = session.go_back(5)
+
+        assert steps_gone_back == 2
+        assert session.current_step == 0
+        assert len(session.history) == 0
+        assert len(session.visit_data) == 0
+
+    def test_go_back_zero_steps(self):
+        """Test going back zero steps."""
+        session = InteractiveSession()
+        session.add_to_history("field1", "value1", "prompt1")
+        session.visit_data["field1"] = "value1"
+
+        steps_gone_back = session.go_back(0)
+
+        assert steps_gone_back == 0
+        assert session.current_step == 1
+        assert len(session.history) == 1
+        assert "field1" in session.visit_data
 
 
 class TestInteractiveAddVisit:
