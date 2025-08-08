@@ -150,19 +150,17 @@ def test_holiday_aware_time_windows():
         # Test "日・祝15:00～17:00" - should be open on Sundays and holidays
         p = parse_usage_time("日・祝15:00～17:00")
 
-        # Sunday (2025-01-05 is a Sunday)
-        assert p.is_open(dt(2025, 1, 5, 16, 0))  # Sunday at 16:00
-        assert not p.is_open(dt(2025, 1, 5, 14, 0))  # Sunday at 14:00 (before opening)
-
-        # Holiday (2025-01-01 is New Year's Day)
-        assert p.is_open(dt(2025, 1, 1, 16, 0))  # Holiday at 16:00
-        assert not p.is_open(dt(2025, 1, 1, 14, 0))  # Holiday at 14:00 (before opening)
-
-        # Regular weekday (2025-01-02 is a Thursday)
-        assert not p.is_open(dt(2025, 1, 2, 16, 0))  # Thursday at 16:00
-
-        # Regular Saturday (2025-01-04 is a Saturday)
-        assert not p.is_open(dt(2025, 1, 4, 16, 0))  # Saturday at 16:00
+        scenarios = [
+            # (datetime, expected_is_open, description)
+            (dt(2025, 1, 5, 16, 0), True, "Sunday at 16:00"),
+            (dt(2025, 1, 5, 14, 0), False, "Sunday at 14:00 (before opening)"),
+            (dt(2025, 1, 1, 16, 0), True, "Holiday at 16:00"),
+            (dt(2025, 1, 1, 14, 0), False, "Holiday at 14:00 (before opening)"),
+            (dt(2025, 1, 2, 16, 0), False, "Thursday at 16:00 (regular weekday)"),
+            (dt(2025, 1, 4, 16, 0), False, "Saturday at 16:00 (regular Saturday)"),
+        ]
+        for test_dt, expected, desc in scenarios:
+            assert p.is_open(test_dt) == expected, f"Failed: {desc}"
 
     finally:
         set_holiday_service(original_service)
