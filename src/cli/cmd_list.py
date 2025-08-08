@@ -48,6 +48,9 @@ CLI_COMMANDS = {
             "ban_number": ArgumentConfig(
                 type=str, required=False, help="Onsen BAN number"
             ),
+            "name": ArgumentConfig(
+                type=str, required=False, help="Onsen name (exact match)"
+            ),
         },
     ),
     "fill-db": CommandConfig(

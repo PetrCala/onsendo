@@ -1,7 +1,7 @@
 """
 print_onsen_summary.py
 
-Print a summary of an onsen specified by its ID or BAN number.
+Print a summary of an onsen specified by its ID, BAN number, or name.
 """
 
 import argparse
@@ -28,29 +28,46 @@ def print_onsen_summary(args: argparse.Namespace) -> None:
     """
     Print a human-readable summary for an onsen.
 
-    One (and only one) of --onsen_id or --ban_number should be provided.
+    One (and only one) of --onsen_id, --ban_number, or --name should be provided.
     """
     onsen_id: Optional[int] = getattr(args, "onsen_id", None)
     ban_number: Optional[str] = getattr(args, "ban_number", None)
+    name: Optional[str] = getattr(args, "name", None)
 
-    if not onsen_id and not ban_number:
-        logger.error("You must provide either --onsen_id or --ban_number")
+    provided = [v for v in [onsen_id, ban_number, name] if v]
+    if not provided:
+        logger.error("You must provide one of --onsen_id, --ban_number, or --name")
         return
 
-    if onsen_id and ban_number:
+    if len(provided) > 1:
         logger.warning(
-            "Both --onsen_id and --ban_number were provided. Using --onsen_id."
+            "Multiple identifiers provided. Using priority: id > ban > name."
         )
 
     with get_db(url=CONST.DATABASE_URL) as db:
         query = db.query(Onsen)
         if onsen_id:
             onsen = query.filter(Onsen.id == onsen_id).first()
-        else:
+        elif ban_number:
             onsen = query.filter(Onsen.ban_number == ban_number).first()
+        else:
+            matches = query.filter(Onsen.name == name).order_by(Onsen.id.asc()).all()
+            if not matches:
+                logger.error(f"Onsen not found for name={name}")
+                return
+            if len(matches) > 1:
+                logger.warning(
+                    "Multiple onsens matched the provided name. "
+                    f"Using id={matches[0].id} (BAN {matches[0].ban_number})."
+                )
+            onsen = matches[0]
 
         if not onsen:
-            identifier = f"id={onsen_id}" if onsen_id else f"ban_number={ban_number}"
+            identifier = (
+                f"id={onsen_id}"
+                if onsen_id
+                else (f"ban_number={ban_number}" if ban_number else f"name={name}")
+            )
             logger.error(f"Onsen not found for {identifier}")
             return
 
