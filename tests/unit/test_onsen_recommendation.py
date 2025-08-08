@@ -437,12 +437,15 @@ class TestRecommendOnsens:
             ) as mock_filter:
                 mock_filter.return_value = [(onsens[0], 0.5), (onsens[2], 2.0)]
 
-                recommendations = engine.recommend_onsens(
-                    location=location,
-                    distance_category="close",
-                    exclude_closed=False,
-                    exclude_visited=True,
-                )
+                with patch.object(engine, "_is_onsen_available") as mock_available:
+                    mock_available.return_value = True
+
+                    recommendations = engine.recommend_onsens(
+                        location=location,
+                        distance_category="close",
+                        exclude_closed=False,
+                        exclude_visited=True,
+                    )
 
         assert len(recommendations) == 2
         assert recommendations[0][0] == onsens[0]
@@ -478,12 +481,15 @@ class TestRecommendOnsens:
             with patch.object(engine, "_has_been_visited") as mock_visited:
                 mock_visited.return_value = False
 
-                recommendations = engine.recommend_onsens(
-                    location=location,
-                    distance_category="very_close",
-                    exclude_closed=False,
-                    exclude_visited=False,
-                )
+                with patch.object(engine, "_is_onsen_available") as mock_available:
+                    mock_available.return_value = True
+
+                    recommendations = engine.recommend_onsens(
+                        location=location,
+                        distance_category="very_close",
+                        exclude_closed=False,
+                        exclude_visited=False,
+                    )
 
         assert len(recommendations) == 1
         metadata = recommendations[0][2]
