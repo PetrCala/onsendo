@@ -87,7 +87,7 @@ def recommend_onsen_interactive() -> None:
         locations = engine_temp.list_locations()
         if not locations:
             print(
-                "No locations found. Please add a location first using 'add-location'."
+                "No locations found. Please add a location first using 'location add'."
             )
             return
 
