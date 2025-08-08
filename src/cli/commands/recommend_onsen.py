@@ -106,7 +106,6 @@ def recommend_onsen_interactive() -> None:
         engine = OnsenRecommendationEngine(db, location)
 
         # Show the calculated distance milestones
-        print(f"\nDistance milestones for {location.name}:")
         engine.print_distance_milestones()
         print()
 
