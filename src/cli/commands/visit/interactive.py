@@ -166,8 +166,6 @@ def add_visit_interactive() -> None:
     # Helper validation functions
     def validate_onsen_id(input_str: str) -> bool:
         """Validate onsen ID input."""
-        if not input_str:  # Allow empty input
-            return True
         try:
             onsen_id = int(input_str)
             # Check if onsen exists
@@ -183,14 +181,10 @@ def add_visit_interactive() -> None:
 
     def validate_yes_no(input_str: str) -> bool:
         """Validate yes/no input."""
-        if not input_str:  # Allow empty input
-            return True
         return input_str.lower() in ["y", "yes", "n", "no"]
 
     def validate_rating(input_str: str) -> bool:
         """Validate rating input (1-10)."""
-        if not input_str:  # Allow empty input
-            return True
         try:
             rating = int(input_str)
             return 1 <= rating <= 10
@@ -199,8 +193,6 @@ def add_visit_interactive() -> None:
 
     def validate_integer(input_str: str) -> bool:
         """Validate integer input."""
-        if not input_str:  # Allow empty input
-            return True
         try:
             int(input_str)
             return True
@@ -209,8 +201,6 @@ def add_visit_interactive() -> None:
 
     def validate_float(input_str: str) -> bool:
         """Validate float input."""
-        if not input_str:  # Allow empty input
-            return True
         try:
             float(input_str)
             return True
@@ -219,8 +209,6 @@ def add_visit_interactive() -> None:
 
     def validate_datetime(input_str: str) -> bool:
         """Validate datetime input (YYYY-MM-DD HH:MM)."""
-        if not input_str:  # Allow empty input
-            return True
         try:
             datetime.strptime(input_str, "%Y-%m-%d %H:%M")
             return True
@@ -437,7 +425,7 @@ def add_visit_interactive() -> None:
             "prompt": "Did you use the sauna? (y/n): ",
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
-            "condition": lambda session: session.visit_data.get("had_sauna", True),
+            "condition": lambda session: session.visit_data.get("had_sauna", False),
             "step_title": "Sauna information",
         },
         {
@@ -445,7 +433,8 @@ def add_visit_interactive() -> None:
             "prompt": "How long did you stay in the sauna? (minutes): ",
             "validator": lambda x: not x or validate_integer(x),
             "processor": lambda x: int(x) if x else None,
-            "condition": lambda session: session.visit_data.get("sauna_visited", True),
+            "condition": lambda session: session.visit_data.get("had_sauna", False)
+            and session.visit_data.get("sauna_visited", False),
             "step_title": "Sauna information",
         },
         {
@@ -453,7 +442,8 @@ def add_visit_interactive() -> None:
             "prompt": "What was the temperature of the sauna? (°C): ",
             "validator": lambda x: not x or validate_float(x),
             "processor": lambda x: float(x) if x else None,
-            "condition": lambda session: session.visit_data.get("sauna_visited", True),
+            "condition": lambda session: session.visit_data.get("had_sauna", False)
+            and session.visit_data.get("sauna_visited", False),
             "step_title": "Sauna information",
         },
         {
@@ -461,7 +451,8 @@ def add_visit_interactive() -> None:
             "prompt": "Did the sauna have steam? (y/n): ",
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
-            "condition": lambda session: session.visit_data.get("sauna_visited", True),
+            "condition": lambda session: session.visit_data.get("had_sauna", False)
+            and session.visit_data.get("sauna_visited", False),
             "step_title": "Sauna information",
         },
         {
@@ -469,7 +460,8 @@ def add_visit_interactive() -> None:
             "prompt": "How do you rate the sauna? (1-10): ",
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
-            "condition": lambda session: session.visit_data.get("sauna_visited", True),
+            "condition": lambda session: session.visit_data.get("had_sauna", False)
+            and session.visit_data.get("sauna_visited", False),
             "step_title": "Sauna information",
         },
         {
@@ -495,8 +487,9 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_float(x),
             "processor": lambda x: float(x) if x else None,
             "condition": lambda session: session.visit_data.get(
-                "outdoor_bath_visited", True
-            ),
+                "had_outdoor_bath", False
+            )
+            and session.visit_data.get("outdoor_bath_visited", False),
             "step_title": "Outdoor bath information",
         },
         {
@@ -505,8 +498,9 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "condition": lambda session: session.visit_data.get(
-                "outdoor_bath_visited", True
-            ),
+                "had_outdoor_bath", False
+            )
+            and session.visit_data.get("outdoor_bath_visited", False),
             "step_title": "Outdoor bath information",
         },
         {
@@ -521,7 +515,7 @@ def add_visit_interactive() -> None:
             "prompt": "Did you use the rest area? (y/n): ",
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
-            "condition": lambda session: session.visit_data.get("had_rest_area", True),
+            "condition": lambda session: session.visit_data.get("had_rest_area", False),
             "step_title": "Rest area and food",
         },
         {
@@ -529,7 +523,8 @@ def add_visit_interactive() -> None:
             "prompt": "How do you rate the rest area? (1-10): ",
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
-            "condition": lambda session: session.visit_data.get("rest_area_used", True),
+            "condition": lambda session: session.visit_data.get("had_rest_area", False)
+            and session.visit_data.get("rest_area_used", False),
             "step_title": "Rest area and food",
         },
         {
@@ -555,8 +550,9 @@ def add_visit_interactive() -> None:
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
             "condition": lambda session: session.visit_data.get(
-                "food_service_used", True
-            ),
+                "had_food_service", False
+            )
+            and session.visit_data.get("food_service_used", False),
             "step_title": "Rest area and food",
         },
         {
@@ -618,25 +614,31 @@ def add_visit_interactive() -> None:
         {
             "name": "visit_order",
             "prompt": "Visit order (1st, 2nd, etc.): ",
-            "validator": lambda x: not x or validate_integer(x),
+            "validator": lambda x: not x or validate_integer(x) and int(x) > 0,
             "processor": lambda x: int(x) if x else None,
             "condition": lambda session: session.visit_data.get(
-                "multi_onsen_day", True
+                "multi_onsen_day", False
             ),
             "step_title": "Multi-onsen day",
         },
         {
             "name": "previous_location",
             "prompt": "What is the ID of the previous onsen visit?: ",
-            "validator": lambda x: not x or validate_integer(x),
+            "validator": lambda x: not x or validate_integer(x) and int(x) > 0,
             "processor": lambda x: int(x) if x else None,
+            "condition": lambda session: session.visit_data.get(
+                "multi_onsen_day", False
+            ),
             "step_title": "Multi-onsen day",
         },
         {
             "name": "next_location",
             "prompt": "What is the ID of the next onsen visit?: ",
-            "validator": lambda x: not x or validate_integer(x),
+            "validator": lambda x: not x or validate_integer(x) and int(x) > 0,
             "processor": lambda x: int(x) if x else None,
+            "condition": lambda session: session.visit_data.get(
+                "multi_onsen_day", False
+            ),
             "step_title": "Multi-onsen day",
         },
         {
