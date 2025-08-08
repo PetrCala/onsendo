@@ -212,9 +212,9 @@ class TestInteractiveAddVisit:
         added_visit = mock_db.add.call_args[0][0]
         assert isinstance(added_visit, OnsenVisit)
         assert added_visit.onsen_id == 1
-        assert added_visit.excercise_before_onsen is True
-        assert added_visit.excercise_type == "running"
-        assert added_visit.excercise_length_minutes == 30
+        assert added_visit.exercise_before_onsen is True
+        assert added_visit.exercise_type == "running"
+        assert added_visit.exercise_length_minutes == 30
 
         # Verify commit was called
         mock_db.commit.assert_called_once()

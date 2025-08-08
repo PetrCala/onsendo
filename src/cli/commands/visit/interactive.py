@@ -166,6 +166,8 @@ def add_visit_interactive() -> None:
     # Helper validation functions
     def validate_onsen_id(input_str: str) -> bool:
         """Validate onsen ID input."""
+        if not input_str:  # Allow empty input
+            return True
         try:
             onsen_id = int(input_str)
             # Check if onsen exists
@@ -181,10 +183,14 @@ def add_visit_interactive() -> None:
 
     def validate_yes_no(input_str: str) -> bool:
         """Validate yes/no input."""
+        if not input_str:  # Allow empty input
+            return True
         return input_str.lower() in ["y", "yes", "n", "no"]
 
     def validate_rating(input_str: str) -> bool:
         """Validate rating input (1-10)."""
+        if not input_str:  # Allow empty input
+            return True
         try:
             rating = int(input_str)
             return 1 <= rating <= 10
@@ -193,6 +199,8 @@ def add_visit_interactive() -> None:
 
     def validate_integer(input_str: str) -> bool:
         """Validate integer input."""
+        if not input_str:  # Allow empty input
+            return True
         try:
             int(input_str)
             return True
@@ -201,6 +209,8 @@ def add_visit_interactive() -> None:
 
     def validate_float(input_str: str) -> bool:
         """Validate float input."""
+        if not input_str:  # Allow empty input
+            return True
         try:
             float(input_str)
             return True
@@ -209,6 +219,8 @@ def add_visit_interactive() -> None:
 
     def validate_datetime(input_str: str) -> bool:
         """Validate datetime input (YYYY-MM-DD HH:MM)."""
+        if not input_str:  # Allow empty input
+            return True
         try:
             datetime.strptime(input_str, "%Y-%m-%d %H:%M")
             return True
@@ -221,8 +233,21 @@ def add_visit_interactive() -> None:
             "prompt": "Enter the onsen ID: ",
             "validator": validate_onsen_id,
             "processor": lambda x: int(x),
-            "required": True,
             "step_title": "Step 1: Select the onsen",
+        },
+        {
+            "name": "entry_fee_yen",
+            "prompt": "What was the entry fee in yen? (0 if free): ",
+            "validator": validate_integer,
+            "processor": lambda x: int(x) if x else None,
+            "step_title": "Step 111: Basic visit information",
+        },
+        {
+            "name": "payment_method",
+            "prompt": "Payment method (cash/card/other): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Step 111: Basic visit information",
         },
         {
             "name": "visit_time",
@@ -231,415 +256,395 @@ def add_visit_interactive() -> None:
             "processor": lambda x: (
                 datetime.now() if not x else datetime.strptime(x, "%Y-%m-%d %H:%M")
             ),
-            "required": True,
-            "step_title": "Step 2: Visit time",
+            "step_title": "Step 111: Basic visit information",
         },
         {
-            "name": "entry_fee_yen",
-            "prompt": "Entry fee (yen): ",
-            "validator": validate_integer,
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 3: Basic information",
+            "name": "weather",
+            "prompt": "Weather conditions (sunny/cloudy/rainy/snowy/other): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Step 111: Basic visit information",
+        },
+        {
+            "name": "time_of_day",
+            "prompt": "Time of day (morning/afternoon/evening): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Step 111: Basic visit information",
+        },
+        {
+            "name": "temperature_outside_celsius",
+            "prompt": "Temperature outside (°C): ",
+            "validator": lambda x: not x or validate_float(x),
+            "processor": lambda x: float(x) if x else None,
+            "step_title": "Step 111: Basic visit information",
         },
         {
             "name": "stay_length_minutes",
-            "prompt": "Stay length (minutes): ",
+            "prompt": "How long did you stay? (minutes): ",
             "validator": validate_integer,
             "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 3: Basic information",
+            "step_title": "Step 111: Basic visit information",
+        },
+        {
+            "name": "visited_with",
+            "prompt": "Who did you visit with? (friend/group/alone/other): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Step 111: Travel information",
+        },
+        {
+            "name": "travel_mode",
+            "prompt": "Travel mode (car/train/bus/walk/run/bike/other): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Step 111: Travel information",
         },
         {
             "name": "travel_time_minutes",
-            "prompt": "Travel time (minutes): ",
+            "prompt": "Travel time in minutes: ",
             "validator": validate_integer,
             "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 3: Basic information",
+            "step_title": "Step 111: Travel information",
+        },
+        {
+            "name": "exercise_before_onsen",
+            "prompt": "Did you exercise before the onsen? (y/n): ",
+            "validator": validate_yes_no,
+            "processor": lambda x: x.lower() in ["y", "yes"],
+            "step_title": "Step 111: Exercise information",
+        },
+        {
+            "name": "exercise_type",
+            "prompt": "Excercise type (running, walking, cycling, other): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "condition": lambda session: session.visit_data.get(
+                "exercise_before_onsen", True
+            ),
+            "step_title": "Step 111: Exercise information",
+        },
+        {
+            "name": "exercise_length_minutes",
+            "prompt": "Excercise duration in minutes: ",
+            "validator": lambda x: not x or validate_integer(x),
+            "processor": lambda x: int(x) if x else None,
+            "condition": lambda session: session.visit_data.get(
+                "exercise_before_onsen", True
+            ),
+            "step_title": "Step 111: Exercise information",
         },
         {
             "name": "accessibility_rating",
-            "prompt": "Accessibility Rating: ",
+            "prompt": "Accessibility rating (1-10): ",
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
+            "step_title": "Step 111: Facility ratings",
         },
         {
             "name": "cleanliness_rating",
-            "prompt": "Cleanliness Rating: ",
+            "prompt": "Cleanliness rating (1-10): ",
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
+            "step_title": "Step 111: Facility ratings",
         },
         {
             "name": "navigability_rating",
-            "prompt": "Navigability Rating: ",
+            "prompt": "Navigability rating (1-10): ",
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
+            "step_title": "Step 111: Facility ratings",
         },
         {
             "name": "view_rating",
-            "prompt": "View Rating: ",
+            "prompt": "View rating (1-10): ",
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
-        },
-        {
-            "name": "smell_intensity_rating",
-            "prompt": "Smell Intensity Rating: ",
-            "validator": lambda x: not x or validate_rating(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
-        },
-        {
-            "name": "changing_room_cleanliness_rating",
-            "prompt": "Changing Room Cleanliness Rating: ",
-            "validator": lambda x: not x or validate_rating(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
-        },
-        {
-            "name": "locker_availability_rating",
-            "prompt": "Locker Availability Rating: ",
-            "validator": lambda x: not x or validate_rating(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
-        },
-        {
-            "name": "rest_area_rating",
-            "prompt": "Rest Area Rating: ",
-            "validator": lambda x: not x or validate_rating(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
-        },
-        {
-            "name": "food_quality_rating",
-            "prompt": "Food Quality Rating: ",
-            "validator": lambda x: not x or validate_rating(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
-        },
-        {
-            "name": "sauna_rating",
-            "prompt": "Sauna Rating: ",
-            "validator": lambda x: not x or validate_rating(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
-        },
-        {
-            "name": "outdoor_bath_rating",
-            "prompt": "Outdoor Bath Rating: ",
-            "validator": lambda x: not x or validate_rating(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
-        },
-        {
-            "name": "energy_level_change",
-            "prompt": "Energy Level Change: ",
-            "validator": lambda x: not x or validate_rating(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
-        },
-        {
-            "name": "hydration_level",
-            "prompt": "Hydration Level: ",
-            "validator": lambda x: not x or validate_rating(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
+            "step_title": "Step 111: Facility ratings",
         },
         {
             "name": "atmosphere_rating",
-            "prompt": "Atmosphere Rating: ",
+            "prompt": "Atmosphere rating (1-10): ",
             "validator": lambda x: not x or validate_rating(x),
             "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
+            "step_title": "Step 111: Facility ratings",
         },
         {
-            "name": "personal_rating",
-            "prompt": "Personal Rating: ",
-            "validator": lambda x: not x or validate_rating(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 4: Ratings (1-10, press Enter to skip)",
+            "name": "main_bath_type",
+            "prompt": "Main bath type (open air/indoor/other): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Step 111: Main bath information",
         },
         {
             "name": "main_bath_temperature",
             "prompt": "Main bath temperature (°C): ",
             "validator": lambda x: not x or validate_float(x),
             "processor": lambda x: float(x) if x else None,
-            "required": False,
-            "step_title": "Step 5: Temperatures (press Enter to skip)",
+            "step_title": "Step 111: Main bath information",
+        },
+        {
+            "name": "main_bath_water_type",
+            "prompt": "Main bath water type (sulfur/salt/other): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Step 111: Main bath information",
+        },
+        {
+            "name": "water_color",
+            "prompt": "Water color (clear/brown/green/other): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Step 111: Main bath information",
+        },
+        {
+            "name": "smell_intensity_rating",
+            "prompt": "Smell intensity rating (1-10): ",
+            "validator": lambda x: not x or validate_rating(x),
+            "processor": lambda x: int(x) if x else None,
+            "step_title": "Step 111: Main bath information",
+        },
+        {
+            "name": "changing_room_cleanliness_rating",
+            "prompt": "Changing room cleanliness rating (1-10): ",
+            "validator": lambda x: not x or validate_rating(x),
+            "processor": lambda x: int(x) if x else None,
+            "step_title": "Step 111: Changing room and facilities",
+        },
+        {
+            "name": "locker_availability_rating",
+            "prompt": "Locker aviailability rating (1-10): ",
+            "validator": lambda x: not x or validate_rating(x),
+            "processor": lambda x: int(x) if x else None,
+            "step_title": "Step 111: Changing room and facilities",
+        },
+        {
+            "name": "had_soap",
+            "prompt": "Was soap available? (y/n): ",
+            "validator": validate_yes_no,
+            "processor": lambda x: x.lower() in ["y", "yes"],
+            "step_title": "Step 111: Changing room and facilities",
+        },
+        {
+            "name": "had_sauna",
+            "prompt": "Was there a sauna at the facility? (y/n): ",
+            "validator": validate_yes_no,
+            "processor": lambda x: x.lower() in ["y", "yes"],
+            "step_title": "Step 111: Sauna information",
+        },
+        {
+            "name": "sauna_visited",
+            "prompt": "Did you use the sauna? (y/n): ",
+            "validator": validate_yes_no,
+            "processor": lambda x: x.lower() in ["y", "yes"],
+            "condition": lambda session: session.visit_data.get("had_sauna", True),
+            "step_title": "Step 111: Sauna information",
+        },
+        {
+            "name": "sauna_duration_minutes",
+            "prompt": "How long did you stay in the sauna? (minutes): ",
+            "validator": lambda x: not x or validate_integer(x),
+            "processor": lambda x: int(x) if x else None,
+            "condition": lambda session: session.visit_data.get("sauna_visited", True),
+            "step_title": "Step 111: Sauna information",
         },
         {
             "name": "sauna_temperature",
-            "prompt": "Sauna temperature (°C): ",
+            "prompt": "What was the temperature of the sauna? (°C): ",
             "validator": lambda x: not x or validate_float(x),
             "processor": lambda x: float(x) if x else None,
-            "required": False,
-            "step_title": "Step 5: Temperatures (press Enter to skip)",
+            "condition": lambda session: session.visit_data.get("sauna_visited", True),
+            "step_title": "Step 111: Sauna information",
+        },
+        {
+            "name": "sauna_steam",
+            "prompt": "Did the sauna have steam? (y/n): ",
+            "validator": validate_yes_no,
+            "processor": lambda x: x.lower() in ["y", "yes"],
+            "condition": lambda session: session.visit_data.get("sauna_visited", True),
+            "step_title": "Step 111: Sauna information",
+        },
+        {
+            "name": "sauna_rating",
+            "prompt": "How do you rate the sauna? (1-10): ",
+            "validator": lambda x: not x or validate_rating(x),
+            "processor": lambda x: int(x) if x else None,
+            "condition": lambda session: session.visit_data.get("sauna_visited", True),
+            "step_title": "Step 111: Sauna information",
+        },
+        {
+            "name": "had_outdoor_bath",
+            "prompt": "Was there an outdoor bath at the facility? (y/n): ",
+            "validator": validate_yes_no,
+            "processor": lambda x: x.lower() in ["y", "yes"],
+            "step_title": "Step 111: Outdoor bath information",
+        },
+        {
+            "name": "outdoor_bath_visited",
+            "prompt": "Did you use the outdoor bath? (y/n): ",
+            "validator": validate_yes_no,
+            "processor": lambda x: x.lower() in ["y", "yes"],
+            "condition": lambda session: session.visit_data.get(
+                "had_outdoor_bath", True
+            ),
+            "step_title": "Step 111: Outdoor bath information",
         },
         {
             "name": "outdoor_bath_temperature",
             "prompt": "Outdoor bath temperature (°C): ",
             "validator": lambda x: not x or validate_float(x),
             "processor": lambda x: float(x) if x else None,
-            "required": False,
-            "step_title": "Step 5: Temperatures (press Enter to skip)",
+            "condition": lambda session: session.visit_data.get(
+                "outdoor_bath_visited", True
+            ),
+            "step_title": "Step 111: Outdoor bath information",
         },
         {
-            "name": "temperature_outside_celsius",
-            "prompt": "Outside temperature (°C): ",
-            "validator": lambda x: not x or validate_float(x),
-            "processor": lambda x: float(x) if x else None,
-            "required": False,
-            "step_title": "Step 5: Temperatures (press Enter to skip)",
-        },
-        {
-            "name": "payment_method",
-            "prompt": "Payment Method: ",
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "weather",
-            "prompt": "Weather: ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "time_of_day",
-            "prompt": "Time Of Day: ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "visited_with",
-            "prompt": "Visited With: ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "travel_mode",
-            "prompt": "Travel Mode: ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "excercise_type",
-            "prompt": "Excercise Type: ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "crowd_level",
-            "prompt": "Crowd Level: ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "heart_rate_data",
-            "prompt": "Heart Rate Data: ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "main_bath_type",
-            "prompt": "Main Bath Type: ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "main_bath_water_type",
-            "prompt": "Main Bath Water Type: ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "water_color",
-            "prompt": "Water Color: ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "pre_visit_mood",
-            "prompt": "Pre Visit Mood: ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "post_visit_mood",
-            "prompt": "Post Visit Mood: ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "required": False,
-            "step_title": "Step 6: Additional information (press Enter to skip)",
-        },
-        {
-            "name": "excercise_before_onsen",
-            "prompt": "Excercise Before Onsen? (y/n): ",
-            "validator": validate_yes_no,
-            "processor": lambda x: x.lower() in ["y", "yes"],
-            "required": False,
-            "step_title": "Step 7: Yes/No questions",
-        },
-        {
-            "name": "had_soap",
-            "prompt": "Had Soap? (y/n): ",
-            "validator": validate_yes_no,
-            "processor": lambda x: x.lower() in ["y", "yes"],
-            "required": False,
-            "step_title": "Step 7: Yes/No questions",
-        },
-        {
-            "name": "had_sauna",
-            "prompt": "Had Sauna? (y/n): ",
-            "validator": validate_yes_no,
-            "processor": lambda x: x.lower() in ["y", "yes"],
-            "required": False,
-            "step_title": "Step 7: Yes/No questions",
-        },
-        {
-            "name": "had_outdoor_bath",
-            "prompt": "Had Outdoor Bath? (y/n): ",
-            "validator": validate_yes_no,
-            "processor": lambda x: x.lower() in ["y", "yes"],
-            "required": False,
-            "step_title": "Step 7: Yes/No questions",
+            "name": "outdoor_bath_rating",
+            "prompt": "Outdoor bath rating (1-10): ",
+            "validator": lambda x: not x or validate_rating(x),
+            "processor": lambda x: int(x) if x else None,
+            "condition": lambda session: session.visit_data.get(
+                "outdoor_bath_visited", True
+            ),
+            "step_title": "Step 111: Outdoor bath information",
         },
         {
             "name": "had_rest_area",
-            "prompt": "Had Rest Area? (y/n): ",
+            "prompt": "Was there a rest area? (y/n): ",
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
-            "required": False,
-            "step_title": "Step 7: Yes/No questions",
+            "step_title": "Step 111: Rest area and food",
+        },
+        {
+            "name": "rest_area_used",
+            "prompt": "Did you use the rest area? (y/n): ",
+            "validator": validate_yes_no,
+            "processor": lambda x: x.lower() in ["y", "yes"],
+            "condition": lambda session: session.visit_data.get("had_rest_area", True),
+            "step_title": "Step 111: Rest area and food",
+        },
+        {
+            "name": "rest_area_rating",
+            "prompt": "How do you rate the rest area? (1-10): ",
+            "validator": lambda x: not x or validate_rating(x),
+            "processor": lambda x: int(x) if x else None,
+            "condition": lambda session: session.visit_data.get("rest_area_used", True),
+            "step_title": "Step 111: Rest area and food",
         },
         {
             "name": "had_food_service",
-            "prompt": "Had Food Service? (y/n): ",
+            "prompt": "Was there food service? (y/n): ",
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
-            "required": False,
-            "step_title": "Step 7: Yes/No questions",
+            "step_title": "Step 111: Rest area and food",
+        },
+        {
+            "name": "food_service_used",
+            "prompt": "Did you use the food service? (y/n): ",
+            "validator": validate_yes_no,
+            "processor": lambda x: x.lower() in ["y", "yes"],
+            "condition": lambda session: session.visit_data.get(
+                "had_food_service", True
+            ),
+            "step_title": "Step 111: Rest area and food",
+        },
+        {
+            "name": "food_quality_rating",
+            "prompt": "How do you rate the food quality? (1-10): ",
+            "validator": lambda x: not x or validate_rating(x),
+            "processor": lambda x: int(x) if x else None,
+            "condition": lambda session: session.visit_data.get(
+                "food_service_used", True
+            ),
+            "step_title": "Step 111: Rest area and food",
         },
         {
             "name": "massage_chair_available",
-            "prompt": "Massage Chair Available? (y/n): ",
+            "prompt": "Was there a massage chair? (y/n): ",
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
-            "required": False,
-            "step_title": "Step 7: Yes/No questions",
+            "step_title": "Step 111: Rest area and food",
         },
         {
-            "name": "sauna_visited",
-            "prompt": "Sauna Visited? (y/n): ",
-            "validator": validate_yes_no,
-            "processor": lambda x: x.lower() in ["y", "yes"],
-            "required": False,
-            "step_title": "Step 7: Yes/No questions",
+            "name": "crowd_level",
+            "prompt": "Crowd level (busy/moderate/quiet/empty): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Step 111: Crowd and mood",
         },
         {
-            "name": "sauna_steam",
-            "prompt": "Sauna Steam? (y/n): ",
-            "validator": validate_yes_no,
-            "processor": lambda x: x.lower() in ["y", "yes"],
-            "required": False,
-            "step_title": "Step 7: Yes/No questions",
+            "name": "pre_visit_mood",
+            "prompt": "Mood before visit (relaxed/stressed/anxious/other): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Step 111: Crowd and mood",
         },
         {
-            "name": "outdoor_bath_visited",
-            "prompt": "Outdoor Bath Visited? (y/n): ",
-            "validator": validate_yes_no,
-            "processor": lambda x: x.lower() in ["y", "yes"],
-            "required": False,
-            "step_title": "Step 7: Yes/No questions",
+            "name": "post_visit_mood",
+            "prompt": "Mood after visit (relaxed/stressed/anxious/other): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Step 111: Crowd and mood",
+        },
+        {
+            "name": "energy_level_change",
+            "prompt": "Energy level change (-5 to +5, negative = less energy)",
+            "validator": lambda x: not x or validate_integer(x) and -5 <= int(x) <= 5,
+            "processor": lambda x: int(x) if x else None,
+            "step_title": "Step 111: Health and energy",
+        },
+        {
+            "name": "hydration_level",
+            "prompt": "Hydration level before entering (1-10): ",
+            "validator": lambda x: not x or validate_rating(x),
+            "processor": lambda x: int(x) if x else None,
+            "step_title": "Step 111: Health and energy",
+        },
+        {
+            "name": "heart_rate_data",
+            "prompt": "Heart rate data (optional): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Step 111: Health and energy",
         },
         {
             "name": "multi_onsen_day",
-            "prompt": "Multi Onsen Day? (y/n): ",
+            "prompt": "Was this a part of a multi-onsen day? (y/n): ",
             "validator": validate_yes_no,
             "processor": lambda x: x.lower() in ["y", "yes"],
-            "required": False,
-            "step_title": "Step 7: Yes/No questions",
-        },
-        {
-            "name": "excercise_length_minutes",
-            "prompt": "Excercise Length Minutes: ",
-            "validator": lambda x: not x or validate_integer(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 8: Additional details (press Enter to skip)",
-        },
-        {
-            "name": "sauna_duration_minutes",
-            "prompt": "Sauna Duration Minutes: ",
-            "validator": lambda x: not x or validate_integer(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 8: Additional details (press Enter to skip)",
-        },
-        {
-            "name": "previous_location",
-            "prompt": "Previous Location: ",
-            "validator": lambda x: not x or validate_integer(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 8: Additional details (press Enter to skip)",
-        },
-        {
-            "name": "next_location",
-            "prompt": "Next Location: ",
-            "validator": lambda x: not x or validate_integer(x),
-            "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 8: Additional details (press Enter to skip)",
+            "step_title": "Step 111: Multi-onsen day",
         },
         {
             "name": "visit_order",
-            "prompt": "Visit Order: ",
+            "prompt": "Visit order (1st, 2nd, etc.): ",
             "validator": lambda x: not x or validate_integer(x),
             "processor": lambda x: int(x) if x else None,
-            "required": False,
-            "step_title": "Step 8: Additional details (press Enter to skip)",
+            "condition": lambda session: session.visit_data.get(
+                "multi_onsen_day", True
+            ),
+            "step_title": "Step 111: Multi-onsen day",
+        },
+        {
+            "name": "previous_location",
+            "prompt": "What is the ID of the previous onsen visit?: ",
+            "validator": lambda x: not x or validate_integer(x),
+            "processor": lambda x: int(x) if x else None,
+            "step_title": "Step 111: Multi-onsen day",
+        },
+        {
+            "name": "next_location",
+            "prompt": "What is the ID of the next onsen visit?: ",
+            "validator": lambda x: not x or validate_integer(x),
+            "processor": lambda x: int(x) if x else None,
+            "step_title": "Step 111: Multi-onsen day",
+        },
+        {
+            "name": "personal_rating",
+            "prompt": "Personal overall rating (1-10): ",
+            "validator": lambda x: not x or validate_rating(x),
+            "processor": lambda x: int(x) if x else None,
+            "step_title": "Step 111: Personal rating",
         },
     ]
 
@@ -654,6 +659,10 @@ def add_visit_interactive() -> None:
         if step["step_title"] != last_step_title:
             print(f"\n{step['step_title']}")
             last_step_title = step["step_title"]
+
+        if hasattr(step, "condition") and not step["condition"](session):
+            current_step_index += 1
+            continue
 
         # Get input for this step
         while True:
@@ -698,7 +707,7 @@ def add_visit_interactive() -> None:
                     )
                     continue
 
-            # Validate input
+            # Validate input (allow empty input for all fields)
             if step["validator"](user_input):
                 # Process the input
                 processed_value = step["processor"](user_input)
@@ -716,347 +725,6 @@ def add_visit_interactive() -> None:
             else:
                 print("Invalid input. Please try again.")
 
-        # # 1. Get onsen ID
-        # print("Step 1: Select the onsen")
-        # onsen_id_input = get_valid_input(
-        #     "Enter the onsen ID: ", validate_onsen_id, max_attempts=3
-        # )
-        # if onsen_id_input is None:
-        #     sys.exit(1)
-        # visit_data["onsen_id"] = int(onsen_id_input)
-
-        # # 2. Basic visit information
-        # print("\nStep 2: Basic visit information")
-
-        # # Entry fee
-        # entry_fee = get_valid_input(
-        #     "What was the entry fee in yen? (0 if free): ", validate_integer
-        # )
-        # visit_data["entry_fee_yen"] = int(entry_fee) if entry_fee else 0
-
-        # # Payment method
-        # payment_method = input("Payment method (cash/card/etc.): ").strip()
-        # visit_data["payment_method"] = payment_method if payment_method else ""
-
-        # # Visit time
-        # visit_time = get_valid_input(
-        #     "Visit time (YYYY-MM-DD HH:MM, or press Enter for now): ",
-        #     lambda x: x == "" or validate_datetime(x),
-        # )
-        # if visit_time:
-        #     visit_data["visit_time"] = visit_time
-        # else:
-        #     visit_data["visit_time"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-
-        # # Weather
-        # weather = input("Weather conditions: ").strip()
-        # visit_data["weather"] = weather if weather else ""
-
-        # # Time of day
-        # time_of_day = input("Time of day (morning/afternoon/evening): ").strip()
-        # visit_data["time_of_day"] = time_of_day if time_of_day else ""
-
-        # # Temperature outside
-        # temp_outside = get_valid_input("Temperature outside in Celsius: ", validate_float)
-        # visit_data["temperature_outside_celsius"] = (
-        #     float(temp_outside) if temp_outside else 0.0
-        # )
-
-        # # Stay length
-        # stay_length = get_valid_input("How long did you stay (minutes): ", validate_integer)
-        # visit_data["stay_length_minutes"] = int(stay_length) if stay_length else 0
-
-        # # 3. Travel information
-        # print("\nStep 3: Travel information")
-
-        # visited_with = input("Who did you visit with (alone/friend/group): ").strip()
-        # visit_data["visited_with"] = visited_with if visited_with else ""
-
-        # travel_mode = input("Travel mode (car/train/bus/walk/run/bike): ").strip()
-        # visit_data["travel_mode"] = travel_mode if travel_mode else ""
-
-        # travel_time = get_valid_input("Travel time in minutes: ", validate_integer)
-        # visit_data["travel_time_minutes"] = int(travel_time) if travel_time else 0
-
-        # # 4. Exercise information
-        # print("\nStep 4: Exercise information")
-
-        # exercise_before = get_valid_input(
-        #     "Did you exercise before the onsen? (y/n): ", validate_yes_no
-        # )
-        # visit_data["excercise_before_onsen"] = exercise_before.lower() in ["y", "yes"]
-
-        # if visit_data["excercise_before_onsen"]:
-        #     exercise_type = input("Exercise type (running/walking/cycling/other): ").strip()
-        #     visit_data["excercise_type"] = exercise_type if exercise_type else ""
-
-        #     exercise_length = get_valid_input(
-        #         "Exercise duration in minutes: ", validate_integer
-        #     )
-        #     visit_data["excercise_length_minutes"] = (
-        #         int(exercise_length) if exercise_length else 0
-        #     )
-
-        # # 5. Facility ratings
-        # print("\nStep 5: Facility ratings (1-10 scale)")
-
-        # accessibility = get_valid_input("Accessibility rating (1-10): ", validate_rating)
-        # visit_data["accessibility_rating"] = int(accessibility) if accessibility else 0
-
-        # cleanliness = get_valid_input("Cleanliness rating (1-10): ", validate_rating)
-        # visit_data["cleanliness_rating"] = int(cleanliness) if cleanliness else 0
-
-        # navigability = get_valid_input("Navigability rating (1-10): ", validate_rating)
-        # visit_data["navigability_rating"] = int(navigability) if navigability else 0
-
-        # view_rating = get_valid_input("View rating (1-10): ", validate_rating)
-        # visit_data["view_rating"] = int(view_rating) if view_rating else 0
-
-        # atmosphere = get_valid_input("Atmosphere rating (1-10): ", validate_rating)
-        # visit_data["atmosphere_rating"] = int(atmosphere) if atmosphere else 0
-
-        # # 6. Main bath information
-        # print("\nStep 6: Main bath information")
-
-        # main_bath_type = input("Main bath type (open air/indoor/other): ").strip()
-        # visit_data["main_bath_type"] = main_bath_type if main_bath_type else ""
-
-        # main_bath_temp = get_valid_input(
-        #     "Main bath temperature in Celsius: ", validate_float
-        # )
-        # visit_data["main_bath_temperature"] = (
-        #     float(main_bath_temp) if main_bath_temp else 0.0
-        # )
-
-        # main_bath_water = input("Main bath water type (sulfur/salt/other): ").strip()
-        # visit_data["main_bath_water_type"] = main_bath_water if main_bath_water else ""
-
-        # water_color = input("Water color (clear/brown/green/other): ").strip()
-        # visit_data["water_color"] = water_color if water_color else ""
-
-        # smell_intensity = get_valid_input(
-        #     "Smell intensity rating (1-10): ", validate_rating
-        # )
-        # visit_data["smell_intensity_rating"] = (
-        #     int(smell_intensity) if smell_intensity else 0
-        # )
-
-        # # 7. Changing room and facilities
-        # print("\nStep 7: Changing room and facilities")
-
-        # changing_cleanliness = get_valid_input(
-        #     "Changing room cleanliness rating (1-10): ", validate_rating
-        # )
-        # visit_data["changing_room_cleanliness_rating"] = (
-        #     int(changing_cleanliness) if changing_cleanliness else 0
-        # )
-
-        # locker_availability = get_valid_input(
-        #     "Locker availability rating (1-10): ", validate_rating
-        # )
-        # visit_data["locker_availability_rating"] = (
-        #     int(locker_availability) if locker_availability else 0
-        # )
-
-        # had_soap = get_valid_input("Was soap available? (y/n): ", validate_yes_no)
-        # visit_data["had_soap"] = had_soap.lower() in ["y", "yes"]
-
-        # # 8. Sauna information
-        # print("\nStep 8: Sauna information")
-
-        # had_sauna = get_valid_input(
-        #     "Was there a sauna at the facility? (y/n): ", validate_yes_no
-        # )
-        # visit_data["had_sauna"] = had_sauna.lower() in ["y", "yes"]
-
-        # if visit_data["had_sauna"]:
-        #     sauna_visited = get_valid_input(
-        #         "Did you use the sauna? (y/n): ", validate_yes_no
-        #     )
-        #     visit_data["sauna_visited"] = sauna_visited.lower() in ["y", "yes"]
-
-        #     if visit_data["sauna_visited"]:
-        #         sauna_temp = get_valid_input(
-        #             "Sauna temperature in Celsius: ", validate_float
-        #         )
-        #         visit_data["sauna_temperature"] = float(sauna_temp) if sauna_temp else 0.0
-
-        #         sauna_steam = get_valid_input(
-        #             "Did the sauna have steam? (y/n): ", validate_yes_no
-        #         )
-        #         visit_data["sauna_steam"] = sauna_steam.lower() in ["y", "yes"]
-
-        #         sauna_duration = get_valid_input(
-        #             "How long did you stay in the sauna (minutes): ", validate_integer
-        #         )
-        #         visit_data["sauna_duration_minutes"] = (
-        #             int(sauna_duration) if sauna_duration else 0
-        #         )
-
-        #         sauna_rating = get_valid_input("Sauna rating (1-10): ", validate_rating)
-        #         visit_data["sauna_rating"] = int(sauna_rating) if sauna_rating else 0
-
-        # # 9. Outdoor bath information
-        # print("\nStep 9: Outdoor bath information")
-
-        # had_outdoor_bath = get_valid_input(
-        #     "Was there an outdoor bath at the facility? (y/n): ", validate_yes_no
-        # )
-        # visit_data["had_outdoor_bath"] = had_outdoor_bath.lower() in ["y", "yes"]
-
-        # if visit_data["had_outdoor_bath"]:
-        #     outdoor_bath_visited = get_valid_input(
-        #         "Did you use the outdoor bath? (y/n): ", validate_yes_no
-        #     )
-        #     visit_data["outdoor_bath_visited"] = outdoor_bath_visited.lower() in [
-        #         "y",
-        #         "yes",
-        #     ]
-
-        #     if visit_data["outdoor_bath_visited"]:
-        #         outdoor_bath_temp = get_valid_input(
-        #             "Outdoor bath temperature in Celsius: ", validate_float
-        #         )
-        #         visit_data["outdoor_bath_temperature"] = (
-        #             float(outdoor_bath_temp) if outdoor_bath_temp else 0.0
-        #         )
-
-        #         outdoor_bath_rating = get_valid_input(
-        #             "Outdoor bath rating (1-10): ", validate_rating
-        #         )
-        #         visit_data["outdoor_bath_rating"] = (
-        #             int(outdoor_bath_rating) if outdoor_bath_rating else 0
-        #         )
-
-        # # 10. Rest area and food
-        # print("\nStep 10: Rest area and food")
-
-        # # TODO add if I had visited a rest area
-        # had_rest_area = get_valid_input("Was there a rest area? (y/n): ", validate_yes_no)
-        # visit_data["had_rest_area"] = had_rest_area.lower() in ["y", "yes"]
-
-        # if visit_data["had_rest_area"]:
-        #     rest_area_rating = get_valid_input("Rest area rating (1-10): ", validate_rating)
-        #     visit_data["rest_area_rating"] = (
-        #         int(rest_area_rating) if rest_area_rating else 0
-        #     )
-
-        # # TODO add if I had tried the food
-        # had_food_service = get_valid_input(
-        #     "Was there food service? (y/n): ", validate_yes_no
-        # )
-        # visit_data["had_food_service"] = had_food_service.lower() in ["y", "yes"]
-
-        # if visit_data["had_food_service"]:
-        #     food_quality = get_valid_input("Food quality rating (1-10): ", validate_rating)
-        #     visit_data["food_quality_rating"] = int(food_quality) if food_quality else 0
-
-        # massage_chair = get_valid_input(
-        #     "Were massage chairs available? (y/n): ", validate_yes_no
-        # )
-        # visit_data["massage_chair_available"] = massage_chair.lower() in ["y", "yes"]
-
-        # # 11. Crowd and mood
-        # print("\nStep 11: Crowd and mood")
-
-        # crowd_level = input("Crowd level (busy/moderate/quiet/empty): ").strip()
-        # visit_data["crowd_level"] = crowd_level if crowd_level else ""
-
-        # pre_visit_mood = input(
-        #     "Mood before visit (relaxed/stressed/anxious/other): "
-        # ).strip()
-        # visit_data["pre_visit_mood"] = pre_visit_mood if pre_visit_mood else ""
-
-        # post_visit_mood = input(
-        #     "Mood after visit (relaxed/stressed/anxious/other): "
-        # ).strip()
-        # visit_data["post_visit_mood"] = post_visit_mood if post_visit_mood else ""
-
-        # # 12. Health and energy
-        # print("\nStep 12: Health and energy")
-
-        # energy_change = get_valid_input(
-        #     "Energy level change (-5 to +5, negative = less energy): ",
-        #     lambda x: validate_integer(x) and -5 <= int(x) <= 5,
-        # )
-        # visit_data["energy_level_change"] = int(energy_change) if energy_change else 0
-
-        # hydration = get_valid_input(
-        #     "Hydration level before entering (1-10): ", validate_rating
-        # )
-        # visit_data["hydration_level"] = int(hydration) if hydration else 0
-
-        # # 13. Multi-onsen day
-        # print("\nStep 13: Multi-onsen day")
-
-        # multi_onsen = get_valid_input(
-        #     "Was this part of a multi-onsen day? (y/n): ", validate_yes_no
-        # )
-        # visit_data["multi_onsen_day"] = multi_onsen.lower() in ["y", "yes"]
-
-        # if visit_data["multi_onsen_day"]:
-        #     visit_order = get_valid_input(
-        #         "Visit order (1st, 2nd, etc.): ", validate_integer
-        #     )
-        #     visit_data["visit_order"] = int(visit_order) if visit_order else 0
-
-        # # 14. Personal rating
-        # print("\nStep 14: Personal rating")
-
-        # personal_rating = get_valid_input(
-        #     "Personal overall rating (1-10): ", validate_rating
-        # )
-        # visit_data["personal_rating"] = int(personal_rating) if personal_rating else 0
-
-        # # 15. Additional information
-        # print("\nStep 15: Additional information")
-
-        # heart_rate_data = input("Heart rate data (optional): ").strip()
-        # visit_data["heart_rate_data"] = heart_rate_data if heart_rate_data else ""
-
-        # # Set defaults for fields that weren't explicitly set
-        # defaults = {
-        #     "previous_location": 0,
-        #     "next_location": 0,
-        # }
-
-        # for key, default_value in defaults.items():
-        #     if key not in visit_data:
-        #         visit_data[key] = default_value
-
-        # # Build the command
-        # print("\n" + "=" * 50)
-        # print("SUMMARY OF YOUR VISIT")
-        # print("=" * 50)
-
-        # # Show key information
-        # with get_db(url=CONST.DATABASE_URL) as db:
-        #     onsen = db.query(Onsen).filter(Onsen.id == visit_data["onsen_id"]).first()
-        #     print(f"Onsen: {onsen.name} (ID: {onsen.id})")
-
-        # print(f"Entry fee: {visit_data['entry_fee_yen']} yen")
-        # print(f"Stay length: {visit_data['stay_length_minutes']} minutes")
-        # print(f"Personal rating: {visit_data['personal_rating']}/10")
-
-        # # Ask for confirmation
-        # confirm = get_valid_input(
-        #     "\nProceed with adding this visit? (y/n): ", validate_yes_no
-        # )
-
-        # if confirm.lower() in ["y", "yes"]:
-        #     # Build command arguments
-        #     cmd_args = ["onsendo", "add-visit"]
-
-        #     for key, value in visit_data.items():
-        #         if isinstance(value, bool):
-        #             if value:
-        #                 cmd_args.append(f"--{key}")
-        #         elif value is not None and value != "":
-        #             cmd_args.append(f"--{key}")
-        #             cmd_args.append(str(value))
-
-        #     print(f"\nExecuting command: {' '.join(cmd_args)}")
-
     # Save the visit
     print("\nSaving visit data...")
     with get_db(url=CONST.DATABASE_URL) as db:
@@ -1064,9 +732,8 @@ def add_visit_interactive() -> None:
             db.query(Onsen).filter(Onsen.id == session.visit_data["onsen_id"]).first()
         )
         visit = OnsenVisit(**session.visit_data)
-        # TODO Disable for now
-        # db.add(visit)
-        # db.commit()
+        db.add(visit)
+        db.commit()
 
         print(f"✅ Successfully recorded visit to {onsen.name}!")
         print(f"Visit ID: {visit.id}")
