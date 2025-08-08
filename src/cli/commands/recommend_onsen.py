@@ -12,14 +12,16 @@ from src.const import CONST
 def recommend_onsen(args: argparse.Namespace) -> None:
     """Recommend onsens based on specified criteria."""
     with get_db(url=CONST.DATABASE_URL) as db:
-        engine = OnsenRecommendationEngine(db)
-
-        # Get the location
-        location = engine.get_location_by_name_or_id(args.location)
+        # Get the location first
+        engine_temp = OnsenRecommendationEngine(db)
+        location = engine_temp.get_location_by_name_or_id(args.location)
         if not location:
             print(f"Error: Location '{args.location}' not found.")
             print("Use 'list-locations' to see available locations.")
             return
+
+        # Create recommendation engine with the location to calculate dynamic milestones
+        engine = OnsenRecommendationEngine(db, location)
 
         # Parse target time if provided
         target_time = None
@@ -74,10 +76,10 @@ def recommend_onsen_interactive() -> None:
     print("=== Onsen Recommendation ===")
 
     with get_db(url=CONST.DATABASE_URL) as db:
-        engine = OnsenRecommendationEngine(db)
+        engine_temp = OnsenRecommendationEngine(db)
 
         # List available locations
-        locations = engine.list_locations()
+        locations = engine_temp.list_locations()
         if not locations:
             print(
                 "No locations found. Please add a location first using 'add-location'."
@@ -93,12 +95,20 @@ def recommend_onsen_interactive() -> None:
         while True:
             location_input = input("Enter location ID or name: ").strip()
             if location_input:
-                location = engine.get_location_by_name_or_id(location_input)
+                location = engine_temp.get_location_by_name_or_id(location_input)
                 if location:
                     break
                 print("Location not found. Please try again.")
             else:
                 print("Location is required.")
+
+        # Create recommendation engine with the location to calculate dynamic milestones
+        engine = OnsenRecommendationEngine(db, location)
+
+        # Show the calculated distance milestones
+        print(f"\nDistance milestones for {location.name}:")
+        engine.print_distance_milestones()
+        print()
 
         # Get target time
         time_input = input(
