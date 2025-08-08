@@ -353,41 +353,28 @@ def _parse_absolute_dates(s: str) -> Optional[AbsoluteDatesRule]:
     dates: Set[Tuple[int, int]] = set()
     ranges: List[Tuple[int, int, int, int]] = []
 
-    # Multi-part split by commas/ideographic commas
-    parts = re.split(r"[、,]\s*", text)
-    for part in parts:
-        part = part.strip()
-        if not part:
-            continue
-        # Range like M/D～M/D or M/D～D
-        m_rng = re.match(
-            r"(?P<m1>\d{1,2})/(?P<d1>\d{1,2})\s*[~〜～\-]\s*(?:(?P<m2>\d{1,2})/)?(?P<d2>\d{1,2})",
-            part,
-        )
-        if m_rng:
-            m1 = int(m_rng.group("m1"))
-            d1 = int(m_rng.group("d1"))
-            m2 = int(m_rng.group("m2")) if m_rng.group("m2") else m1
-            d2 = int(m_rng.group("d2"))
-            ranges.append((m1, d1, m2, d2))
-            continue
+    # Find ranges anywhere in the string (not only at the start)
+    for m_rng in re.finditer(
+        r"(?P<m1>\d{1,2})/(?P<d1>\d{1,2})\s*[~〜～\-]\s*(?:(?P<m2>\d{1,2})/)?(?P<d2>\d{1,2})",
+        text,
+    ):
+        m1 = int(m_rng.group("m1"))
+        d1 = int(m_rng.group("d1"))
+        m2 = int(m_rng.group("m2")) if m_rng.group("m2") else m1
+        d2 = int(m_rng.group("d2"))
+        ranges.append((m1, d1, m2, d2))
 
-        # Single date with month/day tokens separated by '・'
-        # e.g., "12/30・31" -> interpret as 12/30 and 12/31
-        m_md_list = re.match(r"(?P<m>\d{1,2})/(?P<ds>[\d・\.]+)", part)
-        if m_md_list:
-            m = int(m_md_list.group("m"))
-            ds = m_md_list.group("ds").replace(".", "・")
-            for d_tok in ds.split("・"):
-                if d_tok.isdigit():
-                    dates.add((m, int(d_tok)))
-            continue
+    # Month with multiple days: 12/30・31
+    for m_md_list in re.finditer(r"(?P<m>\d{1,2})/(?P<ds>[\d・]+)", text):
+        m = int(m_md_list.group("m"))
+        ds = m_md_list.group("ds")
+        for d_tok in ds.split("・"):
+            if d_tok.isdigit():
+                dates.add((m, int(d_tok)))
 
-        # Single exact date M/D
-        m_md = re.match(r"(?P<m>\d{1,2})/(?P<d>\d{1,2})", part)
-        if m_md:
-            dates.add((int(m_md.group("m")), int(m_md.group("d"))))
-            continue
+    # Single exact dates M/D (avoid double-adding; sets handle dedup)
+    for m_md in re.finditer(r"(?P<m>\d{1,2})/(?P<d>\d{1,2})", text):
+        dates.add((int(m_md.group("m")), int(m_md.group("d"))))
 
     if dates or ranges:
         return AbsoluteDatesRule(dates_mmdd=dates, ranges=ranges)
