@@ -10,25 +10,25 @@ Test Coverage:
 - Conditional logic for exercise, sauna, and outdoor bath flows
 - Input validation and error handling
 - User cancellation scenarios
-- Subprocess execution and error handling
+- Database operations and error handling
 
 Each test uses extensive mocking to simulate:
 - User input via the input() function
 - Database queries and responses
-- Subprocess execution of the final CLI command
+- Database operations (add, commit)
 - Print statements for user feedback
 
 The tests ensure that:
 1. All user inputs are properly validated
 2. Conditional logic works correctly (e.g., sauna questions only asked if sauna exists)
-3. The final command is constructed correctly with all arguments
+3. The final database operation is performed correctly with all arguments
 4. Error handling works as expected
 5. The user experience is smooth and informative
 """
 
 from unittest.mock import patch, MagicMock
-from src.cli.commands.visit.add import add_visit_interactive
-from src.db.models import Onsen
+from src.cli.commands.visit.interactive import add_visit_interactive
+from src.db.models import Onsen, OnsenVisit
 from src.testing.mocks import (
     get_complete_flow_inputs,
     get_exercise_flow_inputs,
@@ -37,7 +37,6 @@ from src.testing.mocks import (
     get_cancellation_inputs,
     get_minimal_flow_inputs,
 )
-import subprocess
 import sys
 
 
@@ -48,11 +47,10 @@ class TestInteractiveAddVisit:
     # - Rewrite common mock setup into fixtures
 
     @patch("builtins.input")
-    @patch("src.cli.commands.visit.add.get_db")
-    @patch("subprocess.run")
+    @patch("src.cli.commands.visit.interactive.get_db")
     @patch("builtins.print")
     def test_add_visit_interactive_complete_flow(
-        self, mock_print, mock_subprocess, mock_get_db, mock_input
+        self, mock_print, mock_get_db, mock_input
     ):
         """Test the complete interactive flow with valid inputs."""
         # Mock database setup
@@ -65,9 +63,11 @@ class TestInteractiveAddVisit:
         mock_onsen.name = "Test Onsen"
         mock_db.query.return_value.filter.return_value.first.return_value = mock_onsen
 
-        # Mock subprocess result
-        mock_subprocess.return_value.returncode = 0
-        mock_subprocess.return_value.stdout = "Visit added successfully"
+        # Mock visit object
+        mock_visit = MagicMock()
+        mock_visit.id = 123
+        mock_visit.visit_time = "2024-01-01 12:00:00"
+        mock_visit.personal_rating = 9
 
         # Mock user inputs for complete flow
         mock_input.side_effect = get_complete_flow_inputs()
@@ -78,36 +78,23 @@ class TestInteractiveAddVisit:
         mock_db.query.assert_called_with(Onsen)
         assert mock_db.query.return_value.filter.call_count >= 1
 
-        # Verify subprocess was called with correct arguments
-        mock_subprocess.assert_called_once()
-        call_args = mock_subprocess.call_args
-        assert call_args[0][0][0] == "onsendo"
-        assert call_args[0][0][1] == "add-visit"
+        # Verify visit was added to database
+        mock_db.add.assert_called_once()
+        added_visit = mock_db.add.call_args[0][0]
+        assert isinstance(added_visit, OnsenVisit)
+        assert added_visit.onsen_id == 1
 
-        # Verify key arguments are present
-        cmd_args = call_args[0][0]
-        assert "--onsen_id" in cmd_args
-        assert "--entry_fee_yen" in cmd_args
-        assert "--payment_method" in cmd_args
-        assert "--had_soap" in cmd_args
-        assert "--had_sauna" in cmd_args
-        assert "--sauna_visited" in cmd_args
-        assert "--had_outdoor_bath" in cmd_args
-        assert "--outdoor_bath_visited" in cmd_args
-        assert "--had_rest_area" in cmd_args
-        assert (
-            "--multi_onsen_day" not in cmd_args
-        )  # Should not be present since user said 'n'
+        # Verify commit was called
+        mock_db.commit.assert_called_once()
 
         # Verify success message was printed
-        mock_print.assert_any_call("✅ Visit successfully added!")
+        mock_print.assert_any_call("✅ Successfully recorded visit to Test Onsen!")
 
     @patch("builtins.input")
-    @patch("src.cli.commands.visit.add.get_db")
-    @patch("subprocess.run")
+    @patch("src.cli.commands.visit.interactive.get_db")
     @patch("builtins.print")
     def test_add_visit_interactive_with_exercise(
-        self, mock_print, mock_subprocess, mock_get_db, mock_input
+        self, mock_print, mock_get_db, mock_input
     ):
         """Test the interactive flow when user exercised before onsen."""
         # Mock database setup
@@ -120,33 +107,26 @@ class TestInteractiveAddVisit:
         mock_onsen.name = "Test Onsen"
         mock_db.query.return_value.filter.return_value.first.return_value = mock_onsen
 
-        # Mock subprocess result
-        mock_subprocess.return_value.returncode = 0
-
         # Mock user inputs with exercise
         mock_input.side_effect = get_exercise_flow_inputs()
 
         # Call the function
         add_visit_interactive()
 
-        # Verify subprocess was called
-        mock_subprocess.assert_called_once()
-        call_args = mock_subprocess.call_args
-        cmd_args = call_args[0][0]
+        # Verify visit was added to database
+        mock_db.add.assert_called_once()
+        added_visit = mock_db.add.call_args[0][0]
+        assert isinstance(added_visit, OnsenVisit)
+        assert added_visit.onsen_id == 1
+        assert added_visit.excercise_before_onsen is True
+        assert added_visit.excercise_type == "running"
+        assert added_visit.excercise_length_minutes == 30
 
-        # Verify exercise-related arguments are present
-        assert "--excercise_before_onsen" in cmd_args
-        assert "--excercise_type" in cmd_args
-        assert "--excercise_length_minutes" in cmd_args
-
-        # Verify sauna/outdoor bath arguments are NOT present (user said no)
-        assert "--had_sauna" not in cmd_args
-        assert "--sauna_visited" not in cmd_args
-        assert "--had_outdoor_bath" not in cmd_args
-        assert "--outdoor_bath_visited" not in cmd_args
+        # Verify commit was called
+        mock_db.commit.assert_called_once()
 
     @patch("builtins.input")
-    @patch("src.cli.commands.visit.add.get_db")
+    @patch("src.cli.commands.visit.interactive.get_db")
     @patch("builtins.print")
     def test_add_visit_interactive_invalid_onsen_id(
         self, mock_print, mock_get_db, mock_input
@@ -175,21 +155,18 @@ class TestInteractiveAddVisit:
             mock_onsen,  # Summary display
         ]
 
-        # Mock subprocess
-        with patch("subprocess.run") as mock_subprocess:
-            mock_subprocess.return_value.returncode = 0
+        # Call the function
+        add_visit_interactive()
 
-            # Call the function
-            add_visit_interactive()
+        # Verify error message was printed for invalid onsen
+        mock_print.assert_any_call("No onsen found with ID 999")
 
-            # Verify error message was printed for invalid onsen
-            mock_print.assert_any_call("No onsen found with ID 999")
-
-            # Verify subprocess was still called (after valid input)
-            mock_subprocess.assert_called_once()
+        # Verify visit was still added after valid input
+        mock_db.add.assert_called_once()
+        mock_db.commit.assert_called_once()
 
     @patch("builtins.input")
-    @patch("src.cli.commands.visit.add.get_db")
+    @patch("src.cli.commands.visit.interactive.get_db")
     @patch("builtins.print")
     def test_add_visit_interactive_invalid_rating(
         self, mock_print, mock_get_db, mock_input
@@ -208,25 +185,21 @@ class TestInteractiveAddVisit:
         # Mock user inputs with invalid rating
         mock_input.side_effect = get_invalid_rating_retry_inputs()
 
-        # Mock subprocess
-        with patch("subprocess.run") as mock_subprocess:
-            mock_subprocess.return_value.returncode = 0
+        # Call the function
+        add_visit_interactive()
 
-            # Call the function
-            add_visit_interactive()
+        # Verify error message was printed for invalid rating
+        mock_print.assert_any_call("Invalid input. Please try again.")
 
-            # Verify error message was printed for invalid rating
-            mock_print.assert_any_call("Invalid input. Please try again.")
-
-            # Verify subprocess was still called (after valid input)
-            mock_subprocess.assert_called_once()
+        # Verify visit was still added after valid input
+        mock_db.add.assert_called_once()
+        mock_db.commit.assert_called_once()
 
     @patch("builtins.input")
-    @patch("src.cli.commands.visit.add.get_db")
-    @patch("subprocess.run")
+    @patch("src.cli.commands.visit.interactive.get_db")
     @patch("builtins.print")
     def test_add_visit_interactive_user_cancels(
-        self, mock_print, mock_subprocess, mock_get_db, mock_input
+        self, mock_print, mock_get_db, mock_input
     ):
         """Test when user cancels the operation."""
         # Mock database setup
@@ -253,17 +226,17 @@ class TestInteractiveAddVisit:
             # Verify sys.exit was called
             mock_exit.assert_called_once_with(0)
 
-            # Verify subprocess was NOT called
-            mock_subprocess.assert_not_called()
+            # Verify database operations were NOT called
+            mock_db.add.assert_not_called()
+            mock_db.commit.assert_not_called()
 
     @patch("builtins.input")
-    @patch("src.cli.commands.visit.add.get_db")
-    @patch("subprocess.run")
+    @patch("src.cli.commands.visit.interactive.get_db")
     @patch("builtins.print")
-    def test_add_visit_interactive_subprocess_error(
-        self, mock_print, mock_subprocess, mock_get_db, mock_input
+    def test_add_visit_interactive_database_error(
+        self, mock_print, mock_get_db, mock_input
     ):
-        """Test handling of subprocess execution error."""
+        """Test handling of database error."""
         # Mock database setup
         mock_db = MagicMock()
         mock_get_db.return_value.__enter__.return_value = mock_db
@@ -274,10 +247,8 @@ class TestInteractiveAddVisit:
         mock_onsen.name = "Test Onsen"
         mock_db.query.return_value.filter.return_value.first.return_value = mock_onsen
 
-        # Mock subprocess error
-        mock_subprocess.side_effect = subprocess.CalledProcessError(
-            1, "onsendo add-visit", stderr="Database error"
-        )
+        # Mock database error on commit
+        mock_db.commit.side_effect = Exception("Database error")
 
         # Mock user inputs
         mock_input.side_effect = get_minimal_flow_inputs()
@@ -287,11 +258,5 @@ class TestInteractiveAddVisit:
             # Call the function
             add_visit_interactive()
 
-            # Verify error message was printed
-            mock_print.assert_any_call(
-                "❌ Error adding visit: Command 'onsendo add-visit' returned non-zero exit status 1."
-            )
-            mock_print.assert_any_call("Error details: Database error")
-
-            # Verify sys.exit was called with error code
+            # Verify error handling
             mock_exit.assert_called_once_with(1)
