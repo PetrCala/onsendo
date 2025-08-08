@@ -16,13 +16,14 @@ def fill_db(args: argparse.Namespace) -> None:
     """
     Scrape onsen data from the web and fill the database.
     """
-    database_url = CONST.DATABASE_URL
-    if not os.path.exists(database_url):
+    database_path = CONST.DATABASE_URL.replace("sqlite:///", "")
+    if not os.path.exists(database_path):
         logger.error(
-            f"Database file {database_url} does not exist! Run `init-db` first to create it."
+            f"Database file {database_path} does not exist! Run `init-db` first to create it."
         )
         return
 
+    database_url = CONST.DATABASE_URL
     with get_db(url=database_url) as db:
         json_path = args.json_path
         if not os.path.isabs(json_path):
