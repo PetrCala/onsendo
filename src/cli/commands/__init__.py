@@ -10,6 +10,7 @@ from .list_locations import list_locations
 from .delete_location import delete_location, delete_location_interactive
 from .modify_location import modify_location, modify_location_interactive
 from .recommend_onsen import recommend_onsen, recommend_onsen_interactive
+from .calculate_milestones import calculate_milestones
 
 
 __all__ = [
@@ -29,4 +30,5 @@ __all__ = [
     "modify_location_interactive",
     "recommend_onsen",
     "recommend_onsen_interactive",
+    "calculate_milestones",
 ]

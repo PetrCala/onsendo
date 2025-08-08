@@ -10,14 +10,26 @@ from sqlalchemy import and_
 from src.db.models import Onsen, Location, OnsenVisit
 from src.lib.parsers.usage_time import parse_usage_time
 from src.lib.parsers.closed_days import parse_closed_days
-from src.lib.distance import filter_onsens_by_distance, calculate_distance_to_onsen
+from src.lib.distance import (
+    filter_onsens_by_distance,
+    calculate_distance_to_onsen,
+    update_distance_categories,
+    DistanceMilestones,
+)
+from src.lib.milestone_calculator import calculate_location_milestones
 
 
 class OnsenRecommendationEngine:
     """Engine for recommending onsens based on various criteria."""
 
-    def __init__(self, db_session: Session):
+    def __init__(self, db_session: Session, location: Optional[Location] = None):
         self.db_session = db_session
+        self.location = location
+        self._distance_milestones: Optional[DistanceMilestones] = None
+
+        # Calculate distance milestones if location is provided
+        if location:
+            self._calculate_and_update_milestones(location)
 
     def get_available_onsens(
         self, target_time: datetime, min_hours_after: Optional[int] = None
@@ -205,13 +217,53 @@ class OnsenRecommendationEngine:
 
         return recommendations
 
+    def _calculate_and_update_milestones(self, location: Location) -> None:
+        """Calculate and update distance milestones for the given location."""
+        self._distance_milestones = calculate_location_milestones(
+            location, self.db_session
+        )
+        update_distance_categories(self._distance_milestones)
+
+    def update_location(self, location: Location) -> None:
+        """Update the location and recalculate distance milestones."""
+        self.location = location
+        self._calculate_and_update_milestones(location)
+
+    def get_distance_milestones(self) -> Optional[DistanceMilestones]:
+        """Get the current distance milestones."""
+        return self._distance_milestones
+
+    def print_distance_milestones(self) -> None:
+        """Print the current distance milestones."""
+        if not self._distance_milestones:
+            print("No distance milestones calculated. Set a location first.")
+            return
+
+        print(f"Distance Milestones for {self.location.name}:")
+        print(f"  Very Close: <= {self._distance_milestones.very_close_max:.2f} km")
+        print(f"  Close:      <= {self._distance_milestones.close_max:.2f} km")
+        print(f"  Medium:     <= {self._distance_milestones.medium_max:.2f} km")
+        print(f"  Far:        >  {self._distance_milestones.medium_max:.2f} km")
+
     def _get_distance_category_name(self, distance_km: float) -> str:
         """Get distance category name for a given distance."""
-        if distance_km <= 5.0:
+        if not self._distance_milestones:
+            # Fallback to default categories
+            if distance_km <= 5.0:
+                return "very_close"
+            elif distance_km <= 15.0:
+                return "close"
+            elif distance_km <= 50.0:
+                return "medium"
+            else:
+                return "far"
+
+        # Use dynamic milestones
+        if distance_km <= self._distance_milestones.very_close_max:
             return "very_close"
-        elif distance_km <= 15.0:
+        elif distance_km <= self._distance_milestones.close_max:
             return "close"
-        elif distance_km <= 50.0:
+        elif distance_km <= self._distance_milestones.medium_max:
             return "medium"
         else:
             return "far"

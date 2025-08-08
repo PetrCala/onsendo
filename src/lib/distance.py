@@ -3,8 +3,9 @@ Distance calculation utilities for onsen recommendations.
 """
 
 import math
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
+from statistics import mean, median, stdev
 from src.db.models import Onsen, Location
 
 
@@ -17,13 +18,110 @@ class DistanceCategory:
     description: str
 
 
-# Predefined distance categories
-DISTANCE_CATEGORIES = {
+@dataclass
+class DistanceMilestones:
+    """Distance milestones calculated from onsen distribution."""
+
+    very_close_max: float
+    close_max: float
+    medium_max: float
+    far_min: float
+
+    def to_categories(self) -> Dict[str, DistanceCategory]:
+        """Convert milestones to distance categories."""
+        return {
+            "very_close": DistanceCategory(
+                "very_close",
+                self.very_close_max,
+                f"Very close (within {self.very_close_max:.1f}km)",
+            ),
+            "close": DistanceCategory(
+                "close", self.close_max, f"Close (within {self.close_max:.1f}km)"
+            ),
+            "medium": DistanceCategory(
+                "medium",
+                self.medium_max,
+                f"Medium distance (within {self.medium_max:.1f}km)",
+            ),
+            "far": DistanceCategory(
+                "far", float("inf"), f"Far (beyond {self.medium_max:.1f}km)"
+            ),
+        }
+
+
+def calculate_distance_milestones(location: Location, db_session) -> DistanceMilestones:
+    """
+    Calculate distance milestones for a location based on the distribution of onsen distances.
+
+    Args:
+        location: Location to calculate milestones for
+        db_session: Database session to query onsens
+
+    Returns:
+        DistanceMilestones object with calculated thresholds
+    """
+    # Get all onsens
+    onsens = db_session.query(Onsen).all()
+    if not onsens:
+        # Return default milestones if no onsens found
+        return DistanceMilestones(5.0, 15.0, 50.0, 50.0)
+
+    # Calculate distances
+    distances = []
+    for onsen in onsens:
+        distance = calculate_distance_to_onsen(location, onsen)
+        if distance is not None:
+            distances.append(distance)
+
+    if not distances:
+        # Return default milestones if no valid distances
+        return DistanceMilestones(5.0, 15.0, 50.0, 50.0)
+
+    # Sort distances for percentile calculation
+    sorted_distances = sorted(distances)
+    n = len(sorted_distances)
+
+    # Helper function to calculate quantiles
+    def quantile(data: List[float], q: float) -> float:
+        """Calculate quantile value from sorted data."""
+        idx = int(q * (len(data) - 1))
+        return data[idx]
+
+    # Calculate milestones using quantiles
+    very_close_max = quantile(sorted_distances, 0.20)  # 20th percentile
+    close_max = quantile(sorted_distances, 0.50)  # 50th percentile (median)
+    medium_max = quantile(sorted_distances, 0.80)  # 80th percentile
+
+    return DistanceMilestones(
+        very_close_max=very_close_max,
+        close_max=close_max,
+        medium_max=medium_max,
+        far_min=medium_max,
+    )
+
+
+# Predefined distance categories (fallback)
+DEFAULT_DISTANCE_CATEGORIES = {
     "very_close": DistanceCategory("very_close", 5.0, "Very close (within 5km)"),
     "close": DistanceCategory("close", 15.0, "Close (within 15km)"),
     "medium": DistanceCategory("medium", 50.0, "Medium distance (within 50km)"),
     "far": DistanceCategory("far", float("inf"), "Far (any distance)"),
 }
+
+# Global variable to hold dynamic categories
+DISTANCE_CATEGORIES = DEFAULT_DISTANCE_CATEGORIES.copy()
+
+
+def update_distance_categories(milestones: DistanceMilestones) -> None:
+    """Update the global distance categories with new milestones."""
+    global DISTANCE_CATEGORIES
+    DISTANCE_CATEGORIES = milestones.to_categories()
+
+
+def reset_distance_categories() -> None:
+    """Reset distance categories to default values."""
+    global DISTANCE_CATEGORIES
+    DISTANCE_CATEGORIES = DEFAULT_DISTANCE_CATEGORIES.copy()
 
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:

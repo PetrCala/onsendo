@@ -21,7 +21,10 @@ def main() -> None:
         parser_command = subparsers.add_parser(command_name, help=command_config.help)
         for arg_name, arg_config in command_config.args.items():
             kwargs = get_argument_kwargs(arg_config)
-            parser_command.add_argument(f"--{arg_name}", **kwargs)
+            if arg_config.positional:
+                parser_command.add_argument(arg_name, **kwargs)
+            else:
+                parser_command.add_argument(f"--{arg_name}", **kwargs)
         parser_command.set_defaults(func=command_config.func)
 
     args = parser.parse_args()

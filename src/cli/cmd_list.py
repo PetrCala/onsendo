@@ -20,6 +20,7 @@ class ArgumentConfig:
     default: Any = None
     help: Optional[str] = None
     action: Optional[str] = None
+    positional: bool = False
 
 
 @dataclass
@@ -261,6 +262,23 @@ CLI_COMMANDS = {
         help="Get onsen recommendations using interactive prompts.",
         args={},
     ),
+    "calculate-milestones": CommandConfig(
+        func=commands.calculate_milestones,
+        help="Calculate distance milestones for a location based on onsen distribution.",
+        args={
+            "location_identifier": ArgumentConfig(
+                type=str, required=True, help="Location ID or name", positional=True
+            ),
+            "update_engine": ArgumentConfig(
+                action="store_true",
+                help="Update the recommendation engine with calculated milestones",
+            ),
+            "show_recommendations": ArgumentConfig(
+                action="store_true",
+                help="Show sample recommendations using the new milestones",
+            ),
+        },
+    ),
 }
 
 
@@ -270,7 +288,8 @@ def get_argument_kwargs(arg_config: ArgumentConfig) -> Dict[str, Any]:
 
     if arg_config.type is not None:
         kwargs["type"] = arg_config.type
-    if arg_config.required:
+    # 'required' is not valid for positional arguments
+    if arg_config.required and not arg_config.positional:
         kwargs["required"] = arg_config.required
     if arg_config.default is not None:
         kwargs["default"] = arg_config.default
