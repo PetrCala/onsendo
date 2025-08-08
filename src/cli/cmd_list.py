@@ -40,6 +40,16 @@ CLI_COMMANDS = {
             "force": ArgumentConfig(action="store_true"),
         },
     ),
+    "print-onsen-summary": CommandConfig(
+        func=commands.print_onsen_summary,
+        help="Print a summary for an onsen by ID or ban number.",
+        args={
+            "onsen_id": ArgumentConfig(type=int, required=False, help="Onsen ID"),
+            "ban_number": ArgumentConfig(
+                type=str, required=False, help="Onsen BAN number"
+            ),
+        },
+    ),
     "fill-db": CommandConfig(
         func=commands.fill_db,
         help="Fill the database with onsen data.",

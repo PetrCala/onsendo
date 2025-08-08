@@ -4,6 +4,7 @@ from .add_visit_interactive import add_visit_interactive
 from .fill_db import fill_db
 from .init_db import init_db
 from .scrape_onsen_data import scrape_onsen_data
+from .print_onsen_summary import print_onsen_summary
 
 
 __all__ = [
@@ -13,4 +14,5 @@ __all__ = [
     "init_db",
     "add_visit_interactive",
     "scrape_onsen_data",
+    "print_onsen_summary",
 ]
