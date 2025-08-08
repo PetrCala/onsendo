@@ -24,28 +24,30 @@ class TestCalculateLocationMilestones:
         location = Mock(spec=Location)
         location.latitude = 35.6762
         location.longitude = 139.6503
-        
+
         # Create mock onsens with different distances
         onsens = []
         distances = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 10.0]
-        
+
         for i, distance in enumerate(distances):
             onsen = Mock(spec=Onsen)
             onsen.id = i + 1
             onsen.latitude = 35.6762 + (distance * 0.001)  # Approximate distance
             onsen.longitude = 139.6503
             onsens.append(onsen)
-        
+
         # Mock database session
         mock_session = Mock(spec=Session)
         mock_session.query.return_value.all.return_value = onsens
-        
+
         # Mock distance calculation
-        with patch('src.lib.milestone_calculator.calculate_distance_to_onsen') as mock_calc:
+        with patch(
+            "src.lib.milestone_calculator.calculate_distance_to_onsen"
+        ) as mock_calc:
             mock_calc.side_effect = lambda loc, onsen: distances[onsen.id - 1]
-            
+
             milestones = calculate_location_milestones(location, mock_session)
-        
+
         # Verify milestones are calculated correctly
         assert isinstance(milestones, DistanceMilestones)
         assert milestones.very_close_max > 0
@@ -58,10 +60,10 @@ class TestCalculateLocationMilestones:
         location = Mock(spec=Location)
         location.latitude = 35.6762
         location.longitude = 139.6503
-        
+
         mock_session = Mock(spec=Session)
         mock_session.query.return_value.all.return_value = []
-        
+
         with pytest.raises(ValueError, match="No onsens found in the database"):
             calculate_location_milestones(location, mock_session)
 
@@ -70,7 +72,7 @@ class TestCalculateLocationMilestones:
         location = Mock(spec=Location)
         location.latitude = 35.6762
         location.longitude = 139.6503
-        
+
         # Create onsens with invalid coordinates
         onsens = []
         for i in range(3):
@@ -79,14 +81,18 @@ class TestCalculateLocationMilestones:
             onsen.latitude = None  # Invalid coordinates
             onsen.longitude = None
             onsens.append(onsen)
-        
+
         mock_session = Mock(spec=Session)
         mock_session.query.return_value.all.return_value = onsens
-        
-        with patch('src.lib.milestone_calculator.calculate_distance_to_onsen') as mock_calc:
+
+        with patch(
+            "src.lib.milestone_calculator.calculate_distance_to_onsen"
+        ) as mock_calc:
             mock_calc.return_value = None  # All distances are None
-            
-            with pytest.raises(ValueError, match="No valid distances could be calculated"):
+
+            with pytest.raises(
+                ValueError, match="No valid distances could be calculated"
+            ):
                 calculate_location_milestones(location, mock_session)
 
     def test_calculate_location_milestones_quantile_calculation(self):
@@ -94,29 +100,31 @@ class TestCalculateLocationMilestones:
         location = Mock(spec=Location)
         location.latitude = 35.6762
         location.longitude = 139.6503
-        
+
         # Create onsens with specific distances for quantile testing
         onsens = []
         distances = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
-        
+
         for i, distance in enumerate(distances):
             onsen = Mock(spec=Onsen)
             onsen.id = i + 1
             onsen.latitude = 35.6762 + (distance * 0.001)
             onsen.longitude = 139.6503
             onsens.append(onsen)
-        
+
         mock_session = Mock(spec=Session)
         mock_session.query.return_value.all.return_value = onsens
-        
-        with patch('src.lib.milestone_calculator.calculate_distance_to_onsen') as mock_calc:
+
+        with patch(
+            "src.lib.milestone_calculator.calculate_distance_to_onsen"
+        ) as mock_calc:
             mock_calc.side_effect = lambda loc, onsen: distances[onsen.id - 1]
-            
+
             milestones = calculate_location_milestones(location, mock_session)
-        
+
         # With 10 sorted distances, quantiles should be:
         # 20th percentile (index 1): 2.0
-        # 50th percentile (index 4): 5.0  
+        # 50th percentile (index 4): 5.0
         # 80th percentile (index 7): 8.0
         assert milestones.very_close_max == 2.0
         assert milestones.close_max == 5.0
@@ -132,11 +140,11 @@ class TestAnalyzeLocationDistances:
         location.name = "Test Location"
         location.latitude = 35.6762
         location.longitude = 139.6503
-        
+
         # Create mock onsens
         onsens = []
         distances = [0.5, 1.0, 2.0, 3.0, 4.0]
-        
+
         for i, distance in enumerate(distances):
             onsen = Mock(spec=Onsen)
             onsen.id = i + 1
@@ -144,15 +152,17 @@ class TestAnalyzeLocationDistances:
             onsen.latitude = 35.6762 + (distance * 0.001)
             onsen.longitude = 139.6503
             onsens.append(onsen)
-        
+
         mock_session = Mock(spec=Session)
         mock_session.query.return_value.all.return_value = onsens
-        
-        with patch('src.lib.milestone_calculator.calculate_distance_to_onsen') as mock_calc:
+
+        with patch(
+            "src.lib.milestone_calculator.calculate_distance_to_onsen"
+        ) as mock_calc:
             mock_calc.side_effect = lambda loc, onsen: distances[onsen.id - 1]
-            
+
             analysis = analyze_location_distances(location, mock_session)
-        
+
         # Verify analysis structure
         assert "error" not in analysis
         assert "location" in analysis
@@ -160,15 +170,15 @@ class TestAnalyzeLocationDistances:
         assert "statistics" in analysis
         assert "onsen_count" in analysis
         assert "sample_distances" in analysis
-        
+
         # Verify location data
         assert analysis["location"]["name"] == "Test Location"
         assert analysis["location"]["latitude"] == 35.6762
         assert analysis["location"]["longitude"] == 139.6503
-        
+
         # Verify milestones
         assert isinstance(analysis["milestones"], DistanceMilestones)
-        
+
         # Verify statistics
         stats = analysis["statistics"]
         assert "mean" in stats
@@ -177,7 +187,7 @@ class TestAnalyzeLocationDistances:
         assert "max" in stats
         assert "count" in stats
         assert stats["count"] == 5
-        
+
         # Verify sample distances
         assert len(analysis["sample_distances"]) <= 10
         assert len(analysis["sample_distances"]) == 5  # All distances in this case
@@ -188,12 +198,12 @@ class TestAnalyzeLocationDistances:
         location.name = "Test Location"
         location.latitude = 35.6762
         location.longitude = 139.6503
-        
+
         mock_session = Mock(spec=Session)
         mock_session.query.return_value.all.return_value = []
-        
+
         analysis = analyze_location_distances(location, mock_session)
-        
+
         assert "error" in analysis
         assert analysis["error"] == "No onsens found in the database"
 
@@ -203,7 +213,7 @@ class TestAnalyzeLocationDistances:
         location.name = "Test Location"
         location.latitude = 35.6762
         location.longitude = 139.6503
-        
+
         # Create onsens with invalid coordinates
         onsens = []
         for i in range(3):
@@ -213,15 +223,17 @@ class TestAnalyzeLocationDistances:
             onsen.latitude = None
             onsen.longitude = None
             onsens.append(onsen)
-        
+
         mock_session = Mock(spec=Session)
         mock_session.query.return_value.all.return_value = onsens
-        
-        with patch('src.lib.milestone_calculator.calculate_distance_to_onsen') as mock_calc:
+
+        with patch(
+            "src.lib.milestone_calculator.calculate_distance_to_onsen"
+        ) as mock_calc:
             mock_calc.return_value = None
-            
+
             analysis = analyze_location_distances(location, mock_session)
-        
+
         assert "error" in analysis
         assert analysis["error"] == "No valid distances could be calculated"
 
@@ -231,11 +243,11 @@ class TestAnalyzeLocationDistances:
         location.name = "Test Location"
         location.latitude = 35.6762
         location.longitude = 139.6503
-        
+
         # Create onsens with specific distances
         onsens = []
         distances = [1.0, 2.0, 3.0, 4.0, 5.0]
-        
+
         for i, distance in enumerate(distances):
             onsen = Mock(spec=Onsen)
             onsen.id = i + 1
@@ -243,15 +255,17 @@ class TestAnalyzeLocationDistances:
             onsen.latitude = 35.6762 + (distance * 0.001)
             onsen.longitude = 139.6503
             onsens.append(onsen)
-        
+
         mock_session = Mock(spec=Session)
         mock_session.query.return_value.all.return_value = onsens
-        
-        with patch('src.lib.milestone_calculator.calculate_distance_to_onsen') as mock_calc:
+
+        with patch(
+            "src.lib.milestone_calculator.calculate_distance_to_onsen"
+        ) as mock_calc:
             mock_calc.side_effect = lambda loc, onsen: distances[onsen.id - 1]
-            
+
             analysis = analyze_location_distances(location, mock_session)
-        
+
         stats = analysis["statistics"]
         assert stats["mean"] == 3.0
         assert stats["median"] == 3.0
@@ -266,22 +280,24 @@ class TestAnalyzeLocationDistances:
         location.name = "Test Location"
         location.latitude = 35.6762
         location.longitude = 139.6503
-        
+
         # Create one onsen with valid distance
         onsen = Mock(spec=Onsen)
         onsen.id = 1
         onsen.name = "Single Onsen"
         onsen.latitude = 35.6762 + 0.001
         onsen.longitude = 139.6503
-        
+
         mock_session = Mock(spec=Session)
         mock_session.query.return_value.all.return_value = [onsen]
-        
-        with patch('src.lib.milestone_calculator.calculate_distance_to_onsen') as mock_calc:
+
+        with patch(
+            "src.lib.milestone_calculator.calculate_distance_to_onsen"
+        ) as mock_calc:
             mock_calc.return_value = 1.0
-            
+
             analysis = analyze_location_distances(location, mock_session)
-        
+
         stats = analysis["statistics"]
         assert stats["mean"] == 1.0
         assert stats["median"] == 1.0
@@ -300,9 +316,9 @@ class TestPrintMilestoneAnalysis:
         location.name = "Test Location"
         location.latitude = 35.6762
         location.longitude = 139.6503
-        
+
         milestones = DistanceMilestones(1.0, 3.0, 5.0, 5.0)
-        
+
         analysis = {
             "location": {
                 "name": "Test Location",
@@ -324,10 +340,10 @@ class TestPrintMilestoneAnalysis:
                 (Mock(spec=Onsen, name="Onsen 2", id=2), 2.0),
             ],
         }
-        
+
         print_milestone_analysis(analysis)
         captured = capsys.readouterr()
-        
+
         # Verify output contains expected information
         assert "Test Location" in captured.out
         assert "very_close: <= 1.00 km" in captured.out
@@ -343,10 +359,10 @@ class TestPrintMilestoneAnalysis:
     def test_print_milestone_analysis_with_error(self, capsys):
         """Test analysis printing with error."""
         analysis = {"error": "Test error message"}
-        
+
         print_milestone_analysis(analysis)
         captured = capsys.readouterr()
-        
+
         assert "Error: Test error message" in captured.out
 
     def test_print_milestone_analysis_no_stddev(self, capsys):
@@ -355,9 +371,9 @@ class TestPrintMilestoneAnalysis:
         location.name = "Test Location"
         location.latitude = 35.6762
         location.longitude = 139.6503
-        
+
         milestones = DistanceMilestones(1.0, 1.0, 1.0, 1.0)
-        
+
         analysis = {
             "location": {
                 "name": "Test Location",
@@ -376,10 +392,10 @@ class TestPrintMilestoneAnalysis:
             "onsen_count": 1,
             "sample_distances": [],
         }
-        
+
         print_milestone_analysis(analysis)
         captured = capsys.readouterr()
-        
+
         assert "Stddev: N/A (only one onsen)" in captured.out
 
     def test_print_milestone_analysis_no_sample_distances(self, capsys):
@@ -388,9 +404,9 @@ class TestPrintMilestoneAnalysis:
         location.name = "Test Location"
         location.latitude = 35.6762
         location.longitude = 139.6503
-        
+
         milestones = DistanceMilestones(1.0, 3.0, 5.0, 5.0)
-        
+
         analysis = {
             "location": {
                 "name": "Test Location",
@@ -409,9 +425,9 @@ class TestPrintMilestoneAnalysis:
             "onsen_count": 5,
             "sample_distances": [],
         }
-        
+
         print_milestone_analysis(analysis)
         captured = capsys.readouterr()
-        
+
         # Should not contain sample distances section
         assert "Sample Distances" not in captured.out

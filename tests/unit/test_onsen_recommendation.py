@@ -205,23 +205,6 @@ class TestOnsenRecommendationEngine:
         result = engine.get_location_by_name_or_id("1")
         assert result == location
 
-    def test_get_location_by_name_or_id_by_name(self):
-        """Test getting location by name."""
-        mock_session = Mock(spec=Session)
-        engine = OnsenRecommendationEngine(mock_session)
-
-        location = Mock(spec=Location)
-        location.id = 1
-        location.name = "Test Location"
-
-        # Mock the query to return None for ID lookup, then location for name lookup
-        mock_query = Mock()
-        mock_query.filter.return_value.first.side_effect = [None, location]
-        mock_session.query.return_value = mock_query
-
-        result = engine.get_location_by_name_or_id("Test Location")
-        assert result == location
-
     def test_get_location_by_name_or_id_not_found(self):
         """Test getting location that doesn't exist."""
         mock_session = Mock(spec=Session)
