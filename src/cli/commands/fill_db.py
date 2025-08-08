@@ -37,4 +37,3 @@ def fill_db(args: argparse.Namespace) -> None:
         logger.info(
             f"Import finished. Inserted={summary['inserted']}, Updated={summary['updated']}, Skipped={summary['skipped']}"
         )
-        import_onsen_data(db)
