@@ -308,10 +308,15 @@ CLI_COMMANDS = {
         func=database_commands.backup_db,
         help="Backup the current database to a specified folder.",
         args={
+            "no_interactive": ArgumentConfig(
+                action="store_true",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
+            ),
             "backup_folder": ArgumentConfig(
                 type=str,
-                required=True,
-                help="Folder path where the backup should be stored",
+                required=False,
+                help="Folder path where the backup should be stored (optional in interactive mode)",
             ),
         },
     ),

@@ -23,8 +23,19 @@ def backup_db(args: argparse.Namespace) -> None:
         )
         return
 
-    # Create backup folder if it doesn't exist
+    # Get backup folder from args or interactively
     backup_folder = args.backup_folder
+    if not backup_folder and not args.no_interactive:
+        backup_folder = input("Enter backup folder path: ").strip()
+        if not backup_folder:
+            logger.error("Backup folder path is required.")
+            return
+
+    if not backup_folder:
+        logger.error("Backup folder path is required.")
+        return
+
+    # Create backup folder if it doesn't exist
     if not os.path.isabs(backup_folder):
         backup_folder = os.path.abspath(backup_folder)
 
