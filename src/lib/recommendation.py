@@ -10,6 +10,7 @@ from sqlalchemy import and_
 from src.db.models import Onsen, Location, OnsenVisit
 from src.lib.parsers.usage_time import parse_usage_time
 from src.lib.parsers.closed_days import parse_closed_days
+from src.lib.parsers.stay_restriction import parse_stay_restriction
 from src.lib.distance import (
     filter_onsens_by_distance,
     update_distance_categories,
@@ -154,6 +155,25 @@ class OnsenRecommendationEngine:
 
         return unvisited_onsens
 
+    def get_non_stay_restricted_onsens(self, onsens: List[Onsen]) -> List[Onsen]:
+        """
+        Filter out onsens that are restricted to facility guests only.
+
+        Args:
+            onsens: List of onsens to filter
+
+        Returns:
+            List of non-stay-restricted onsens
+        """
+        non_stay_restricted = []
+
+        for onsen in onsens:
+            stay_restriction = parse_stay_restriction(onsen.remarks)
+            if not stay_restriction.is_stay_restricted:
+                non_stay_restricted.append(onsen)
+
+        return non_stay_restricted
+
     def recommend_onsens(
         self,
         location: Location,
@@ -163,6 +183,7 @@ class OnsenRecommendationEngine:
         exclude_visited: bool = False,
         min_hours_after: Optional[int] = None,
         limit: Optional[int] = None,
+        stay_restriction_filter: Optional[str] = None,
     ) -> List[Tuple[Onsen, float, dict]]:
         """
         Get onsen recommendations based on specified criteria.
@@ -175,6 +196,7 @@ class OnsenRecommendationEngine:
             exclude_visited: Whether to exclude visited onsens
             min_hours_after: Minimum hours the onsen should be open after target_time (None to disable)
             limit: Maximum number of recommendations to return
+            stay_restriction_filter: Filter for stay restrictions ('non_stay_restricted', 'all', or None)
 
         Returns:
             List of tuples (onsen, distance_km, metadata)
@@ -193,6 +215,10 @@ class OnsenRecommendationEngine:
         if exclude_visited:
             onsens = self.get_unvisited_onsens(onsens)
 
+        # Filter by stay restriction if requested
+        if stay_restriction_filter == "non_stay_restricted":
+            onsens = self.get_non_stay_restricted_onsens(onsens)
+
         # Filter by distance
         distance_filtered = filter_onsens_by_distance(
             onsens, location, distance_category
@@ -201,6 +227,9 @@ class OnsenRecommendationEngine:
         # Add metadata and limit results
         recommendations = []
         for onsen, distance in distance_filtered:
+            # Parse stay restriction for metadata
+            stay_restriction = parse_stay_restriction(onsen.remarks)
+
             metadata = {
                 "distance_category": self._get_distance_category_name(distance),
                 "is_available": (
@@ -210,6 +239,8 @@ class OnsenRecommendationEngine:
                 ),
                 "has_been_visited": self._has_been_visited(onsen),
                 "google_maps_link": self._generate_google_maps_link(onsen),
+                "stay_restricted": stay_restriction.is_stay_restricted,
+                "stay_restriction_notes": stay_restriction.notes,
             }
             recommendations.append((onsen, distance, metadata))
 

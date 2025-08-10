@@ -13,6 +13,10 @@ from .closed_days import (
     ClosedDaysParsed,
     parse_closed_days,
 )
+from .stay_restriction import (
+    StayRestrictionParsed,
+    parse_stay_restriction,
+)
 
 __all__ = [
     "MonthRange",
@@ -26,4 +30,6 @@ __all__ = [
     "AbsoluteDatesRule",
     "ClosedDaysParsed",
     "parse_closed_days",
+    "StayRestrictionParsed",
+    "parse_stay_restriction",
 ]

@@ -273,6 +273,12 @@ CLI_COMMANDS = {
             "limit": ArgumentConfig(
                 type=int, required=False, help="Maximum number of recommendations"
             ),
+            "stay_restriction_filter": ArgumentConfig(
+                type=str,
+                required=False,
+                default="non_stay_restricted",
+                help="Stay restriction filter (non_stay_restricted, all)",
+            ),
         },
     ),
     "onsen-scrape-data": CommandConfig(

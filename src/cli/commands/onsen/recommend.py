@@ -45,6 +45,7 @@ def recommend_onsen(args: argparse.Namespace) -> None:
             exclude_visited=args.exclude_visited,
             min_hours_after=args.min_hours_after,
             limit=args.limit,
+            stay_restriction_filter=args.stay_restriction_filter,
         )
 
         # Display results
@@ -60,6 +61,8 @@ def recommend_onsen(args: argparse.Namespace) -> None:
         print(f"Exclude visited: {args.exclude_visited}")
         if args.min_hours_after:
             print(f"Minimum hours after target time: {args.min_hours_after}")
+        if args.stay_restriction_filter:
+            print(f"Stay restriction filter: {args.stay_restriction_filter}")
         print()
 
         for i, (onsen, distance, metadata) in enumerate(recommendations, 1):
@@ -73,6 +76,13 @@ def recommend_onsen(args: argparse.Namespace) -> None:
                 print(f"   Fee: {onsen.admission_fee}")
             if metadata["has_been_visited"]:
                 print(f"   Status: Previously visited")
+            if metadata["stay_restricted"]:
+                print(
+                    f"   Stay restriction: {'Yes' if metadata['stay_restricted'] else 'No'}"
+                )
+                if metadata["stay_restriction_notes"]:
+                    for note in metadata["stay_restriction_notes"]:
+                        print(f"     Note: {note}")
             print()
 
 
@@ -153,6 +163,27 @@ def recommend_onsen_interactive() -> None:
             input("Exclude visited onsens? (y/n, default: y): ").strip().lower() != "n"
         )
 
+        # Get stay restriction filter
+        print("\nStay restriction filter:")
+        print("  1: Non-stay-restricted only (exclude 宿泊限定 onsens)")
+        print("  2: All onsens (include stay-restricted)")
+
+        while True:
+            stay_filter_choice = input(
+                "Choose stay restriction filter (1-2, default: 1): "
+            ).strip()
+            if not stay_filter_choice:
+                stay_restriction_filter = "non_stay_restricted"
+                break
+            elif stay_filter_choice == "1":
+                stay_restriction_filter = "non_stay_restricted"
+                break
+            elif stay_filter_choice == "2":
+                stay_restriction_filter = "all"
+                break
+            else:
+                print("Please enter 1 or 2.")
+
         # Get minimum hours after target time
         min_hours_input = input(
             "Minimum hours onsen should be open after target time (press Enter for 2, or 0 to disable): "
@@ -189,6 +220,7 @@ def recommend_onsen_interactive() -> None:
         args.distance = distance_category
         args.exclude_closed = exclude_closed
         args.exclude_visited = exclude_visited
+        args.stay_restriction_filter = stay_restriction_filter
         args.min_hours_after = min_hours_after if min_hours_after > 0 else None
         args.limit = limit
         args.no_interactive = True
