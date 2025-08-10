@@ -27,12 +27,18 @@ def get_command_group_config() -> Dict[str, str]:
         "visit": "Visit management commands",
         "onsen": "Onsen management commands",
         "system": "System management commands",
+        "database": "Database management commands",
     }
 
 
-def get_command_group_mapping():
+def get_command_group_mapping() -> Dict[str, str]:
     """Get mapping of command prefixes to their group names."""
-    return {"location-": "location", "visit-": "visit", "onsen-": "onsen"}
+    return {
+        "location-": "location",
+        "visit-": "visit",
+        "onsen-": "onsen",
+        "database-": "database",
+    }
 
 
 def add_subcommands_to_group(
@@ -82,6 +88,9 @@ def main() -> None:
     python -m src.cli location add --help
     python -m src.cli visit add --help
     python -m src.cli onsen add --help
+    python -m src.cli database init --help
+    python -m src.cli database fill --help
+    python -m src.cli database backup --help
     ```
     """
     parser = argparse.ArgumentParser(description=f"{config.CLI_NAME}")

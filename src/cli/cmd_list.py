@@ -12,6 +12,7 @@ import src.cli.commands.location as location_commands
 import src.cli.commands.visit as visit_commands
 import src.cli.commands.onsen as onsen_commands
 import src.cli.commands.system as system_commands
+import src.cli.commands.database as database_commands
 
 
 @dataclass
@@ -288,19 +289,30 @@ CLI_COMMANDS = {
             ),
         },
     ),
-    # System commands
-    "init-db": CommandConfig(
-        func=system_commands.init_db,
+    # Database commands
+    "database-init": CommandConfig(
+        func=database_commands.init_db,
         help="Initialize the database.",
         args={
             "force": ArgumentConfig(action="store_true"),
         },
     ),
-    "fill-db": CommandConfig(
-        func=system_commands.fill_db,
+    "database-fill": CommandConfig(
+        func=database_commands.fill_db,
         help="Fill the database with onsen data.",
         args={
             "json_path": ArgumentConfig(type=str, required=True),
+        },
+    ),
+    "database-backup": CommandConfig(
+        func=database_commands.backup_db,
+        help="Backup the current database to a specified folder.",
+        args={
+            "backup_folder": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Folder path where the backup should be stored",
+            ),
         },
     ),
     "calculate-milestones": CommandConfig(

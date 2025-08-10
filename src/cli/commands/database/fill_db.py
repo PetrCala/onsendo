@@ -19,7 +19,7 @@ def fill_db(args: argparse.Namespace) -> None:
     database_path = CONST.DATABASE_URL.replace("sqlite:///", "")
     if not os.path.exists(database_path):
         logger.error(
-            f"Database file {database_path} does not exist! Run `init-db` first to create it."
+            f"Database file {database_path} does not exist! Run `database init` first to create it."
         )
         return
 
