@@ -6,7 +6,7 @@ by looking for "宿泊限定" (stay-limited) in the remarks column.
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Any
 
 
 @dataclass
@@ -24,7 +24,7 @@ class StayRestrictionParsed:
             self.notes = []
 
 
-def parse_stay_restriction(value: Optional[str]) -> StayRestrictionParsed:
+def parse_stay_restriction(value: Optional[str | Any]) -> StayRestrictionParsed:
     """
     Parse stay restriction information from onsen remarks.
 
@@ -40,6 +40,12 @@ def parse_stay_restriction(value: Optional[str]) -> StayRestrictionParsed:
             normalized=None if value is None else "",
             is_stay_restricted=False,
             requires_inquiry=False,
+        )
+
+    # Ensure value is a string
+    if not isinstance(value, str):
+        return StayRestrictionParsed(
+            raw=value, normalized=None, is_stay_restricted=False, requires_inquiry=False
         )
 
     # Normalize the text for consistent matching
@@ -65,6 +71,9 @@ def parse_stay_restriction(value: Optional[str]) -> StayRestrictionParsed:
 
 def _normalize_text(text: str) -> str:
     """Normalize text for consistent matching."""
+    if not isinstance(text, str):
+        return ""
+
     # Convert to lowercase and remove extra whitespace
     normalized = text.lower().strip()
     # Replace multiple spaces with single space
