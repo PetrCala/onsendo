@@ -23,22 +23,22 @@ def main() -> None:
         "location", help="Location management commands"
     )
     location_subparsers = location_parser.add_subparsers(
-        dest="location_command", help="Location subcommands"
+        dest="location_command", help="Location subcommands", required=False
     )
 
     visit_parser = subparsers.add_parser("visit", help="Visit management commands")
     visit_subparsers = visit_parser.add_subparsers(
-        dest="visit_command", help="Visit subcommands"
+        dest="visit_command", help="Visit subcommands", required=False
     )
 
     onsen_parser = subparsers.add_parser("onsen", help="Onsen management commands")
     onsen_subparsers = onsen_parser.add_subparsers(
-        dest="onsen_command", help="Onsen subcommands"
+        dest="onsen_command", help="Onsen subcommands", required=False
     )
 
     system_parser = subparsers.add_parser("system", help="System management commands")
     system_subparsers = system_parser.add_subparsers(
-        dest="system_command", help="System subcommands"
+        dest="system_command", help="System subcommands", required=False
     )
 
     # Add subcommands to each group
@@ -82,6 +82,33 @@ def main() -> None:
         parser_command.set_defaults(func=command_config.func)
 
     args = parser.parse_args()
+
+    # Check if a command group was specified but no subcommand
+    if hasattr(args, "command_group") and args.command_group:
+        # Check if any subcommand was actually provided
+        has_subcommand = False
+        if args.command_group == "location":
+            has_subcommand = args.location_command is not None
+        elif args.command_group == "visit":
+            has_subcommand = args.visit_command is not None
+        elif args.command_group == "onsen":
+            has_subcommand = args.onsen_command is not None
+        elif args.command_group == "system":
+            has_subcommand = args.system_command is not None
+
+        # If no subcommand was provided, show help for the command group
+        if not has_subcommand:
+            if args.command_group == "location":
+                location_parser.print_help()
+            elif args.command_group == "visit":
+                visit_parser.print_help()
+            elif args.command_group == "onsen":
+                onsen_parser.print_help()
+            elif args.command_group == "system":
+                system_parser.print_help()
+            return
+
+    # Execute the command if a function is specified
     if hasattr(args, "func"):
         args.func(args)
     else:
