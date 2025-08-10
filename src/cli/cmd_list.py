@@ -306,7 +306,7 @@ CLI_COMMANDS = {
     ),
     "database-backup": CommandConfig(
         func=database_commands.backup_db,
-        help="Backup the current database to a specified folder.",
+        help="Backup the current database to a specified folder. In interactive mode, type 'browse' to open folder selection dialog.",
         args={
             "no_interactive": ArgumentConfig(
                 action="store_true",

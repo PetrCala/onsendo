@@ -9,6 +9,7 @@ import os
 import shutil
 from datetime import datetime
 from loguru import logger
+from src.lib.utils import open_folder_dialog
 from src.const import CONST
 
 
@@ -23,10 +24,21 @@ def backup_db(args: argparse.Namespace) -> None:
         )
         return
 
-    # Get backup folder from args or interactively
     backup_folder = args.backup_folder
     if not backup_folder and not args.no_interactive:
-        backup_folder = input("Enter backup folder path: ").strip()
+        user_input = input(
+            "Enter backup folder path, or type 'browse' to open folder selection dialog: "
+        ).strip()
+
+        if user_input.lower() in ["browse", "select", "dialog", "gui"]:
+            logger.info("Opening folder selection dialog...")
+            backup_folder = open_folder_dialog()
+            if not backup_folder:
+                logger.info("No folder selected or dialog cancelled.")
+                return
+        else:
+            backup_folder = user_input
+
         if not backup_folder:
             logger.error("Backup folder path is required.")
             return

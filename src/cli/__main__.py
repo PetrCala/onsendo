@@ -81,17 +81,6 @@ def show_command_group_help(
 def main() -> None:
     """
     Main function for the CLI.
-
-    Usage:
-    ```bash
-    python -m src.cli --help
-    python -m src.cli location add --help
-    python -m src.cli visit add --help
-    python -m src.cli onsen add --help
-    python -m src.cli database init --help
-    python -m src.cli database fill --help
-    python -m src.cli database backup --help
-    ```
     """
     parser = argparse.ArgumentParser(description=f"{config.CLI_NAME}")
     subparsers = parser.add_subparsers(dest="command_group", help="Command groups")
