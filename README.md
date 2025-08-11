@@ -69,6 +69,12 @@ source .venv/bin/activate
    poetry run onsendo visit add
    ```
 
+5. **Generate test data** (optional, for development/testing):
+
+   ```bash
+   poetry run onsendo database insert-mock --scenario random
+   ```
+
 ### Preparing a database
 
 You can either choose to create your own database, or use the provided one.
@@ -91,6 +97,7 @@ poetry run onsendo location --help
 poetry run onsendo onsen --help
 poetry run onsendo visit --help
 poetry run onsendo system --help
+poetry run onsendo database --help
 ```
 
 #### Core Concepts and Workflows
