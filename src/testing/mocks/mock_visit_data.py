@@ -71,7 +71,6 @@ class MockOnsenVisit:
     # Optional fields with defaults
     exercise_type: Optional[str] = None
     exercise_length_minutes: Optional[int] = None
-    heart_rate_data: Optional[str] = None
     sauna_visited: Optional[bool] = None
     sauna_temperature: Optional[float] = None
     sauna_steam: Optional[bool] = None
@@ -319,7 +318,6 @@ class MockVisitDataGenerator:
                 random.randint(15, 60) if exercise_before else None
             ),
             "crowd_level": random.choice(self.CROWD_LEVELS),
-            "heart_rate_data": None,  # Usually not recorded
             "view_rating": self._get_realistic_ratings("view"),
             "navigability_rating": random.randint(6, 10),
             "cleanliness_rating": self._get_realistic_ratings("cleanliness"),

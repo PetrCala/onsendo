@@ -100,7 +100,6 @@ class OnsenVisit(Base):
     - exercise_type: the type of exercise I did before the onsen (e.g., "running", "walking", "cycling", "other")
     - exercise_length_minutes: how long I exercised before the onsen
     - crowd_level: the crowd level at the onsen ("busy", "moderate", "quiet", "empty")
-    - heart_rate_data: can store some textual or JSON data about heart rate
     - view_rating: my rating of the view from the onsen (1-10)
     - navigability_rating: my rating of the navigability inside the onsen (1-10)
     - cleanliness_rating: my rating of the cleanliness (1-10)
@@ -160,7 +159,6 @@ class OnsenVisit(Base):
     exercise_type = Column(String)
     exercise_length_minutes = Column(Integer)
     crowd_level = Column(String)
-    heart_rate_data = Column(String)
     cleanliness_rating = Column(Integer)
     navigability_rating = Column(Integer)
     view_rating = Column(Integer)
@@ -209,7 +207,6 @@ class HeartRateData(Base):
 
     Columns:
     - id: primary key
-    - visit_id: foreign key referencing OnsenVisit (optional, for linked visits)
     - recording_start: when the recording started
     - recording_end: when the recording ended
     - data_format: format of the data (e.g., "garmin_fit", "apple_health", "csv")
@@ -241,5 +238,4 @@ class HeartRateData(Base):
     notes = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationship to visit
     visit = relationship("OnsenVisit")

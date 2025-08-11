@@ -55,7 +55,6 @@ def get_complete_flow_inputs() -> List[str]:
         "car",  # travel_mode
         "",  # exercise_type (skip)
         "moderate",  # crowd_level
-        "",  # heart_rate_data (skip)
         "open air",  # main_bath_type
         "sulfur",  # main_bath_water_type
         "clear",  # water_color
@@ -123,7 +122,6 @@ def get_exercise_flow_inputs() -> List[str]:
         "walk",  # travel_mode
         "running",  # exercise_type
         "quiet",  # crowd_level
-        "",  # heart_rate_data (skip)
         "indoor",  # main_bath_type
         "salt",  # main_bath_water_type
         "brown",  # water_color
@@ -189,7 +187,6 @@ def get_minimal_flow_inputs() -> List[str]:
         "train",  # travel_mode
         "",  # exercise_type (skip)
         "quiet",  # crowd_level
-        "",  # heart_rate_data (skip)
         "indoor",  # main_bath_type
         "sulfur",  # main_bath_water_type
         "clear",  # water_color
@@ -258,7 +255,6 @@ def get_invalid_onsen_retry_inputs() -> List[str]:
         "car",  # travel_mode
         "",  # exercise_type (skip)
         "moderate",  # crowd_level
-        "",  # heart_rate_data (skip)
         "open air",  # main_bath_type
         "sulfur",  # main_bath_water_type
         "clear",  # water_color
@@ -327,7 +323,6 @@ def get_invalid_rating_retry_inputs() -> List[str]:
         "car",  # travel_mode
         "",  # exercise_type (skip)
         "moderate",  # crowd_level
-        "",  # heart_rate_data (skip)
         "open air",  # main_bath_type
         "sulfur",  # main_bath_water_type
         "clear",  # water_color
@@ -394,7 +389,6 @@ def get_multi_onsen_day_inputs() -> List[str]:
         "bus",  # travel_mode
         "",  # exercise_type (skip)
         "busy",  # crowd_level
-        "",  # heart_rate_data (skip)
         "open air",  # main_bath_type
         "salt",  # main_bath_water_type
         "brown",  # water_color

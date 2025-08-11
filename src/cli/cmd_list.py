@@ -151,7 +151,6 @@ CLI_COMMANDS = {
             "travel_mode": ArgumentConfig(type=str, default=""),
             "exercise_type": ArgumentConfig(type=str, default=""),
             "crowd_level": ArgumentConfig(type=str, default=""),
-            "heart_rate_data": ArgumentConfig(type=str, default=""),
             "main_bath_type": ArgumentConfig(type=str, default=""),
             "main_bath_water_type": ArgumentConfig(type=str, default=""),
             "water_color": ArgumentConfig(type=str, default=""),

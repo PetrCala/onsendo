@@ -112,7 +112,6 @@ def insert_mock_data(args: argparse.Namespace) -> None:
                 exercise_type=visit.exercise_type,
                 exercise_length_minutes=visit.exercise_length_minutes,
                 crowd_level=visit.crowd_level,
-                heart_rate_data=visit.heart_rate_data,
                 view_rating=visit.view_rating,
                 navigability_rating=visit.navigability_rating,
                 cleanliness_rating=visit.cleanliness_rating,
