@@ -3,8 +3,6 @@ Batch import heart rate data from a directory.
 """
 
 import argparse
-import sys
-import os
 from pathlib import Path
 from typing import List, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -99,16 +97,16 @@ def import_single_file(
     return result
 
 
-def batch_import_heart_rate_data(
-    directory: str,
-    recursive: bool = False,
-    format_hint: Optional[str] = None,
-    notes: Optional[str] = None,
-    dry_run: bool = False,
-    max_workers: int = 4,
-) -> int:
+def batch_import_heart_rate_data(args: argparse.Namespace) -> int:
     """Batch import heart rate data from a directory."""
     try:
+        directory = args.directory
+        recursive = args.recursive
+        format_hint = args.format
+        notes = args.notes
+        dry_run = args.dry_run
+        max_workers = args.max_workers
+
         print(f"📁 Batch importing heart rate data from: {directory}")
         if recursive:
             print("   🔍 Recursive search enabled")
@@ -214,69 +212,3 @@ def _print_import_result(result: dict, file_path: Path):
         print(f"   ⚠️  Validation issues:")
         for error in result["validation_errors"]:
             print(f"      - {error}")
-
-
-def main():
-    """Main CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="Batch import heart rate data from a directory",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Supported file formats:
-  - CSV files (.csv)
-  - JSON files (.json) 
-  - Text files (.txt)
-
-Files are automatically detected by extension and processed in parallel.
-        """,
-    )
-
-    parser.add_argument("directory", help="Directory containing heart rate data files")
-
-    parser.add_argument(
-        "--recursive",
-        "-r",
-        action="store_true",
-        help="Search subdirectories recursively",
-    )
-
-    parser.add_argument(
-        "--format",
-        "-f",
-        choices=["csv", "json", "text"],
-        help="Force specific file format for all files (auto-detected if not specified)",
-    )
-
-    parser.add_argument(
-        "--notes", "-n", help="Optional notes to add to all imported sessions"
-    )
-
-    parser.add_argument(
-        "--dry-run",
-        "-d",
-        action="store_true",
-        help="Show what would be imported without actually storing data",
-    )
-
-    parser.add_argument(
-        "--max-workers",
-        "-w",
-        type=int,
-        default=4,
-        help="Maximum number of parallel workers (default: 4)",
-    )
-
-    args = parser.parse_args()
-
-    return batch_import_heart_rate_data(
-        args.directory,
-        recursive=args.recursive,
-        format_hint=args.format,
-        notes=args.notes,
-        dry_run=args.dry_run,
-        max_workers=args.max_workers,
-    )
-
-
-if __name__ == "__main__":
-    sys.exit(main())

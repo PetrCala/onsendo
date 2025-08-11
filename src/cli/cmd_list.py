@@ -431,7 +431,7 @@ CLI_COMMANDS = {
     ),
     # Heart rate commands
     "heart-rate-import": CommandConfig(
-        func=heart_rate_commands.import_heart_rate_data_cli,
+        func=heart_rate_commands.import_heart_rate_data,
         help="Import heart rate data from a file",
         args={
             "file_path": ArgumentConfig(

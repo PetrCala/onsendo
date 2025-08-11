@@ -3,25 +3,22 @@ List and manage heart rate data records.
 """
 
 import argparse
-import sys
-from datetime import datetime
-from typing import Optional
 
 from src.lib.heart_rate_manager import HeartRateDataManager
 from src.db.conn import get_db
-from src.db.models import HeartRateData, OnsenVisit
+from src.db.models import HeartRateData
 from src.const import CONST
 
 
-def list_heart_rate_data(
-    linked_only: bool = False,
-    unlinked_only: bool = False,
-    visit_id: Optional[int] = None,
-    show_details: bool = False,
-) -> int:
+def list_heart_rate_data(args: argparse.Namespace) -> int:
     """List heart rate data records."""
     try:
         manager = HeartRateDataManager()
+
+        linked_only = args.linked_only
+        unlinked_only = args.unlinked_only
+        visit_id = args.visit_id
+        show_details = args.details
 
         if visit_id:
             # Show heart rate data for specific visit
@@ -95,10 +92,13 @@ def list_heart_rate_data(
         return 1
 
 
-def link_heart_rate_to_visit(heart_rate_id: int, visit_id: int) -> int:
+def link_heart_rate_to_visit(args: argparse.Namespace) -> int:
     """Link heart rate data to an onsen visit."""
     try:
         manager = HeartRateDataManager()
+
+        heart_rate_id = args.heart_rate_id
+        visit_id = args.visit_id_link
 
         print(f"🔗 Linking heart rate data {heart_rate_id} to visit {visit_id}...")
 
@@ -114,10 +114,12 @@ def link_heart_rate_to_visit(heart_rate_id: int, visit_id: int) -> int:
         return 1
 
 
-def unlink_heart_rate_from_visit(heart_rate_id: int) -> int:
+def unlink_heart_rate_from_visit(args: argparse.Namespace) -> int:
     """Unlink heart rate data from its visit."""
     try:
         manager = HeartRateDataManager()
+
+        heart_rate_id = args.heart_rate_id
 
         print(f"🔓 Unlinking heart rate data {heart_rate_id} from visit...")
 
@@ -133,10 +135,13 @@ def unlink_heart_rate_from_visit(heart_rate_id: int) -> int:
         return 1
 
 
-def delete_heart_rate_record(heart_rate_id: int, force: bool = False) -> int:
+def delete_heart_rate_record(args: argparse.Namespace) -> int:
     """Delete a heart rate record."""
     try:
         manager = HeartRateDataManager()
+
+        heart_rate_id = args.heart_rate_id
+        force = args.force
 
         # Get record details
         db_session = get_db()
