@@ -12,6 +12,8 @@ from src.lib.heart_rate_manager import (
     HeartRateDataValidator,
     HeartRateDataManager,
 )
+from src.db.conn import get_db
+from src.const import CONST
 
 
 def import_heart_rate_data(
@@ -60,12 +62,13 @@ def import_heart_rate_data(
 
         # Store in database
         print("\n💾 Storing data in database...")
-        manager = HeartRateDataManager()
 
         if notes:
             session.notes = notes
 
-        record = manager.store_session(session)
+        with get_db(CONST.DATABASE_URL) as db:
+            manager = HeartRateDataManager(db)
+            record = manager.store_session(session)
 
         print(f"✅ Successfully stored heart rate data with ID: {record.id}")
         print(f"🔗 File hash: {record.data_hash[:16]}...")

@@ -10,6 +10,7 @@ from typing import Optional
 from src.lib.heart_rate_manager import HeartRateDataManager
 from src.db.conn import get_db
 from src.db.models import HeartRateData, OnsenVisit
+from src.const import CONST
 
 
 def list_heart_rate_data(
@@ -31,21 +32,26 @@ def list_heart_rate_data(
             print(f"💓 Heart rate data for visit {visit_id}:")
         elif linked_only:
             # Show only linked records
-            db_session = get_db()
-            records = (
-                db_session.query(HeartRateData)
-                .filter(HeartRateData.visit_id.isnot(None))
-                .all()
-            )
+            with get_db(CONST.DATABASE_URL) as db:
+                records = (
+                    db.query(HeartRateData)
+                    .filter(HeartRateData.visit_id.isnot(None))
+                    .all()
+                )
             print("🔗 Linked heart rate data records:")
         elif unlinked_only:
             # Show only unlinked records
-            records = manager.get_unlinked()
+            with get_db(CONST.DATABASE_URL) as db:
+                records = (
+                    db.query(HeartRateData)
+                    .filter(HeartRateData.visit_id.is_(None))
+                    .all()
+                )
             print("🔓 Unlinked heart rate data records:")
         else:
             # Show all records
-            db_session = get_db()
-            records = db_session.query(HeartRateData).all()
+            with get_db(CONST.DATABASE_URL) as db:
+                records = db.query(HeartRateData).all()
             print("💓 All heart rate data records:")
 
         if not records:

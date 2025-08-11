@@ -462,7 +462,12 @@ class HeartRateDataManager:
     """Manages heart rate data storage and retrieval."""
 
     def __init__(self, db_session=None):
-        self.db_session = db_session or get_db(CONST.DATABASE_URL)
+        """Initialize with an optional database session.
+
+        If no session is provided, the manager will create its own
+        database connection for each operation.
+        """
+        self.db_session = db_session
 
     def store_session(
         self, session: HeartRateSession, visit_id: Optional[int] = None
@@ -487,8 +492,15 @@ class HeartRateDataManager:
             notes=session.notes,
         )
 
-        self.db_session.add(heart_rate_record)
-        self.db_session.commit()
+        if self.db_session:
+            # Use provided session
+            self.db_session.add(heart_rate_record)
+            self.db_session.commit()
+        else:
+            # Create our own database connection
+            with get_db(CONST.DATABASE_URL) as db:
+                db.add(heart_rate_record)
+                db.commit()
 
         logger.info(f"Stored heart rate session: {heart_rate_record.id}")
         return heart_rate_record
@@ -496,29 +508,56 @@ class HeartRateDataManager:
     def link_to_visit(self, heart_rate_id: int, visit_id: int) -> bool:
         """Link heart rate data to an onsen visit."""
         try:
-            heart_rate_record = (
-                self.db_session.query(HeartRateData).filter_by(id=heart_rate_id).first()
-            )
-            if not heart_rate_record:
-                logger.error(f"Heart rate record {heart_rate_id} not found")
-                return False
+            if self.db_session:
+                # Use provided session
+                heart_rate_record = (
+                    self.db_session.query(HeartRateData)
+                    .filter_by(id=heart_rate_id)
+                    .first()
+                )
+                if not heart_rate_record:
+                    logger.error(f"Heart rate record {heart_rate_id} not found")
+                    return False
 
-            visit_record = (
-                self.db_session.query(OnsenVisit).filter_by(id=visit_id).first()
-            )
-            if not visit_record:
-                logger.error(f"Visit record {visit_id} not found")
-                return False
+                visit_record = (
+                    self.db_session.query(OnsenVisit).filter_by(id=visit_id).first()
+                )
+                if not visit_record:
+                    logger.error(f"Visit record {visit_id} not found")
+                    return False
 
-            heart_rate_record.visit_id = visit_id
-            self.db_session.commit()
+                heart_rate_record.visit_id = visit_id
+                self.db_session.commit()
 
-            logger.info(f"Linked heart rate {heart_rate_id} to visit {visit_id}")
-            return True
+                logger.info(f"Linked heart rate {heart_rate_id} to visit {visit_id}")
+                return True
+            else:
+                # Create our own database connection
+                with get_db(CONST.DATABASE_URL) as db:
+                    heart_rate_record = (
+                        db.query(HeartRateData).filter_by(id=heart_rate_id).first()
+                    )
+                    if not heart_rate_record:
+                        logger.error(f"Heart rate record {heart_rate_id} not found")
+                        return False
+
+                    visit_record = db.query(OnsenVisit).filter_by(id=visit_id).first()
+                    if not visit_record:
+                        logger.error(f"Visit record {visit_id} not found")
+                        return False
+
+                    heart_rate_record.visit_id = visit_id
+                    db.commit()
+
+                    logger.info(
+                        f"Linked heart rate {heart_rate_id} to visit {visit_id}"
+                    )
+                    return True
 
         except Exception as e:
             logger.error(f"Error linking heart rate to visit: {e}")
-            self.db_session.rollback()
+            if self.db_session:
+                self.db_session.rollback()
             return False
 
     def unlink_from_visit(self, heart_rate_id: int) -> bool:
