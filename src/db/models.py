@@ -201,7 +201,6 @@ class OnsenVisit(Base):
     personal_rating = Column(Integer)
 
     onsen = relationship("Onsen", back_populates="visits")
-    heart_rate_data = relationship("HeartRateData", back_populates="visit")
 
 
 class HeartRateData(Base):
@@ -243,4 +242,4 @@ class HeartRateData(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationship to visit
-    visit = relationship("OnsenVisit", back_populates="heart_rate_data")
+    visit = relationship("OnsenVisit")

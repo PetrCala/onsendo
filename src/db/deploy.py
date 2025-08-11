@@ -2,8 +2,10 @@ import sys
 from typing import Optional
 from loguru import logger
 from sqlalchemy_utils import database_exists, create_database, drop_database
-from src.db.conn import engine
+from src.db.conn import db_manager
 from src.db.models import Base
+from src.const import CONST
+
 
 def main(action: Optional[str] = "create"):
     """
@@ -26,13 +28,26 @@ def main(action: Optional[str] = "create"):
         logger.error(f"Unknown action: {action}")
         sys.exit(1)
 
+
 def drop_all():
     logger.warning("Dropping all tables in the database.")
+    # Get the engine from db_manager
+    engine = db_manager.engines.get(CONST.DATABASE_URL)
+    if engine is None:
+        db_manager.add_connection(CONST.DATABASE_URL)
+        engine = db_manager.engines[CONST.DATABASE_URL]
     Base.metadata.drop_all(bind=engine)
+
 
 def create_all():
     logger.info("Creating all tables in the database.")
+    # Get the engine from db_manager
+    engine = db_manager.engines.get(CONST.DATABASE_URL)
+    if engine is None:
+        db_manager.add_connection(CONST.DATABASE_URL)
+        engine = db_manager.engines[CONST.DATABASE_URL]
     Base.metadata.create_all(bind=engine)
+
 
 if __name__ == "__main__":
     # e.g. python deploy_db.py create
