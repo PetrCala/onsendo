@@ -35,6 +35,7 @@
       - [Adding a Visit](#adding-a-visit)
       - [Key Features of Visit Recording](#key-features-of-visit-recording)
       - [Managing Visit Records](#managing-visit-records)
+      - [Heart Rate Data Management](#heart-rate-data-management)
     - [Getting Smart Recommendations](#getting-smart-recommendations)
       - [Basic Recommendations](#basic-recommendations)
       - [Advanced Filtering](#advanced-filtering)
@@ -115,17 +116,19 @@ For detailed help on any command group:
 poetry run onsendo location --help
 poetry run onsendo onsen --help
 poetry run onsendo visit --help
+poetry run onsendo heart-rate --help
 poetry run onsendo system --help
 poetry run onsendo database --help
 ```
 
 #### Core Concepts and Workflows
 
-The CLI is organized around four main concepts that reflect how you interact with onsens in real life:
+The CLI is organized around five main concepts that reflect how you interact with onsens in real life:
 
 **🏠 Locations** - Places you stay or visit from (home, hotel, etc.)
 **♨️ Onsens** - Hot spring facilities you can visit
 **📝 Visits** - Your actual experiences at specific onsens
+**💓 Heart Rate** - Physiological data from fitness devices linked to visits
 **⚙️ System** - Database management and data processing
 
 #### Managing Your Locations
@@ -214,6 +217,112 @@ poetry run onsendo visit list            # See all your visits
 poetry run onsendo visit modify          # Update visit details
 poetry run onsendo visit delete          # Remove a visit record
 ```
+
+##### Heart Rate Data Management
+
+The heart rate data system allows you to import, store, and link heart rate recordings from various fitness devices (smartwatches, fitness trackers, etc.) to your onsen visits. This enables comprehensive health tracking and analysis of how onsen experiences affect your physiological responses.
+
+**Key Features**:
+
+- **Multi-format Support**: Import from CSV, JSON, Apple Health, and plain text
+- **Data Validation**: Automatic quality checks ensure only reliable data is stored
+- **Visit Linking**: Connect heart rate sessions to specific onsen visits
+- **File Integrity**: SHA-256 hashing verifies data hasn't been corrupted
+- **Flexible Storage**: Store data with or without linking to visits
+
+**Supported Data Formats**:
+
+*Standard CSV Format*:
+
+```csv
+timestamp,heart_rate,confidence
+2024-01-15 10:00:00,72,0.95
+2024-01-15 10:01:00,75,0.92
+```
+
+*Apple Health Format*:
+
+```csv
+"SampleType","SampleRate","StartTime","Data"
+"HEART_RATE",1,"2025-08-11T15:24:12.000Z","72;74;73;75;76;80;82;85;87"
+"HEART_RATE",1,"2025-08-11T15:25:12.000Z","88;90;92;95;98;100;102;105;108"
+```
+
+**Importing Heart Rate Data**:
+
+```bash
+# Import a single file
+poetry run onsendo heart-rate import path/to/data.csv
+
+# Force specific format
+poetry run onsendo heart-rate import path/to/data.csv --format csv
+
+# Add notes
+poetry run onsendo heart-rate import path/to/data.csv --notes "Morning workout session"
+
+# Validate only (don't store)
+poetry run onsendo heart-rate import path/to/data.csv --validate-only
+
+# Batch import from directory
+poetry run onsendo heart-rate batch-import /path/to/heart_rate_files/ --recursive
+```
+
+**Linking to Onsen Visits**:
+
+When adding a visit interactively, you can link heart rate data:
+
+1. Complete the visit details
+2. When prompted for heart rate data, enter the ID of an unlinked record
+3. Or type `list` to see available unlinked heart rate records
+4. The system will automatically link the selected data to your visit
+
+**Managing Heart Rate Records**:
+
+```bash
+# List all records
+poetry run onsendo heart-rate list list
+
+# Show only unlinked records
+poetry run onsendo heart-rate list list --unlinked_only
+
+# Show details including file integrity
+poetry run onsendo heart-rate list list --details
+
+# Link to a visit
+poetry run onsendo heart-rate list link 123 456  # Link HR record 123 to visit 456
+
+# Unlink from visit
+poetry run onsendo heart-rate list unlink 123
+
+# Delete a record
+poetry run onsendo heart-rate list delete 123 --force
+```
+
+**Mock Data Generation**:
+
+For testing and development, you can generate realistic heart rate data:
+
+```python
+from src.testing.mocks.mock_heart_rate_data import (
+    create_workout_session,
+    create_sleep_session,
+    create_daily_sessions
+)
+
+# Create a complete workout session
+workout = create_workout_session()
+
+# Export to Apple Health format
+workout.export_apple_health_format("workout.csv")
+```
+
+**Data Quality Features**:
+
+- **Physiological Accuracy**: Heart rates within realistic bounds (40-200 BPM)
+- **Activity Patterns**: Different patterns for resting, exercise, recovery, and sleep
+- **Time-based Variations**: Morning vs evening patterns, seasonal adjustments
+- **Confidence Scores**: Data quality assessment for each measurement
+- **Export Formats**: Support for all major data formats including Apple Health
 
 #### Getting Smart Recommendations
 
@@ -438,3 +547,6 @@ poetry run onsendo database drop-visits --force
 1. Record detailed visit data including energy levels and hydration
 2. Track how different onsens affect your well-being
 3. Use this data to plan future visits based on your health goals
+4. **Import heart rate data** from fitness devices to correlate physiological responses with onsen experiences
+5. **Link heart rate sessions** to specific visits for comprehensive health analysis
+6. **Monitor recovery patterns** by tracking heart rate changes before, during, and after onsen visits
