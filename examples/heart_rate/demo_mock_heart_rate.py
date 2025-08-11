@@ -6,7 +6,7 @@ This script shows how to generate realistic mock heart rate data
 and export it in various formats including Apple Health CSV.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from src.testing.mocks.mock_heart_rate_data import (
     create_single_session,
     create_workout_session,
@@ -130,6 +130,58 @@ def main():
                     )
 
     print(f"   Exported mixed scenario to: {mixed_apple_health}")
+
+    # 6. Create additional sample files for documentation
+    print("\n6. Creating additional sample files...")
+
+    # Create a simple Apple Health sample file
+    apple_health_sample = "examples/heart_rate/apple_health_sample.csv"
+    with open(apple_health_sample, "w", newline="", encoding="utf-8") as f:
+        import csv
+
+        writer = csv.writer(f)
+        writer.writerow(["SampleType", "SampleRate", "StartTime", "Data"])
+
+        # Create a simple example with increasing heart rate
+        base_time = datetime.now().replace(hour=15, minute=24, second=12, microsecond=0)
+        for i in range(5):
+            timestamp = base_time + timedelta(minutes=i)
+            hr_values = [
+                str(70 + i * 2 + j) for j in range(9)
+            ]  # Simple increasing pattern
+            hr_data = ";".join(hr_values)
+            writer.writerow(
+                ["HEART_RATE", 1, timestamp.strftime("%Y-%m-%dT%H:%M:%S.000Z"), hr_data]
+            )
+    print(f"   Created Apple Health sample: {apple_health_sample}")
+
+    # Create a standard CSV sample file
+    csv_sample = "examples/heart_rate/heart_rate_sample.csv"
+    with open(csv_sample, "w", newline="", encoding="utf-8") as f:
+        import csv
+
+        writer = csv.writer(f)
+        writer.writerow(["timestamp", "heart_rate", "confidence"])
+
+        # Create a simple example with realistic heart rate data
+        base_time = datetime.now().replace(hour=10, minute=0, second=0, microsecond=0)
+        for i in range(20):  # 20 data points
+            timestamp = base_time + timedelta(minutes=i)
+            heart_rate = 70 + int(10 * (i % 3))  # Varying pattern
+            confidence = 0.85 + (i % 3) * 0.05
+            writer.writerow(
+                [
+                    timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                    heart_rate,
+                    f"{confidence:.3f}",
+                ]
+            )
+    print(f"   Created standard CSV sample: {csv_sample}")
+
+    # Create a mock sleep session in Apple Health format
+    mock_sleep_apple_health = "examples/heart_rate/mock_sleep_apple_health.csv"
+    sleep_session.export_apple_health_format(mock_sleep_apple_health)
+    print(f"   Created mock sleep Apple Health: {mock_sleep_apple_health}")
 
     print(
         "\n✅ Demo completed! Check the 'examples/heart_rate/' directory for generated files."
