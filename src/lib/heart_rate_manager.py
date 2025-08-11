@@ -598,57 +598,117 @@ class HeartRateDataManager:
     def unlink_from_visit(self, heart_rate_id: int) -> bool:
         """Unlink heart rate data from its visit."""
         try:
-            heart_rate_record = (
-                self.db_session.query(HeartRateData).filter_by(id=heart_rate_id).first()
-            )
-            if not heart_rate_record:
-                logger.error(f"Heart rate record {heart_rate_id} not found")
-                return False
+            if self.db_session:
+                # Use provided session
+                heart_rate_record = (
+                    self.db_session.query(HeartRateData)
+                    .filter_by(id=heart_rate_id)
+                    .first()
+                )
+                if not heart_rate_record:
+                    logger.error(f"Heart rate record {heart_rate_id} not found")
+                    return False
 
-            heart_rate_record.visit_id = None
-            self.db_session.commit()
+                heart_rate_record.visit_id = None
+                self.db_session.commit()
 
-            logger.info(f"Unlinked heart rate {heart_rate_id} from visit")
-            return True
+                logger.info(f"Unlinked heart rate {heart_rate_id} from visit")
+                return True
+            else:
+                # Create our own database connection
+                with get_db(CONST.DATABASE_URL) as db:
+                    heart_rate_record = (
+                        db.query(HeartRateData).filter_by(id=heart_rate_id).first()
+                    )
+                    if not heart_rate_record:
+                        logger.error(f"Heart rate record {heart_rate_id} not found")
+                        return False
+
+                    heart_rate_record.visit_id = None
+                    db.commit()
+
+                    logger.info(f"Unlinked heart rate {heart_rate_id} from visit")
+                    return True
 
         except Exception as e:
             logger.error(f"Error unlinking heart rate from visit: {e}")
-            self.db_session.rollback()
+            if self.db_session:
+                self.db_session.rollback()
             return False
 
     def get_by_visit(self, visit_id: int) -> List[HeartRateData]:
         """Get all heart rate data for a specific visit."""
-        return self.db_session.query(HeartRateData).filter_by(visit_id=visit_id).all()
+        if self.db_session:
+            return (
+                self.db_session.query(HeartRateData).filter_by(visit_id=visit_id).all()
+            )
+        else:
+            # Create our own database connection
+            with get_db(CONST.DATABASE_URL) as db:
+                return db.query(HeartRateData).filter_by(visit_id=visit_id).all()
 
     def get_unlinked(self) -> List[HeartRateData]:
         """Get all heart rate data not linked to any visit."""
-        return self.db_session.query(HeartRateData).filter_by(visit_id=None).all()
+        if self.db_session:
+            return self.db_session.query(HeartRateData).filter_by(visit_id=None).all()
+        else:
+            # Create our own database connection
+            with get_db(CONST.DATABASE_URL) as db:
+                return db.query(HeartRateData).filter_by(visit_id=None).all()
 
     def get_by_date_range(
         self, start_date: datetime, end_date: datetime
     ) -> List[HeartRateData]:
         """Get heart rate data within a date range."""
-        return (
-            self.db_session.query(HeartRateData)
-            .filter(
-                HeartRateData.recording_start >= start_date,
-                HeartRateData.recording_end <= end_date,
+        if self.db_session:
+            return (
+                self.db_session.query(HeartRateData)
+                .filter(
+                    HeartRateData.recording_start >= start_date,
+                    HeartRateData.recording_end <= end_date,
+                )
+                .all()
             )
-            .all()
-        )
+        else:
+            # Create our own database connection
+            with get_db(CONST.DATABASE_URL) as db:
+                return (
+                    db.query(HeartRateData)
+                    .filter(
+                        HeartRateData.recording_start >= start_date,
+                        HeartRateData.recording_end <= end_date,
+                    )
+                    .all()
+                )
 
     def delete_record(self, heart_rate_id: int) -> bool:
         """Delete a heart rate record."""
         try:
-            heart_rate_record = (
-                self.db_session.query(HeartRateData).filter_by(id=heart_rate_id).first()
-            )
+            if self.db_session:
+                # Use provided session
+                heart_rate_record = (
+                    self.db_session.query(HeartRateData)
+                    .filter_by(id=heart_rate_id)
+                    .first()
+                )
+            else:
+                # Create our own database connection
+                with get_db(CONST.DATABASE_URL) as db:
+                    heart_rate_record = (
+                        db.query(HeartRateData).filter_by(id=heart_rate_id).first()
+                    )
+
             if not heart_rate_record:
                 logger.error(f"Heart rate record {heart_rate_id} not found")
                 return False
 
-            self.db_session.delete(heart_rate_record)
-            self.db_session.commit()
+            if self.db_session:
+                self.db_session.delete(heart_rate_record)
+                self.db_session.commit()
+            else:
+                # This should never happen since we're inside the with block
+                logger.error("No database session available for deletion")
+                return False
 
             logger.info(f"Deleted heart rate record {heart_rate_id}")
             return True
@@ -669,9 +729,20 @@ class HeartRateDataManager:
     def validate_file_integrity(self, heart_rate_id: int) -> bool:
         """Validate that the stored file hash matches the current file."""
         try:
-            heart_rate_record = (
-                self.db_session.query(HeartRateData).filter_by(id=heart_rate_id).first()
-            )
+            if self.db_session:
+                # Use provided session
+                heart_rate_record = (
+                    self.db_session.query(HeartRateData)
+                    .filter_by(id=heart_rate_id)
+                    .first()
+                )
+            else:
+                # Create our own database connection
+                with get_db(CONST.DATABASE_URL) as db:
+                    heart_rate_record = (
+                        db.query(HeartRateData).filter_by(id=heart_rate_id).first()
+                    )
+
             if not heart_rate_record:
                 return False
 
