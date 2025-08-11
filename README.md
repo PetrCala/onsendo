@@ -30,6 +30,7 @@
     - [Understanding Distance Calculations](#understanding-distance-calculations)
     - [How Recommendations Work](#how-recommendations-work)
     - [System Management](#system-management)
+    - [Database Management and Testing](#database-management-and-testing)
     - [Tips for Effective Use](#tips-for-effective-use)
     - [Example Workflows](#example-workflows)
 
@@ -282,6 +283,103 @@ Most commands support a `--no-interactive` flag for scripting and automation:
 
 ```bash
 poetry run onsendo location add --no-interactive --name "Home" --latitude 33.2794 --longitude 131.5006
+```
+
+#### Database Management and Testing
+
+The system provides powerful tools for managing your database and generating test data for development and testing purposes.
+
+**Mock Data Generation**:
+
+Generate realistic onsen visit data to test the system or populate your database with sample data:
+
+```bash
+# Insert random mock data (default: 7 days, 1 visit per day)
+poetry run onsendo database insert-mock
+
+# Insert specific scenario types
+poetry run onsendo database insert-mock --scenario weekend_warrior
+poetry run onsendo database insert-mock --scenario daily_visitor
+poetry run onsendo database insert-mock --scenario seasonal_explorer
+poetry run onsendo database insert-mock --scenario multi_onsen_enthusiast
+
+# Custom scenarios with parameters
+poetry run onsendo database insert-mock --scenario custom --num_days 14 --visits_per_day 2
+poetry run onsendo database insert-mock --scenario seasonal --season winter --num_visits 20
+poetry run onsendo database insert-mock --scenario custom --start_date 2024-01-01 --num_days 30
+```
+
+**Available Scenarios**:
+
+- **`random`**: Mix of single and multi-onsen days with configurable parameters
+- **`weekend_warrior`**: Multiple onsens visited on weekends (4 weekends, 2 visits each)
+- **`daily_visitor`**: Almost daily visits over 2 weeks
+- **`seasonal_explorer`**: Different onsens visited across all four seasons
+- **`multi_onsen_enthusiast`**: Multiple onsens per day over 5 different days
+- **`custom`**: Fully configurable with custom days, visits per day, and start date
+- **`seasonal`**: Season-specific visits with appropriate characteristics
+
+**Mock Data Features**:
+
+- **Realistic Data**: Generates data that mimics real onsen visits
+- **Logic Chain Compliance**: Follows the same validation rules as interactive visit recording
+- **Seasonal Intelligence**: Adjusts temperatures, timing, and characteristics based on season
+- **Multi-onsen Support**: Properly handles visit ordering and cross-references
+- **Comprehensive Coverage**: Includes all visit fields from ratings to health metrics
+
+**Database Cleanup**:
+
+Remove visit data from your database for testing or maintenance:
+
+```bash
+# Drop all visits (with confirmation prompt)
+poetry run onsendo database drop-visits
+
+# Skip confirmation (use with caution)
+poetry run onsendo database drop-visits --force
+
+# Drop visits based on specific criteria
+poetry run onsendo database drop-visits-by-criteria --rating_below 7 --force
+poetry run onsendo database drop-visits-by-criteria --before_date 2024-01-01 --force
+poetry run onsendo database drop-visits-by-criteria --onsen_id 5 --force
+poetry run onsendo database drop-visits-by-criteria --rating_above 9 --force
+```
+
+**Filtering Options for Selective Deletion**:
+
+- **`--onsen_id`**: Filter by specific onsen
+- **`--before_date`** / **`--after_date`**: Date ranges (YYYY-MM-DD format)
+- **`--rating_below`** / **`--rating_above`**: Rating-based filtering (1-10 scale)
+- **`--force`**: Skip confirmation prompts
+- **`--no_interactive`**: Run in non-interactive mode
+
+**Safety Features**:
+
+- **Confirmation Prompts**: All deletion operations require confirmation unless `--force` is used
+- **Non-Interactive Protection**: Cannot delete without confirmation in non-interactive mode
+- **Detailed Logging**: Shows exactly what will be deleted before confirmation
+- **Verification**: Confirms successful deletion and shows remaining visit count
+
+**Use Cases**:
+
+- **Development Testing**: Generate realistic data to test new features
+- **System Validation**: Verify that the system handles various data scenarios correctly
+- **Performance Testing**: Test with large datasets to ensure scalability
+- **Data Reset**: Clean slate for testing different scenarios
+- **Demo Purposes**: Show the system's capabilities with sample data
+
+**Example Testing Workflow**:
+
+```bash
+# 1. Generate test data
+poetry run onsendo database insert-mock --scenario weekend_warrior
+
+# 2. Test the system with the data
+poetry run onsendo visit list
+poetry run onsendo onsen recommend --location "Hotel"
+
+# 3. Clean up when done testing
+poetry run onsendo database drop-visits --force
 ```
 
 #### Tips for Effective Use
