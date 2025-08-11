@@ -16,6 +16,7 @@ from dataclasses import dataclass
 import logging
 
 from src.db.conn import get_db
+from src.const import CONST
 from src.db.models import HeartRateData, OnsenVisit
 
 logger = logging.getLogger(__name__)
@@ -461,7 +462,7 @@ class HeartRateDataManager:
     """Manages heart rate data storage and retrieval."""
 
     def __init__(self, db_session=None):
-        self.db_session = db_session or get_db()
+        self.db_session = db_session or get_db(CONST.DATABASE_URL)
 
     def store_session(
         self, session: HeartRateSession, visit_id: Optional[int] = None
