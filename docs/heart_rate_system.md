@@ -53,57 +53,57 @@ The system performs comprehensive validation to ensure data quality:
 
 ```bash
 # Import a heart rate data file
-onsendo heart-rate-import path/to/data.csv
+onsendo heart-rate import path/to/data.csv
 
 # Force specific format
-onsendo heart-rate-import path/to/data.csv --format csv
+onsendo heart-rate import path/to/data.csv --format csv
 
 # Add notes
-onsendo heart-rate-import path/to/data.csv --notes "Morning workout session"
+onsendo heart-rate import path/to/data.csv --notes "Morning workout session"
 
 # Validate only (don't store)
-onsendo heart-rate-import path/to/data.csv --validate-only
+onsendo heart-rate import path/to/data.csv --validate-only
 ```
 
 ### Batch Import
 
 ```bash
 # Import all heart rate files from a directory
-onsendo heart-rate-batch-import /path/to/heart_rate_files/
+onsendo heart-rate batch-import /path/to/heart_rate_files/
 
 # Recursive search
-onsendo heart-rate-batch-import /path/to/heart_rate_files/ --recursive
+onsendo heart-rate batch-import /path/to/heart_rate_files/ --recursive
 
 # Dry run to see what would be imported
-onsendo heart-rate-batch-import /path/to/heart_rate_files/ --dry-run
+onsendo heart-rate batch-import /path/to/heart_rate_files/ --dry-run
 
 # Use 8 parallel workers
-onsendo heart-rate-batch-import /path/to/heart_rate_files/ --max-workers 8
+onsendo heart-rate batch-import /path/to/heart_rate_files/ --max-workers 8
 ```
 
 ### Manage Records
 
 ```bash
 # List all heart rate records
-onsendo heart-rate-list list
+onsendo heart-rate list list
 
 # Show only unlinked records
-onsendo heart-rate-list list --unlinked-only
+onsendo heart-rate list list --unlinked-only
 
 # Show details including file integrity
-onsendo heart-rate-list list --details
+onsendo heart-rate list list --details
 
 # Link heart rate data to a visit
-onsendo heart-rate-list link 123 456  # Link HR record 123 to visit 456
+onsendo heart-rate list link 123 456  # Link HR record 123 to visit 456
 
 # Unlink heart rate data from visit
-onsendo heart-rate-list unlink 123
+onsendo heart-rate list unlink 123
 
 # Delete a record
-onsendo heart-rate-list delete 123
+onsendo heart-rate list delete 123
 
 # Force delete without confirmation
-onsendo heart-rate-list delete 123 --force
+onsendo heart-rate list delete 123 --force
 ```
 
 ## Integration with Onsen Visits
@@ -122,7 +122,7 @@ When adding a visit interactively, you can link heart rate data:
 
 ```bash
 # Link existing heart rate data to a visit
-onsendo heart-rate-list link 123 456
+onsendo heart-rate list link 123 456
 ```
 
 ## Database Schema
@@ -144,7 +144,7 @@ The system creates a `heart_rate_data` table with:
 ## Workflow Example
 
 1. **Export Data**: Export heart rate data from your device to CSV/JSON
-2. **Import**: Use `onsendo heart-rate-import` to import the file
+2. **Import**: Use `onsendo heart-rate import` to import the file
 3. **Validate**: System automatically validates data quality
 4. **Store**: Data is stored with file integrity checks
 5. **Link**: During visit creation, link the heart rate data
