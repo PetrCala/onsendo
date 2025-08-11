@@ -236,15 +236,22 @@ fi
 if [ "$CREATE_EXAMPLES" = true ]; then
     print_status "Creating example files..."
     
+    # Get current year and month for example files
+    CURRENT_YEAR_MONTH=$(date +%Y_%m)
+    
+    # Ensure the directories exist before creating files
+    mkdir -p "$BASE_DIR/raw/apple_health/$CURRENT_YEAR_MONTH"
+    mkdir -p "$BASE_DIR/raw/garmin/$CURRENT_YEAR_MONTH"
+    
     # Create example Apple Health file
-    cat > "$BASE_DIR/raw/apple_health/$(date +%Y_%m)/example_apple_health.csv" << 'EOF'
+    cat > "$BASE_DIR/raw/apple_health/$CURRENT_YEAR_MONTH/example_apple_health.csv" << 'EOF'
 "SampleType","SampleRate","StartTime","Data"
 "HEART_RATE",1,"2025-08-15T10:00:00.000Z","72;74;73;75;76;80;82;85;87"
 "HEART_RATE",1,"2025-08-15T10:01:00.000Z","88;90;92;95;98;100;102;105;108"
 EOF
 
     # Create example CSV file
-    cat > "$BASE_DIR/raw/garmin/$(date +%Y_%m)/example_garmin.csv" << 'EOF'
+    cat > "$BASE_DIR/raw/garmin/$CURRENT_YEAR_MONTH/example_garmin.csv" << 'EOF'
 timestamp,heart_rate,confidence
 2025-08-15 10:00:00,72,0.95
 2025-08-15 10:01:00,75,0.92
