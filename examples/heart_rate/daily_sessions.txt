@@ -1,24 +1,24 @@
 === Session 1 ===
-Duration: 79 minutes
-Heart Rate: 40-143 BPM
-Average: 84.5 BPM
-Notes: Mock light_exercise session - Out federal beyond indicate ok guess.
+Duration: 52 minutes
+Heart Rate: 48-137 BPM
+Average: 92.0 BPM
+Notes: Mock light_exercise session - Spring not road set.
 
 === Session 2 ===
-Duration: 29 minutes
-Heart Rate: 53-98 BPM
-Average: 76.4 BPM
-Notes: Mock resting session - Admit great much Democrat accept cold heart.
+Duration: 80 minutes
+Heart Rate: 40-150 BPM
+Average: 90.9 BPM
+Notes: Mock light_exercise session - Experience community wall heart feel.
 
 === Session 3 ===
-Duration: 72 minutes
-Heart Rate: 61-91 BPM
-Average: 75.6 BPM
-Notes: Mock resting session - Night morning treatment film decide half.
+Duration: 54 minutes
+Heart Rate: 54-100 BPM
+Average: 74.6 BPM
+Notes: Mock resting session - With result thought course natural explain.
 
 === Session 4 ===
-Duration: 24 minutes
-Heart Rate: 50-69 BPM
-Average: 59.5 BPM
-Notes: Mock resting session - Watch quite management yourself program rest every.
+Duration: 40 minutes
+Heart Rate: 58-122 BPM
+Average: 89.6 BPM
+Notes: Mock light_exercise session - Sign value ok true fish.
 
