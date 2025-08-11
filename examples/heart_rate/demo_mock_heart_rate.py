@@ -32,7 +32,7 @@ def main():
     print(f"   Average: {resting_session.average_heart_rate:.1f} BPM")
 
     # Export to CSV
-    csv_file = "examples/resting_session.csv"
+    csv_file = "examples/heart_rate/resting_session.csv"
     resting_session.export_csv(csv_file)
     print(f"   Exported to: {csv_file}")
 
@@ -47,7 +47,7 @@ def main():
     print(f"   Average: {workout_session.average_heart_rate:.1f} BPM")
 
     # Export to Apple Health format
-    apple_health_file = "examples/workout_apple_health.csv"
+    apple_health_file = "examples/heart_rate/workout_apple_health.csv"
     workout_session.export_apple_health_format(apple_health_file)
     print(f"   Exported to Apple Health format: {apple_health_file}")
 
@@ -62,7 +62,7 @@ def main():
     print(f"   Average: {sleep_session.average_heart_rate:.1f} BPM")
 
     # Export to JSON
-    json_file = "examples/sleep_session.json"
+    json_file = "examples/heart_rate/sleep_session.json"
     sleep_session.export_json(json_file)
     print(f"   Exported to: {json_file}")
 
@@ -78,7 +78,7 @@ def main():
         )
 
     # Export all daily sessions to text
-    text_file = "examples/daily_sessions.txt"
+    text_file = "examples/heart_rate/daily_sessions.txt"
     with open(text_file, "w", encoding="utf-8") as f:
         for i, session in enumerate(daily_sessions, 1):
             f.write(f"=== Session {i} ===\n")
@@ -99,7 +99,7 @@ def main():
     print(f"   Mixed scenario: {len(mixed_scenario)} sessions")
 
     # Export mixed scenario to Apple Health
-    mixed_apple_health = "examples/mixed_scenario_apple_health.csv"
+    mixed_apple_health = "examples/heart_rate/mixed_scenario_apple_health.csv"
     for i, session in enumerate(mixed_scenario):
         if i == 0:  # First session
             session.export_apple_health_format(mixed_apple_health)
@@ -131,7 +131,9 @@ def main():
 
     print(f"   Exported mixed scenario to: {mixed_apple_health}")
 
-    print("\n✅ Demo completed! Check the 'examples/' directory for generated files.")
+    print(
+        "\n✅ Demo completed! Check the 'examples/heart_rate/' directory for generated files."
+    )
     print("\n📊 Summary of generated data:")
     print(f"   - Resting session: {resting_session.data_points_count} points")
     print(f"   - Workout session: {workout_session.data_points_count} points")
