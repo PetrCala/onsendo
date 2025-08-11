@@ -24,11 +24,30 @@
   - [Using Command Line Interface](#using-command-line-interface)
     - [Core Concepts and Workflows](#core-concepts-and-workflows)
     - [Managing Your Locations](#managing-your-locations)
+      - [Adding a Location](#adding-a-location)
+      - [Why Locations Matter](#why-locations-matter)
+      - [Listing and Managing Locations](#listing-and-managing-locations)
     - [Discovering and Managing Onsens](#discovering-and-managing-onsens)
+      - [Adding an Onsen](#adding-an-onsen)
+      - [Getting Onsen Information](#getting-onsen-information)
+      - [Data Scraping (for administrators)](#data-scraping-for-administrators)
     - [Recording Your Visits](#recording-your-visits)
+      - [Adding a Visit](#adding-a-visit)
+      - [Key Features of Visit Recording](#key-features-of-visit-recording)
+      - [Managing Visit Records](#managing-visit-records)
     - [Getting Smart Recommendations](#getting-smart-recommendations)
+      - [Basic Recommendations](#basic-recommendations)
+      - [Advanced Filtering](#advanced-filtering)
+      - [Distance Categories](#distance-categories)
     - [Understanding Distance Calculations](#understanding-distance-calculations)
+      - [How Distances Are Calculated](#how-distances-are-calculated)
+      - [Distance Milestones](#distance-milestones)
+      - [Calculating Milestones for a Location](#calculating-milestones-for-a-location)
     - [How Recommendations Work](#how-recommendations-work)
+      - [Availability Checking](#availability-checking)
+      - [Distance Filtering](#distance-filtering)
+      - [Personalization\*\*](#personalization)
+      - [Smart Defaults\*\*](#smart-defaults)
     - [System Management](#system-management)
     - [Database Management and Testing](#database-management-and-testing)
     - [Tips for Effective Use](#tips-for-effective-use)
@@ -113,7 +132,7 @@ The CLI is organized around four main concepts that reflect how you interact wit
 
 Locations are the starting points for your onsen adventures. They're used to calculate distances to onsens and provide context for recommendations.
 
-**Adding a Location**
+##### Adding a Location
 
 ```bash
 poetry run onsendo location add
@@ -125,9 +144,11 @@ This will guide you through adding a new location (like your home or hotel) with
 - Coordinates (latitude/longitude)
 - Optional description
 
-**Why Locations Matter**: The system uses your locations to calculate distances to onsens, which affects recommendations and helps you plan your visits based on travel time and convenience.
+##### Why Locations Matter
 
-**Listing and Managing Locations**
+The system uses your locations to calculate distances to onsens, which affects recommendations and helps you plan your visits based on travel time and convenience.
+
+##### Listing and Managing Locations
 
 ```bash
 poetry run onsendo location list          # See all your locations
@@ -139,20 +160,20 @@ poetry run onsendo location delete       # Remove a location
 
 Onsens are the hot spring facilities themselves. The system maintains a database of onsens with details like operating hours, facilities, and locations.
 
-**Adding an Onsen**
+##### Adding an Onsen
 
 ```bash
 poetry run onsendo onsen add --ban-number "123" --name "Beppu Onsen" --address "Beppu City"
 ```
 
-**Getting Onsen Information**
+##### Getting Onsen Information
 
 ```bash
 poetry run onsendo onsen print-summary --onsen-id 1
 poetry run onsendo onsen print-summary --ban-number "123"
 ```
 
-**Data Scraping** (for administrators)
+##### Data Scraping (for administrators)
 
 ```bash
 poetry run onsendo onsen scrape-data
@@ -164,7 +185,7 @@ This fetches current onsen data from the web to keep your database up-to-date.
 
 Visits capture your personal experiences at onsens. This is where you record ratings, observations, and details that help you remember and compare different experiences.
 
-**Adding a Visit**
+##### Adding a Visit
 
 ```bash
 poetry run onsendo visit add
@@ -179,14 +200,14 @@ The interactive mode will guide you through recording:
 - Health metrics (energy level changes, hydration)
 - Environmental factors (weather, crowd levels)
 
-**Key Features of Visit Recording**:
+##### Key Features of Visit Recording
 
 - **Interactive Mode**: Guided prompts with validation and navigation
 - **Comprehensive Data**: Capture everything from basic ratings to detailed health metrics
 - **Navigation**: Use "back" or "back N" to go back and modify previous answers
 - **Flexibility**: Most fields are optional, so you can record as much or as little detail as you want
 
-**Managing Visit Records**
+##### Managing Visit Records
 
 ```bash
 poetry run onsendo visit list            # See all your visits
@@ -198,13 +219,13 @@ poetry run onsendo visit delete          # Remove a visit record
 
 The recommendation system helps you discover new onsens and plan your visits based on your preferences and current situation.
 
-**Basic Recommendations**
+##### Basic Recommendations
 
 ```bash
 poetry run onsendo onsen recommend --location "Beppu Station"
 ```
 
-**Advanced Filtering**
+##### Advanced Filtering
 
 ```bash
 poetry run onsendo onsen recommend \
@@ -215,7 +236,7 @@ poetry run onsendo onsen recommend \
   --limit 5
 ```
 
-**Distance Categories**:
+##### Distance Categories
 
 - `very_close`: Within the closest 20% of onsens (typically 0-5km)
 - `close`: Within the median distance (typically 5-15km)  
@@ -226,13 +247,14 @@ poetry run onsendo onsen recommend \
 
 The system uses sophisticated distance calculations to help you plan your onsen visits effectively.
 
-**How Distances Are Calculated**:
+##### How Distances Are Calculated
 
 - Uses the Haversine formula for accurate geographic distance calculations
 - Distances are calculated from your locations to each onsen's coordinates
 - Results are in kilometers for easy understanding
 
-**Distance Milestones**:
+##### Distance Milestones
+
 The system automatically calculates distance thresholds based on the actual distribution of onsens around your location:
 
 - **20th percentile**: Very close onsens (closest 20%)
@@ -242,7 +264,7 @@ The system automatically calculates distance thresholds based on the actual dist
 
 This means the categories adapt to your specific location - if you're in a dense onsen area, "close" might mean 2km, while in a rural area it might mean 20km.
 
-**Calculating Milestones for a Location**:
+##### Calculating Milestones for a Location
 
 ```bash
 poetry run onsendo system calculate-milestones "Beppu Station" --update-engine
@@ -252,25 +274,25 @@ poetry run onsendo system calculate-milestones "Beppu Station" --update-engine
 
 The recommendation engine combines multiple factors to suggest the best onsens for your situation:
 
-**Availability Checking**:
+##### Availability Checking
 
 - Checks if the onsen is open at your target time
 - Considers operating hours and closed days
 - Ensures the onsen stays open long enough for your visit
 
-**Distance Filtering**:
+##### Distance Filtering
 
 - Filters onsens based on your preferred distance category
 - Uses calculated milestones for intelligent distance categorization
 - Provides actual distances in the results
 
-**Personalization**:
+##### Personalization**
 
 - Can exclude onsens you've already visited
 - Considers your current location for travel planning
 - Factors in time constraints and preferences
 
-**Smart Defaults**:
+##### Smart Defaults**
 
 - Automatically excludes closed onsens
 - Suggests reasonable time windows
