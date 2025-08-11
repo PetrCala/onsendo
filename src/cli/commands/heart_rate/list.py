@@ -95,16 +95,6 @@ def list_heart_rate_data(
         return 1
 
 
-def list_heart_rate_data_cli(args: argparse.Namespace) -> int:
-    """CLI wrapper for list_heart_rate_data that accepts argparse.Namespace."""
-    return list_heart_rate_data(
-        linked_only=args.linked_only,
-        unlinked_only=args.unlinked_only,
-        visit_id=args.visit_id,
-        show_details=args.details,
-    )
-
-
 def link_heart_rate_to_visit(heart_rate_id: int, visit_id: int) -> int:
     """Link heart rate data to an onsen visit."""
     try:
@@ -124,11 +114,6 @@ def link_heart_rate_to_visit(heart_rate_id: int, visit_id: int) -> int:
         return 1
 
 
-def link_heart_rate_to_visit_cli(args: argparse.Namespace) -> int:
-    """CLI wrapper for link_heart_rate_to_visit that accepts argparse.Namespace."""
-    return link_heart_rate_to_visit(args.heart_rate_id, args.visit_id_link)
-
-
 def unlink_heart_rate_from_visit(heart_rate_id: int) -> int:
     """Unlink heart rate data from its visit."""
     try:
@@ -146,11 +131,6 @@ def unlink_heart_rate_from_visit(heart_rate_id: int) -> int:
     except Exception as e:
         print(f"❌ Error unlinking heart rate data: {e}")
         return 1
-
-
-def unlink_heart_rate_from_visit_cli(args: argparse.Namespace) -> int:
-    """CLI wrapper for unlink_heart_rate_from_visit that accepts argparse.Namespace."""
-    return unlink_heart_rate_from_visit(args.heart_rate_id)
 
 
 def delete_heart_rate_record(heart_rate_id: int, force: bool = False) -> int:
@@ -194,87 +174,3 @@ def delete_heart_rate_record(heart_rate_id: int, force: bool = False) -> int:
     except Exception as e:
         print(f"❌ Error deleting heart rate record: {e}")
         return 1
-
-
-def delete_heart_rate_record_cli(args: argparse.Namespace) -> int:
-    """CLI wrapper for delete_heart_rate_record that accepts argparse.Namespace."""
-    return delete_heart_rate_record(args.heart_rate_id, args.force)
-
-
-def main():
-    """Main CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="List and manage heart rate data records",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-    # List command
-    list_parser = subparsers.add_parser("list", help="List heart rate data records")
-    list_parser.add_argument(
-        "--linked-only",
-        "-l",
-        action="store_true",
-        help="Show only records linked to visits",
-    )
-    list_parser.add_argument(
-        "--unlinked-only",
-        "-u",
-        action="store_true",
-        help="Show only records not linked to visits",
-    )
-    list_parser.add_argument(
-        "--visit-id", "-v", type=int, help="Show heart rate data for specific visit ID"
-    )
-    list_parser.add_argument(
-        "--details",
-        "-d",
-        action="store_true",
-        help="Show detailed information including file integrity",
-    )
-
-    # Link command
-    link_parser = subparsers.add_parser("link", help="Link heart rate data to a visit")
-    link_parser.add_argument("heart_rate_id", type=int, help="Heart rate record ID")
-    link_parser.add_argument("visit_id", type=int, help="Visit ID to link to")
-
-    # Unlink command
-    unlink_parser = subparsers.add_parser(
-        "unlink", help="Unlink heart rate data from its visit"
-    )
-    unlink_parser.add_argument("heart_rate_id", type=int, help="Heart rate record ID")
-
-    # Delete command
-    delete_parser = subparsers.add_parser("delete", help="Delete a heart rate record")
-    delete_parser.add_argument("heart_rate_id", type=int, help="Heart rate record ID")
-    delete_parser.add_argument(
-        "--force", "-f", action="store_true", help="Force deletion without confirmation"
-    )
-
-    args = parser.parse_args()
-
-    if not args.command:
-        parser.print_help()
-        return 1
-
-    if args.command == "list":
-        return list_heart_rate_data(
-            linked_only=args.linked_only,
-            unlinked_only=args.unlinked_only,
-            visit_id=args.visit_id,
-            show_details=args.details,
-        )
-    elif args.command == "link":
-        return link_heart_rate_to_visit(args.heart_rate_id, args.visit_id)
-    elif args.command == "unlink":
-        return unlink_heart_rate_from_visit(args.heart_rate_id)
-    elif args.command == "delete":
-        return delete_heart_rate_record(args.heart_rate_id, args.force)
-    else:
-        print(f"❌ Unknown command: {args.command}")
-        return 1
-
-
-if __name__ == "__main__":
-    sys.exit(main())

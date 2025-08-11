@@ -456,7 +456,7 @@ CLI_COMMANDS = {
         },
     ),
     "heart-rate-list": CommandConfig(
-        func=heart_rate_commands.list_heart_rate_data_cli,
+        func=heart_rate_commands.list_heart_rate_data,
         help="List and manage heart rate data records",
         args={
             "linked_only": ArgumentConfig(
@@ -477,7 +477,7 @@ CLI_COMMANDS = {
         },
     ),
     "heart-rate-link": CommandConfig(
-        func=heart_rate_commands.link_heart_rate_to_visit_cli,
+        func=heart_rate_commands.link_heart_rate_to_visit,
         help="Link heart rate data to a visit",
         args={
             "heart_rate_id": ArgumentConfig(
@@ -495,7 +495,7 @@ CLI_COMMANDS = {
         },
     ),
     "heart-rate-unlink": CommandConfig(
-        func=heart_rate_commands.unlink_heart_rate_from_visit_cli,
+        func=heart_rate_commands.unlink_heart_rate_from_visit,
         help="Unlink heart rate data from its visit",
         args={
             "heart_rate_id": ArgumentConfig(
@@ -507,7 +507,7 @@ CLI_COMMANDS = {
         },
     ),
     "heart-rate-delete": CommandConfig(
-        func=heart_rate_commands.delete_heart_rate_record_cli,
+        func=heart_rate_commands.delete_heart_rate_record,
         help="Delete a heart rate record",
         args={
             "heart_rate_id": ArgumentConfig(
