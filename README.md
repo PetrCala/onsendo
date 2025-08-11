@@ -46,8 +46,8 @@
     - [How Recommendations Work](#how-recommendations-work)
       - [Availability Checking](#availability-checking)
       - [Distance Filtering](#distance-filtering)
-      - [Personalization\*\*](#personalization)
-      - [Smart Defaults\*\*](#smart-defaults)
+      - [Personalization](#personalization)
+      - [Smart Defaults](#smart-defaults)
     - [System Management](#system-management)
     - [Database Management and Testing](#database-management-and-testing)
     - [Tips for Effective Use](#tips-for-effective-use)
@@ -286,13 +286,13 @@ The recommendation engine combines multiple factors to suggest the best onsens f
 - Uses calculated milestones for intelligent distance categorization
 - Provides actual distances in the results
 
-##### Personalization**
+##### Personalization
 
 - Can exclude onsens you've already visited
 - Considers your current location for travel planning
 - Factors in time constraints and preferences
 
-##### Smart Defaults**
+##### Smart Defaults
 
 - Automatically excludes closed onsens
 - Suggests reasonable time windows
