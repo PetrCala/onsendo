@@ -13,6 +13,7 @@ import src.cli.commands.visit as visit_commands
 import src.cli.commands.onsen as onsen_commands
 import src.cli.commands.system as system_commands
 import src.cli.commands.database as database_commands
+import src.cli.commands.heart_rate as heart_rate_commands
 
 
 @dataclass
@@ -425,6 +426,102 @@ CLI_COMMANDS = {
             "show_recommendations": ArgumentConfig(
                 action="store_true",
                 help="Show sample recommendations using the new milestones",
+            ),
+        },
+    ),
+    # Heart rate commands
+    "heart-rate-import": CommandConfig(
+        func=heart_rate_commands.import_heart_rate_data,
+        help="Import heart rate data from a file",
+        args={
+            "file_path": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Path to heart rate data file",
+                positional=True,
+            ),
+            "format": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Force specific file format (csv, json, text)",
+            ),
+            "notes": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Optional notes about the recording session",
+            ),
+            "validate_only": ArgumentConfig(
+                action="store_true", help="Only validate data without importing"
+            ),
+        },
+    ),
+    "heart-rate-list": CommandConfig(
+        func=heart_rate_commands.list_heart_rate_data,
+        help="List and manage heart rate data records",
+        args={
+            "command": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Command to run (list, link, unlink, delete)",
+                positional=True,
+            ),
+            "linked_only": ArgumentConfig(
+                action="store_true", help="Show only records linked to visits"
+            ),
+            "unlinked_only": ArgumentConfig(
+                action="store_true", help="Show only records not linked to visits"
+            ),
+            "visit_id": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Show heart rate data for specific visit ID",
+            ),
+            "details": ArgumentConfig(
+                action="store_true",
+                help="Show detailed information including file integrity",
+            ),
+            "heart_rate_id": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Heart rate record ID for link/unlink/delete operations",
+            ),
+            "visit_id_link": ArgumentConfig(
+                type=int, required=False, help="Visit ID to link to (for link command)"
+            ),
+            "force": ArgumentConfig(
+                action="store_true", help="Force deletion without confirmation"
+            ),
+        },
+    ),
+    "heart-rate-batch-import": CommandConfig(
+        func=heart_rate_commands.batch_import_heart_rate_data,
+        help="Batch import heart rate data from a directory",
+        args={
+            "directory": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Directory containing heart rate data files",
+                positional=True,
+            ),
+            "recursive": ArgumentConfig(
+                action="store_true", help="Search subdirectories recursively"
+            ),
+            "format": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Force specific file format for all files",
+            ),
+            "notes": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Optional notes to add to all imported sessions",
+            ),
+            "dry_run": ArgumentConfig(
+                action="store_true",
+                help="Show what would be imported without storing data",
+            ),
+            "max_workers": ArgumentConfig(
+                type=int, default=4, help="Maximum number of parallel workers"
             ),
         },
     ),

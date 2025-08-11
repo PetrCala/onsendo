@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import declarative_base, relationship
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -200,3 +201,46 @@ class OnsenVisit(Base):
     personal_rating = Column(Integer)
 
     onsen = relationship("Onsen", back_populates="visits")
+    heart_rate_data = relationship("HeartRateData", back_populates="visit")
+
+
+class HeartRateData(Base):
+    """
+    Heart rate data recorded during onsen visits or other activities.
+
+    Columns:
+    - id: primary key
+    - visit_id: foreign key referencing OnsenVisit (optional, for linked visits)
+    - recording_start: when the recording started
+    - recording_end: when the recording ended
+    - data_format: format of the data (e.g., "garmin_fit", "apple_health", "csv")
+    - data_file_path: path to the original data file
+    - data_hash: hash of the data for integrity verification
+    - average_heart_rate: average heart rate during the recording
+    - min_heart_rate: minimum heart rate recorded
+    - max_heart_rate: maximum heart rate recorded
+    - total_recording_minutes: total duration of the recording
+    - data_points_count: number of heart rate measurements
+    - notes: optional notes about the recording
+    - created_at: when this record was created in the database
+    """
+
+    __tablename__ = "heart_rate_data"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    visit_id = Column(Integer, ForeignKey("onsen_visits.id"), nullable=True)
+    recording_start = Column(DateTime, nullable=False)
+    recording_end = Column(DateTime, nullable=False)
+    data_format = Column(String, nullable=False)
+    data_file_path = Column(String, nullable=False)
+    data_hash = Column(String, nullable=False)
+    average_heart_rate = Column(Float, nullable=False)
+    min_heart_rate = Column(Float, nullable=False)
+    max_heart_rate = Column(Float, nullable=False)
+    total_recording_minutes = Column(Integer, nullable=False)
+    data_points_count = Column(Integer, nullable=False)
+    notes = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationship to visit
+    visit = relationship("OnsenVisit", back_populates="heart_rate_data")

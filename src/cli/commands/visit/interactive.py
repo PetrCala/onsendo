@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Tuple, Optional
 from src.db.conn import get_db
 from src.db.models import Onsen, OnsenVisit
 from src.const import CONST
+from src.lib.heart_rate_manager import HeartRateDataManager
 
 
 class InteractiveSession:
@@ -214,6 +215,73 @@ def add_visit_interactive() -> None:
             return True
         except ValueError:
             return False
+
+    def _process_heart_rate_input(input_str: str) -> Optional[str]:
+        """Process heart rate data input, handling 'list' command and ID validation."""
+        if not input_str:
+            return None
+
+        if input_str.lower() == "list":
+            # Show available unlinked heart rate data
+            try:
+                manager = HeartRateDataManager()
+                unlinked_records = manager.get_unlinked()
+
+                if not unlinked_records:
+                    print("📊 No unlinked heart rate data records found.")
+                    print(
+                        "   Use 'onsendo heart-rate import' to add heart rate data first."
+                    )
+                    return None
+
+                print("📊 Available unlinked heart rate data records:")
+                for record in unlinked_records:
+                    print(
+                        f"   ID {record.id}: {record.recording_start.strftime('%Y-%m-%d %H:%M')} - {record.recording_end.strftime('%H:%M')} ({record.total_recording_minutes} min, avg HR: {record.average_heart_rate:.1f} BPM)"
+                    )
+
+                # Ask user to choose
+                choice = input(
+                    "\nEnter heart rate record ID to link (or press Enter to skip): "
+                ).strip()
+                if choice and choice.isdigit():
+                    return choice
+                return None
+
+            except Exception as e:
+                print(f"⚠️  Error listing heart rate data: {e}")
+                return None
+
+        # If it's a digit, validate the ID exists
+        if input_str.isdigit():
+            try:
+                manager = HeartRateDataManager()
+                db_session = get_db()
+                from src.db.models import HeartRateData
+
+                record = (
+                    db_session.query(HeartRateData).filter_by(id=int(input_str)).first()
+                )
+                if not record:
+                    print(f"❌ Heart rate record {input_str} not found.")
+                    return None
+
+                if record.visit_id:
+                    print(
+                        f"⚠️  Heart rate record {input_str} is already linked to visit {record.visit_id}."
+                    )
+                    return None
+
+                print(
+                    f"✅ Heart rate record {input_str} selected: {record.recording_start.strftime('%Y-%m-%d %H:%M')} - {record.recording_end.strftime('%H:%M')}"
+                )
+                return input_str
+
+            except Exception as e:
+                print(f"⚠️  Error validating heart rate record: {e}")
+                return None
+
+        return None
 
     steps = [
         {
@@ -599,9 +667,13 @@ def add_visit_interactive() -> None:
         },
         {
             "name": "heart_rate_data",
-            "prompt": "Heart rate data (optional): ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
+            "prompt": "Heart rate data (optional - enter ID or 'list' to see available): ",
+            "validator": lambda x: not x or x.lower() == "list" or x.isdigit(),
+            "processor": lambda x: (
+                int(_process_heart_rate_input(x))
+                if _process_heart_rate_input(x)
+                else None
+            ),
             "step_title": "Health and energy",
         },
         {
@@ -741,5 +813,22 @@ def add_visit_interactive() -> None:
 
         print(f"✅ Successfully recorded visit to {onsen.name}!")
         print(f"Visit ID: {visit.id}")
+
+        # Link heart rate data if provided
+        if session.visit_data.get("heart_rate_data"):
+            try:
+                heart_rate_manager = HeartRateDataManager(db)
+                if heart_rate_manager.link_to_visit(
+                    session.visit_data["heart_rate_data"], visit.id
+                ):
+                    print(
+                        f"🔗 Linked heart rate data {session.visit_data['heart_rate_data']} to visit {visit.id}"
+                    )
+                else:
+                    print(
+                        f"⚠️  Failed to link heart rate data {session.visit_data['heart_rate_data']} to visit"
+                    )
+            except Exception as e:
+                print(f"⚠️  Error linking heart rate data: {e}")
         print(f"Visit time: {visit.visit_time}")
         print(f"Personal rating: {visit.personal_rating}/10")
