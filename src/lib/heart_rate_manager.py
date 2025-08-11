@@ -177,7 +177,7 @@ class HeartRateDataImporter:
             file_format = format_hint
         else:
             file_format = cls.SUPPORTED_FORMATS.get(file_path.suffix.lower())
-            
+
             # For CSV files, check if they're actually Apple Health format
             if file_format == "csv":
                 file_format = cls._detect_csv_format(file_path)
@@ -203,18 +203,25 @@ class HeartRateDataImporter:
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 first_line = f.readline().strip()
-                
+
                 # Check if it has Apple Health headers
-                if "SampleType" in first_line and "StartTime" in first_line and "Data" in first_line:
+                if (
+                    "SampleType" in first_line
+                    and "StartTime" in first_line
+                    and "Data" in first_line
+                ):
                     return "apple_health"
-                    
+
                 # Check if it has standard CSV headers
-                if "timestamp" in first_line.lower() or "heart_rate" in first_line.lower():
+                if (
+                    "timestamp" in first_line.lower()
+                    or "heart_rate" in first_line.lower()
+                ):
                     return "csv"
-                    
+
                 # Default to standard CSV for unknown formats
                 return "csv"
-                
+
         except Exception:
             # If we can't read the file, default to standard CSV
             return "csv"
@@ -522,13 +529,15 @@ class HeartRateDataManager:
             # Use provided session
             self.db_session.add(heart_rate_record)
             self.db_session.commit()
+            record_id = heart_rate_record.id
         else:
             # Create our own database connection
             with get_db(CONST.DATABASE_URL) as db:
                 db.add(heart_rate_record)
                 db.commit()
+                record_id = heart_rate_record.id
 
-        logger.info(f"Stored heart rate session: {heart_rate_record.id}")
+        logger.info(f"Stored heart rate session: {record_id}")
         return heart_rate_record
 
     def link_to_visit(self, heart_rate_id: int, visit_id: int) -> bool:
