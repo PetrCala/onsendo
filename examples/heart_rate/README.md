@@ -16,7 +16,7 @@ A comprehensive demonstration script that shows how to:
 Run with:
 
 ```bash
-poetry run python examples/demo_mock_heart_rate.py
+poetry run python examples/heart_rate/demo_mock_heart_rate.py
 ```
 
 ## Sample Data Files
@@ -61,7 +61,7 @@ from src.lib.heart_rate_manager import HeartRateDataImporter
 
 # Import Apple Health CSV
 session = HeartRateDataImporter.import_from_file(
-    'examples/apple_health_sample.csv', 
+    'examples/heart_rate/apple_health_sample.csv', 
     format_hint='apple_health'
 )
 
