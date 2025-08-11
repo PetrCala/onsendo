@@ -12,6 +12,8 @@ from src.lib.heart_rate_manager import (
     HeartRateDataValidator,
     HeartRateDataManager,
 )
+from src.db.conn import get_db
+from src.const import CONST
 
 
 def get_heart_rate_files(directory: str, recursive: bool = False) -> List[Path]:
@@ -80,13 +82,14 @@ def import_single_file(
 
         if not dry_run and is_valid:
             # Store in database
-            manager = HeartRateDataManager()
-            if notes:
-                session.notes = notes
+            with get_db(CONST.DATABASE_URL) as db:
+                manager = HeartRateDataManager(db)
+                if notes:
+                    session.notes = notes
 
-            record = manager.store_session(session)
-            result["record_id"] = record.id
-            result["success"] = True
+                record = manager.store_session(session)
+                result["record_id"] = record.id
+                result["success"] = True
 
         elif dry_run:
             result["success"] = True  # Consider it successful for dry run
