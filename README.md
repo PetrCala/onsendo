@@ -261,7 +261,7 @@ poetry run onsendo heart-rate import path/to/data.csv --format csv
 poetry run onsendo heart-rate import path/to/data.csv --notes "Morning workout session"
 
 # Validate only (don't store)
-poetry run onsendo heart-rate import path/to/data.csv --validate-only
+poetry run onsendo heart-rate import path/to/data.csv --validate_only
 
 # Batch import from directory
 poetry run onsendo heart-rate batch-import /path/to/heart_rate_files/ --recursive
@@ -368,7 +368,7 @@ mv data/heart_rate/raw/apple_health/2025_08/ data/heart_rate/archived/2025_08/
 
 - **File Permissions**: `chmod 600 data/heart_rate/raw/**/*.csv` for privacy
 - **Regular Backups**: Use `rsync` or git for version control
-- **Validation**: Use `--validate-only` to check files before importing
+- **Validation**: Use `--validate_only` to check files before importing
 
 #### Getting Smart Recommendations
 

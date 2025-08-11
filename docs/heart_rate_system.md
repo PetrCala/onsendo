@@ -70,7 +70,7 @@ onsendo heart-rate import path/to/data.csv --format csv
 onsendo heart-rate import path/to/data.csv --notes "Morning workout session"
 
 # Validate only (don't store)
-onsendo heart-rate import path/to/data.csv --validate-only
+onsendo heart-rate import path/to/data.csv --validate_only
 ```
 
 ### Batch Import
@@ -83,10 +83,10 @@ onsendo heart-rate batch-import /path/to/heart_rate_files/
 onsendo heart-rate batch-import /path/to/heart_rate_files/ --recursive
 
 # Dry run to see what would be imported
-onsendo heart-rate batch-import /path/to/heart_rate_files/ --dry-run
+onsendo heart-rate batch-import /path/to/heart_rate_files/ --dry_run
 
 # Use 8 parallel workers
-onsendo heart-rate batch-import /path/to/heart_rate_files/ --max-workers 8
+onsendo heart-rate batch-import /path/to/heart_rate_files/ --max_workers 8
 ```
 
 ### Manage Records
@@ -96,7 +96,7 @@ onsendo heart-rate batch-import /path/to/heart_rate_files/ --max-workers 8
 onsendo heart-rate list list
 
 # Show only unlinked records
-onsendo heart-rate list list --unlinked-only
+onsendo heart-rate list list --unlinked_only
 
 # Show details including file integrity
 onsendo heart-rate list list --details
@@ -173,7 +173,7 @@ The system is designed to be robust:
 1. **Data Quality**: Ensure your device exports clean, consistent data
 2. **File Organization**: Use descriptive filenames and organize by date
 3. **Backup**: Keep original device exports as backup
-4. **Validation**: Use `--validate-only` flag to check data before importing
+4. **Validation**: Use `--validate_only` flag to check data before importing
 5. **Batch Processing**: Use batch import for multiple files
 6. **Notes**: Add descriptive notes during import for better organization
 

@@ -97,7 +97,7 @@ fi
 
 # First, validate the data
 print_status "Validating data before import..."
-VALIDATE_CMD="$CMD --validate-only"
+VALIDATE_CMD="$CMD --validate_only"
 
 if eval "$VALIDATE_CMD"; then
     print_success "Data validation passed!"

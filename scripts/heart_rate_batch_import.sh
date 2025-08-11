@@ -40,14 +40,14 @@ show_usage() {
     echo "  --recursive  Search subdirectories recursively"
     echo "  --format     Force specific format for all files (csv, json, text, apple_health)"
     echo "  --notes      Add notes to all imported sessions"
-    echo "  --dry-run    Show what would be imported without storing data"
+    echo "  --dry_run    Show what would be imported without storing data"
     echo "  --workers    Maximum number of parallel workers (default: 4)"
     echo "  --help       Show this help message"
     echo ""
     echo "Examples:"
     echo "  $0 data/heart_rate/raw/apple_health/2025_08/"
     echo "  $0 data/heart_rate/raw/ --recursive --format apple_health"
-    echo "  $0 data/heart_rate/raw/ --recursive --notes 'August 2025 data' --dry-run"
+    echo "  $0 data/heart_rate/raw/ --recursive --notes 'August 2025 data' --dry_run"
     echo "  $0 data/heart_rate/raw/ --recursive --workers 8"
 }
 
@@ -73,7 +73,7 @@ while [[ $# -gt 0 ]]; do
             NOTES="$2"
             shift 2
             ;;
-        --dry-run)
+        --dry_run)
             DRY_RUN=true
             shift
             ;;
@@ -149,7 +149,7 @@ fi
 
 if [ "$DRY_RUN" = true ]; then
     CMD="$CMD --dry_run"
-    print_status "Running in dry-run mode (no data will be stored)"
+    print_status "Running in dry_run mode (no data will be stored)"
 fi
 
 CMD="$CMD --max_workers $WORKERS"

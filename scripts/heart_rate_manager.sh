@@ -80,7 +80,7 @@ show_detailed_help() {
     echo -e "${GREEN}3. Batch Import${NC}"
     echo "   Imports multiple files from a directory with parallel processing."
     echo "   Usage: ./scripts/heart_rate_batch_import.sh [directory] [options]"
-    echo "   Options: --recursive, --format, --notes, --dry-run, --workers"
+    echo "   Options: --recursive, --format, --notes, --dry_run, --workers"
     echo ""
     
     echo -e "${GREEN}4. View Status${NC}"
