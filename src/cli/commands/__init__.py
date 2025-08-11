@@ -6,7 +6,7 @@ from .database import init_db, fill_db, backup_db
 from .heart_rate import (
     import_heart_rate_data_cli,
     batch_import_heart_rate_data,
-    list_heart_rate_data,
+    list_heart_rate_data_cli,
 )
 
 
@@ -29,5 +29,5 @@ __all__ = [
     "backup_db",
     "import_heart_rate_data_cli",
     "batch_import_heart_rate_data",
-    "list_heart_rate_data",
+    "list_heart_rate_data_cli",
 ]

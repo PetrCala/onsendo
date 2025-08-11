@@ -95,6 +95,16 @@ def list_heart_rate_data(
         return 1
 
 
+def list_heart_rate_data_cli(args: argparse.Namespace) -> int:
+    """CLI wrapper for list_heart_rate_data that accepts argparse.Namespace."""
+    return list_heart_rate_data(
+        linked_only=args.linked_only,
+        unlinked_only=args.unlinked_only,
+        visit_id=args.visit_id,
+        show_details=args.details,
+    )
+
+
 def link_heart_rate_to_visit(heart_rate_id: int, visit_id: int) -> int:
     """Link heart rate data to an onsen visit."""
     try:
@@ -114,6 +124,11 @@ def link_heart_rate_to_visit(heart_rate_id: int, visit_id: int) -> int:
         return 1
 
 
+def link_heart_rate_to_visit_cli(args: argparse.Namespace) -> int:
+    """CLI wrapper for link_heart_rate_to_visit that accepts argparse.Namespace."""
+    return link_heart_rate_to_visit(args.heart_rate_id, args.visit_id_link)
+
+
 def unlink_heart_rate_from_visit(heart_rate_id: int) -> int:
     """Unlink heart rate data from its visit."""
     try:
@@ -131,6 +146,11 @@ def unlink_heart_rate_from_visit(heart_rate_id: int) -> int:
     except Exception as e:
         print(f"❌ Error unlinking heart rate data: {e}")
         return 1
+
+
+def unlink_heart_rate_from_visit_cli(args: argparse.Namespace) -> int:
+    """CLI wrapper for unlink_heart_rate_from_visit that accepts argparse.Namespace."""
+    return unlink_heart_rate_from_visit(args.heart_rate_id)
 
 
 def delete_heart_rate_record(heart_rate_id: int, force: bool = False) -> int:
@@ -174,6 +194,11 @@ def delete_heart_rate_record(heart_rate_id: int, force: bool = False) -> int:
     except Exception as e:
         print(f"❌ Error deleting heart rate record: {e}")
         return 1
+
+
+def delete_heart_rate_record_cli(args: argparse.Namespace) -> int:
+    """CLI wrapper for delete_heart_rate_record that accepts argparse.Namespace."""
+    return delete_heart_rate_record(args.heart_rate_id, args.force)
 
 
 def main():

@@ -456,15 +456,9 @@ CLI_COMMANDS = {
         },
     ),
     "heart-rate-list": CommandConfig(
-        func=heart_rate_commands.list_heart_rate_data,
+        func=heart_rate_commands.list_heart_rate_data_cli,
         help="List and manage heart rate data records",
         args={
-            "command": ArgumentConfig(
-                type=str,
-                required=True,
-                help="Command to run (list, link, unlink, delete)",
-                positional=True,
-            ),
             "linked_only": ArgumentConfig(
                 action="store_true", help="Show only records linked to visits"
             ),
@@ -480,13 +474,47 @@ CLI_COMMANDS = {
                 action="store_true",
                 help="Show detailed information including file integrity",
             ),
+        },
+    ),
+    "heart-rate-link": CommandConfig(
+        func=heart_rate_commands.link_heart_rate_to_visit_cli,
+        help="Link heart rate data to a visit",
+        args={
             "heart_rate_id": ArgumentConfig(
                 type=int,
-                required=False,
-                help="Heart rate record ID for link/unlink/delete operations",
+                required=True,
+                help="Heart rate record ID",
+                positional=True,
             ),
             "visit_id_link": ArgumentConfig(
-                type=int, required=False, help="Visit ID to link to (for link command)"
+                type=int,
+                required=True,
+                help="Visit ID to link to",
+                positional=True,
+            ),
+        },
+    ),
+    "heart-rate-unlink": CommandConfig(
+        func=heart_rate_commands.unlink_heart_rate_from_visit_cli,
+        help="Unlink heart rate data from its visit",
+        args={
+            "heart_rate_id": ArgumentConfig(
+                type=int,
+                required=True,
+                help="Heart rate record ID",
+                positional=True,
+            ),
+        },
+    ),
+    "heart-rate-delete": CommandConfig(
+        func=heart_rate_commands.delete_heart_rate_record_cli,
+        help="Delete a heart rate record",
+        args={
+            "heart_rate_id": ArgumentConfig(
+                type=int,
+                required=True,
+                help="Heart rate record ID",
+                positional=True,
             ),
             "force": ArgumentConfig(
                 action="store_true", help="Force deletion without confirmation"
