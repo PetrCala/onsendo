@@ -2,7 +2,7 @@
 set -e
 
 SCRIPTS_DIR=$(dirname "${BASH_SOURCE[0]}")
-source "$SCRIPTS_DIR/shellUtils.sh"
+source "$SCRIPTS_DIR/shell_utils.sh"
 
 if [[ $(git status --porcelain) ]]; then
   error "There are unsaved changes. Please commit or stash your changes before running this script."
