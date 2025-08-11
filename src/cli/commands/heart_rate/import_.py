@@ -83,6 +83,16 @@ def import_heart_rate_data(
         return 1
 
 
+def import_heart_rate_data_cli(args: argparse.Namespace) -> int:
+    """CLI wrapper for import_heart_rate_data that accepts argparse.Namespace."""
+    return import_heart_rate_data(
+        file_path=args.file_path,
+        format_hint=args.format,
+        notes=args.notes,
+        validate_only=args.validate_only,
+    )
+
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -134,12 +144,7 @@ Example JSON format:
         print(f"❌ File not found: {args.file_path}")
         return 1
 
-    return import_heart_rate_data(
-        args.file_path,
-        format_hint=args.format,
-        notes=args.notes,
-        validate_only=args.validate_only,
-    )
+    return import_heart_rate_data_cli(args)
 
 
 if __name__ == "__main__":

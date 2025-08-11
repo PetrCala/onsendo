@@ -4,7 +4,7 @@ from .onsen import add_onsen, print_summary, recommend_onsen, scrape_onsen_data
 from .system import calculate_milestones
 from .database import init_db, fill_db, backup_db
 from .heart_rate import (
-    import_heart_rate_data,
+    import_heart_rate_data_cli,
     batch_import_heart_rate_data,
     list_heart_rate_data,
 )
@@ -27,7 +27,7 @@ __all__ = [
     "init_db",
     "fill_db",
     "backup_db",
-    "import_heart_rate_data",
+    "import_heart_rate_data_cli",
     "batch_import_heart_rate_data",
     "list_heart_rate_data",
 ]
