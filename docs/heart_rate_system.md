@@ -37,6 +37,14 @@ timestamp,heart_rate,confidence
 2024-01-15 10:01:00,75,0.92
 ```
 
+### Apple Health Format
+
+```csv
+"SampleType","SampleRate","StartTime","Data"
+"HEART_RATE",1,"2025-08-11T15:24:12.000Z","72;74;73;75;76;80;82;85;87"
+"HEART_RATE",1,"2025-08-11T15:25:12.000Z","88;90;92;95;98;100;102;105;108"
+```
+
 ## Data Validation
 
 The system performs comprehensive validation to ensure data quality:

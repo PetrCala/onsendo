@@ -154,7 +154,12 @@ class HeartRateDataValidator:
 class HeartRateDataImporter:
     """Imports heart rate data from various file formats."""
 
-    SUPPORTED_FORMATS = {".csv": "csv", ".json": "json", ".txt": "text"}
+    SUPPORTED_FORMATS = {
+        ".csv": "csv",
+        ".json": "json",
+        ".txt": "text",
+        ".health": "apple_health",
+    }
 
     @classmethod
     def import_from_file(
@@ -182,6 +187,8 @@ class HeartRateDataImporter:
             return cls._import_json(file_path)
         elif file_format == "text":
             return cls._import_text(file_path)
+        elif file_format == "apple_health":
+            return cls._import_apple_health(file_path)
         else:
             raise ValueError(f"Unsupported format: {file_format}")
 
@@ -350,6 +357,76 @@ class HeartRateDataImporter:
             end_time=data_points[-1].timestamp,
             data_points=data_points,
             format="text",
+            source_file=str(file_path),
+        )
+
+    @classmethod
+    def _import_apple_health(cls, file_path: Path) -> HeartRateSession:
+        """Import from Apple Health CSV format."""
+        data_points = []
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+
+            for row in reader:
+                try:
+                    # Check if this is a heart rate row
+                    if row.get("SampleType") != "HEART_RATE":
+                        continue
+
+                    # Parse timestamp
+                    timestamp_str = row.get("StartTime", "")
+                    if not timestamp_str:
+                        continue
+
+                    # Handle Apple Health timestamp format (ISO with Z suffix)
+                    timestamp = cls._parse_timestamp(timestamp_str)
+
+                    # Parse heart rate data (semicolon-separated values)
+                    hr_data = row.get("Data", "")
+                    if not hr_data:
+                        continue
+
+                    # Split by semicolon and parse each heart rate value
+                    hr_values = hr_data.split(";")
+                    sample_rate = float(row.get("SampleRate", 1.0))
+
+                    # Calculate time interval between samples
+                    time_interval = 1.0 / sample_rate if sample_rate > 0 else 1.0
+
+                    for i, hr_str in enumerate(hr_values):
+                        try:
+                            heart_rate = float(hr_str.strip())
+
+                            # Calculate timestamp for this sample
+                            sample_timestamp = timestamp + timedelta(
+                                seconds=i * time_interval
+                            )
+
+                            # Create data point (no confidence data in Apple Health format)
+                            data_points.append(
+                                HeartRatePoint(sample_timestamp, heart_rate, None)
+                            )
+
+                        except ValueError:
+                            # Skip invalid heart rate values
+                            continue
+
+                except (ValueError, KeyError) as e:
+                    logger.warning(f"Skipping invalid row: {row}, error: {e}")
+                    continue
+
+        if not data_points:
+            raise ValueError("No valid heart rate data found in Apple Health file")
+
+        # Sort by timestamp
+        data_points.sort(key=lambda x: x.timestamp)
+
+        return HeartRateSession(
+            start_time=data_points[0].timestamp,
+            end_time=data_points[-1].timestamp,
+            data_points=data_points,
+            format="apple_health",
             source_file=str(file_path),
         )
 
