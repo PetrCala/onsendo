@@ -585,7 +585,7 @@ def add_visit_interactive() -> None:
         },
         {
             "name": "energy_level_change",
-            "prompt": "Energy level change (-5 to +5, negative = less energy)",
+            "prompt": "Energy level change (-5 to +5, negative = less energy): ",
             "validator": lambda x: not x or validate_integer(x) and -5 <= int(x) <= 5,
             "processor": lambda x: int(x) if x else None,
             "step_title": "Health and energy",
