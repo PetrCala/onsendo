@@ -324,6 +324,52 @@ workout.export_apple_health_format("workout.csv")
 - **Confidence Scores**: Data quality assessment for each measurement
 - **Export Formats**: Support for all major data formats including Apple Health
 
+**File Storage and Organization**:
+
+For production use, organize your heart rate files in a structured directory system:
+
+```plain
+onsendo/
+├── data/
+│   ├── heart_rate/                    # Main heart rate data directory
+│   │   ├── raw/                       # Original files from devices
+│   │   │   ├── apple_health/          # Apple Health exports
+│   │   │   ├── garmin/                # Garmin exports
+│   │   │   ├── fitbit/                # Fitbit exports
+│   │   │   └── other/                 # Other device formats
+│   │   ├── processed/                 # Cleaned/validated files
+│   │   ├── archived/                  # Old files you want to keep
+│   │   └── imports/                   # Files currently being imported
+```
+
+**Best Practices**:
+
+- **Separate by Device**: Keep files from different devices in separate subdirectories
+- **Date-Based Organization**: Use `YYYY_MM` format for monthly subdirectories
+- **Descriptive Naming**: Use names like `workout_morning_run_2025_08_15.csv`
+- **Keep Originals**: Never modify raw files from your devices
+- **Regular Imports**: Set up weekly routines to import new data
+
+**Import Workflow**:
+
+```bash
+# 1. Export from device to organized directory
+# 2. Import with correct format flag
+poetry run onsendo heart-rate import data/heart_rate/raw/apple_health/2025_08/workout_2025_08_15.csv --format apple_health
+
+# 3. Batch import from monthly directories
+poetry run onsendo heart-rate batch-import data/heart_rate/raw/apple_health/2025_08/ --recursive
+
+# 4. Move processed files to archive
+mv data/heart_rate/raw/apple_health/2025_08/ data/heart_rate/archived/2025_08/
+```
+
+**Security and Backup**:
+
+- **File Permissions**: `chmod 600 data/heart_rate/raw/**/*.csv` for privacy
+- **Regular Backups**: Use `rsync` or git for version control
+- **Validation**: Use `--validate-only` to check files before importing
+
 #### Getting Smart Recommendations
 
 The recommendation system helps you discover new onsens and plan your visits based on your preferences and current situation.
