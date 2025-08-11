@@ -17,7 +17,6 @@ This module provides functionality to scrape onsen (hot spring) data from the Oi
 - `scraper.py`: Core scraping functionality and utilities
 - `data_mapper.py`: Data mapping utilities for converting scraped data to database format
 - `test_scraper.py`: Test script to verify scraping functionality
-- `test_basic.py`: Basic structure and import tests
 - `README.md`: This documentation file
 
 ## Output Files
@@ -146,14 +145,6 @@ The scraper uses constants defined in `src.const.CONST`:
 
 - `ONSEN_URL`: Main onsen list page URL
 - `ONSEN_DETAIL_URL_TEMPLATE`: Template for individual onsen detail pages
-
-## Testing
-
-Run the basic test script to verify the scraping functionality:
-
-```bash
-python src/cli/commands/onsen/scrape_data/test_basic.py
-```
 
 ## Notes
 
