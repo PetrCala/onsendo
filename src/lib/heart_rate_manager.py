@@ -177,6 +177,10 @@ class HeartRateDataImporter:
             file_format = format_hint
         else:
             file_format = cls.SUPPORTED_FORMATS.get(file_path.suffix.lower())
+            
+            # For CSV files, check if they're actually Apple Health format
+            if file_format == "csv":
+                file_format = cls._detect_csv_format(file_path)
 
         if not file_format:
             raise ValueError(f"Unsupported file format: {file_path.suffix}")
@@ -192,6 +196,28 @@ class HeartRateDataImporter:
             return cls._import_apple_health(file_path)
         else:
             raise ValueError(f"Unsupported format: {file_format}")
+
+    @classmethod
+    def _detect_csv_format(cls, file_path: Path) -> str:
+        """Detect if a CSV file is Apple Health format or standard CSV."""
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                first_line = f.readline().strip()
+                
+                # Check if it has Apple Health headers
+                if "SampleType" in first_line and "StartTime" in first_line and "Data" in first_line:
+                    return "apple_health"
+                    
+                # Check if it has standard CSV headers
+                if "timestamp" in first_line.lower() or "heart_rate" in first_line.lower():
+                    return "csv"
+                    
+                # Default to standard CSV for unknown formats
+                return "csv"
+                
+        except Exception:
+            # If we can't read the file, default to standard CSV
+            return "csv"
 
     @classmethod
     def _import_csv(cls, file_path: Path) -> HeartRateSession:

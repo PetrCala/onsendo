@@ -183,6 +183,14 @@ def main():
     sleep_session.export_apple_health_format(mock_sleep_apple_health)
     print(f"   Created mock sleep Apple Health: {mock_sleep_apple_health}")
 
+    print("\n📝 Note: The sample files above are for documentation purposes only.")
+    print("   For actual import testing, use the main generated files:")
+    print("   - resting_session.csv")
+    print("   - workout_apple_health.csv")
+    print("   - sleep_session.json")
+    print("   - daily_sessions.txt")
+    print("   - mixed_scenario_apple_health.csv")
+
     print(
         "\n✅ Demo completed! Check the 'examples/heart_rate/' directory for generated files."
     )

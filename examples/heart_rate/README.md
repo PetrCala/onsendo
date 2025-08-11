@@ -21,19 +21,25 @@ poetry run python examples/heart_rate/demo_mock_heart_rate.py
 
 ## Sample Data Files
 
-### Apple Health Format
+### 🚫 Documentation Examples (Not for Import)
 
-- **`apple_health_sample.csv`** - Simple example of Apple Health CSV format
-- **`mock_workout_apple_health.csv`** - Generated workout session in Apple Health format
-- **`mock_sleep_apple_health.csv`** - Generated sleep session in Apple Health format
-- **`mixed_scenario_apple_health.csv`** - Combined daily + workout sessions
+These files are meant to demonstrate file formats and are **NOT suitable for import**:
 
-### Standard Formats
+- **`apple_health_sample.csv`** - Simple example of Apple Health CSV format (minimal data)
+- **`heart_rate_sample.csv`** - Standard CSV format example (minimal data)
+- **`mock_sleep_apple_health.csv`** - Generated sleep session in Apple Health format (minimal data)
 
-- **`heart_rate_sample.csv`** - Standard CSV format with timestamp, heart_rate, confidence
+### ✅ Import-Ready Files
+
+These files contain realistic data and **CAN be imported** for testing:
+
 - **`resting_session.csv`** - Generated resting session in standard CSV format
+- **`workout_apple_health.csv`** - Generated workout session in Apple Health format  
 - **`sleep_session.json`** - Generated sleep session in JSON format
 - **`daily_sessions.txt`** - Text summary of multiple daily sessions
+- **`mixed_scenario_apple_health.csv`** - Combined daily + workout sessions
+
+> **Note**: When using the heart rate import system, focus on the import-ready files. The documentation examples are too minimal and will fail validation.
 
 ## Apple Health CSV Format
 
