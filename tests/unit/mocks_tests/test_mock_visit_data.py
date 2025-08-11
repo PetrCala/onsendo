@@ -301,7 +301,3 @@ class TestConvenienceFunctions:
         assert len(visits) == 3
         assert all(isinstance(visit, MockOnsenVisit) for visit in visits)
         assert [visit.onsen_id for visit in visits] == [1, 2, 3]
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
