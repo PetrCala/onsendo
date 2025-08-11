@@ -144,8 +144,8 @@ def delete_heart_rate_record(args: argparse.Namespace) -> int:
         force = args.force
 
         # Get record details
-        db_session = get_db()
-        record = db_session.query(HeartRateData).filter_by(id=heart_rate_id).first()
+        with get_db(CONST.DATABASE_URL) as db:
+            record = db.query(HeartRateData).filter_by(id=heart_rate_id).first()
 
         if not record:
             print(f"❌ Heart rate record {heart_rate_id} not found")
