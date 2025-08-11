@@ -585,11 +585,12 @@ def create_realistic_visit_scenario(
 
     else:  # random
         # Random mix of scenarios
+        num_days = kwargs.get("num_days", random.randint(5, 15))
+        visits_per_day = kwargs.get("visits_per_day", random.randint(1, 3))
         return generator.generate_visit_series(
             onsen_ids=onsen_ids,
-            num_days=random.randint(5, 15),
-            visits_per_day=random.randint(1, 3),
-            **kwargs,
+            num_days=num_days,
+            visits_per_day=visits_per_day,
         )
 
 

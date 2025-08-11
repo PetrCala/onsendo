@@ -326,6 +326,91 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    "database-insert-mock": CommandConfig(
+        func=database_commands.insert_mock_data,
+        help="Insert mock onsen visit data into the database for testing purposes.",
+        args={
+            "scenario": ArgumentConfig(
+                type=str,
+                default="random",
+                help="Mock data scenario (random, weekend_warrior, daily_visitor, seasonal_explorer, multi_onsen_enthusiast, custom, seasonal)",
+            ),
+            "num_days": ArgumentConfig(
+                type=int,
+                default=7,
+                help="Number of days for custom scenario (default: 7)",
+            ),
+            "visits_per_day": ArgumentConfig(
+                type=int,
+                default=1,
+                help="Visits per day for custom scenario (default: 1)",
+            ),
+            "num_visits": ArgumentConfig(
+                type=int,
+                default=10,
+                help="Number of visits for seasonal scenario (default: 10)",
+            ),
+            "season": ArgumentConfig(
+                type=str,
+                default="summer",
+                help="Season for seasonal scenario (spring, summer, autumn, winter)",
+            ),
+            "start_date": ArgumentConfig(
+                type=str,
+                help="Start date for custom scenario (YYYY-MM-DD)",
+            ),
+        },
+    ),
+    "database-drop-visits": CommandConfig(
+        func=database_commands.drop_all_visits,
+        help="Drop all onsen visits from the database.",
+        args={
+            "force": ArgumentConfig(
+                action="store_true",
+                help="Skip confirmation prompt",
+            ),
+            "no_interactive": ArgumentConfig(
+                action="store_true",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
+            ),
+        },
+    ),
+    "database-drop-visits-by-criteria": CommandConfig(
+        func=database_commands.drop_visits_by_criteria,
+        help="Drop visits from the database based on specific criteria.",
+        args={
+            "onsen_id": ArgumentConfig(
+                type=int,
+                help="Filter visits by specific onsen ID",
+            ),
+            "before_date": ArgumentConfig(
+                type=str,
+                help="Filter visits before this date (YYYY-MM-DD)",
+            ),
+            "after_date": ArgumentConfig(
+                type=str,
+                help="Filter visits after this date (YYYY-MM-DD)",
+            ),
+            "rating_below": ArgumentConfig(
+                type=int,
+                help="Filter visits with rating below this value (1-10)",
+            ),
+            "rating_above": ArgumentConfig(
+                type=int,
+                help="Filter visits with rating above this value (1-10)",
+            ),
+            "force": ArgumentConfig(
+                action="store_true",
+                help="Skip confirmation prompt",
+            ),
+            "no_interactive": ArgumentConfig(
+                action="store_true",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
+            ),
+        },
+    ),
     "calculate-milestones": CommandConfig(
         func=system_commands.calculate_milestones,
         help="Calculate distance milestones for a location based on onsen distribution.",
