@@ -1,24 +1,24 @@
 === Session 1 ===
-Duration: 52 minutes
-Heart Rate: 48-137 BPM
-Average: 92.0 BPM
-Notes: Mock light_exercise session - Spring not road set.
+Duration: 28 minutes
+Heart Rate: 44-141 BPM
+Average: 92.6 BPM
+Notes: Mock light_exercise session - Only add just president organization thing energy.
 
 === Session 2 ===
-Duration: 80 minutes
-Heart Rate: 40-150 BPM
-Average: 90.9 BPM
-Notes: Mock light_exercise session - Experience community wall heart feel.
+Duration: 41 minutes
+Heart Rate: 51-114 BPM
+Average: 80.7 BPM
+Notes: Mock light_exercise session - Offer structure camera good Mrs behind try.
 
 === Session 3 ===
-Duration: 54 minutes
-Heart Rate: 54-100 BPM
-Average: 74.6 BPM
-Notes: Mock resting session - With result thought course natural explain.
+Duration: 82 minutes
+Heart Rate: 40-85 BPM
+Average: 61.5 BPM
+Notes: Mock resting session - Blue continue door.
 
 === Session 4 ===
-Duration: 40 minutes
-Heart Rate: 58-122 BPM
-Average: 89.6 BPM
-Notes: Mock light_exercise session - Sign value ok true fish.
+Duration: 57 minutes
+Heart Rate: 40-111 BPM
+Average: 69.6 BPM
+Notes: Mock resting session - Your through most information green however whether take.
 

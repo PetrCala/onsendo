@@ -21,3 +21,9 @@ __pycache__/
 
 # VSCode
 .vscode/
+
+# Examples
+examples/heart_rate/*.txt
+examples/heart_rate/*.json
+examples/heart_rate/*.csv
+examples/heart_rate/*.health
