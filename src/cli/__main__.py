@@ -28,6 +28,7 @@ def get_command_group_config() -> Dict[str, str]:
         "onsen": "Onsen management commands",
         "system": "System management commands",
         "database": "Database management commands",
+        "heart-rate": "Heart rate management commands",
     }
 
 
@@ -38,6 +39,7 @@ def get_command_group_mapping() -> Dict[str, str]:
         "visit-": "visit",
         "onsen-": "onsen",
         "database-": "database",
+        "heart-rate-": "heart-rate",
     }
 
 
