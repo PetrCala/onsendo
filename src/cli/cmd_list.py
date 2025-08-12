@@ -14,6 +14,7 @@ import src.cli.commands.onsen as onsen_commands
 import src.cli.commands.system as system_commands
 import src.cli.commands.database as database_commands
 import src.cli.commands.heart_rate as heart_rate_commands
+import src.cli.commands.analysis as analysis_commands
 
 
 @dataclass
@@ -568,6 +569,187 @@ CLI_COMMANDS = {
             ),
             "max_workers": ArgumentConfig(
                 type=int, default=4, help="Maximum number of parallel workers"
+            ),
+        },
+    ),
+    # Analysis commands
+    "analysis-run": CommandConfig(
+        func=analysis_commands.run_analysis,
+        help="Run a custom analysis",
+        args={
+            "analysis_type": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Type of analysis to perform",
+                positional=True,
+            ),
+            "data_categories": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Comma-separated list of data categories",
+            ),
+            "metrics": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Comma-separated list of metrics to calculate",
+            ),
+            "visualizations": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Comma-separated list of visualizations to create",
+            ),
+            "models": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Comma-separated list of models to train",
+            ),
+            "filters": ArgumentConfig(
+                type=str,
+                required=False,
+                help="JSON string of filters to apply",
+            ),
+            "grouping": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Comma-separated list of columns to group by",
+            ),
+            "time_range": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Time range in format 'start,end' (YYYY-MM-DD HH:MM)",
+            ),
+            "spatial_bounds": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Spatial bounds in format 'min_lat,max_lat,min_lon,max_lon'",
+            ),
+            "custom_metrics": ArgumentConfig(
+                type=str,
+                required=False,
+                help="JSON string of custom metrics",
+            ),
+            "output_format": ArgumentConfig(
+                type=str,
+                required=False,
+                default="html",
+                help="Output format for reports",
+            ),
+            "include_raw_data": ArgumentConfig(
+                action="store_true",
+                help="Include raw data in results",
+            ),
+            "include_statistical_tests": ArgumentConfig(
+                action="store_true",
+                default=True,
+                help="Include statistical tests",
+            ),
+            "confidence_level": ArgumentConfig(
+                type=float,
+                required=False,
+                default=0.95,
+                help="Confidence level for statistical tests",
+            ),
+            "output_dir": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output directory for analysis results",
+            ),
+            "export": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Export format (json, csv)",
+            ),
+        },
+    ),
+    "analysis-scenario": CommandConfig(
+        func=analysis_commands.run_scenario_analysis,
+        help="Run a predefined analysis scenario",
+        args={
+            "scenario": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Analysis scenario to run",
+                positional=True,
+            ),
+            "custom_config": ArgumentConfig(
+                type=str,
+                required=False,
+                help="JSON string of custom configuration overrides",
+            ),
+            "output_dir": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output directory for analysis results",
+            ),
+            "export": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Export format (json, csv)",
+            ),
+        },
+    ),
+    "analysis-list-scenarios": CommandConfig(
+        func=analysis_commands.list_scenarios,
+        help="List available analysis scenarios",
+        args={},
+    ),
+    "analysis-list-options": CommandConfig(
+        func=analysis_commands.list_analysis_options,
+        help="List available analysis options",
+        args={},
+    ),
+    "analysis-summary": CommandConfig(
+        func=analysis_commands.show_analysis_summary,
+        help="Show summary of all analyses performed",
+        args={
+            "output_dir": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output directory for analysis results",
+            ),
+        },
+    ),
+    "analysis-clear-cache": CommandConfig(
+        func=analysis_commands.clear_analysis_cache,
+        help="Clear the analysis cache",
+        args={
+            "output_dir": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output directory for analysis results",
+            ),
+        },
+    ),
+    "analysis-export": CommandConfig(
+        func=analysis_commands.export_analysis_results,
+        help="Export analysis results",
+        args={
+            "analysis_key": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Analysis key to export",
+            ),
+            "format": ArgumentConfig(
+                type=str,
+                required=False,
+                default="json",
+                help="Export format (json, csv)",
+            ),
+            "output_dir": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output directory for analysis results",
+            ),
+        },
+    ),
+    "analysis-sample": CommandConfig(
+        func=analysis_commands.create_sample_analysis,
+        help="Create a sample analysis to demonstrate the system",
+        args={
+            "output_dir": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output directory for analysis results",
             ),
         },
     ),
