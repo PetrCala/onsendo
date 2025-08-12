@@ -25,8 +25,19 @@ def show_analysis_summary(args: argparse.Namespace) -> None:
             print("Analysis Summary:")
             print("=" * 50)
             print(f"Total Analyses: {summary['total_analyses']}")
-            print(f"Output Directory: {summary['output_directory']}")
+            print(f"Base Output Directory: {summary['base_output_directory']}")
             print(f"Cache Size: {summary['cache_size']}")
+
+            if summary["analysis_directories"]:
+                print(
+                    f"\nAnalysis Directories ({len(summary['analysis_directories'])}):"
+                )
+                for dir_info in summary["analysis_directories"]:
+                    print(f"\n  {dir_info['name']}")
+                    print(f"    Path: {dir_info['path']}")
+                    print(f"    Created: {dir_info['created']}")
+                    print(f"    Size: {dir_info['size']} bytes")
+                    print(f"    Files: {dir_info['file_count']}")
 
             if summary["analyses"]:
                 print("\nRecent Analyses:")
