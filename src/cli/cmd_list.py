@@ -305,9 +305,18 @@ CLI_COMMANDS = {
     ),
     "database-fill": CommandConfig(
         func=database_commands.fill_db,
-        help="Fill the database with onsen data.",
+        help="Fill the database with onsen data. In interactive mode, will search for scraped data files.",
         args={
-            "json_path": ArgumentConfig(type=str, required=True),
+            "no_interactive": ArgumentConfig(
+                action="store_true",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
+            ),
+            "json_path": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Path to JSON file with onsen data (optional in interactive mode)",
+            ),
         },
     ),
     "database-backup": CommandConfig(
