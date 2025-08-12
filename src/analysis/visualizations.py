@@ -122,6 +122,14 @@ class VisualizationEngine:
             else:
                 raise ValueError("Cannot infer columns for bar chart")
 
+        if data[config.y_column].ndim > 1:
+            # If y_column is 2D, take the mean or first column
+            if isinstance(data[config.y_column].iloc[0], (list, np.ndarray)):
+                data = data.copy()
+                data[config.y_column] = data[config.y_column].apply(
+                    lambda x: np.mean(x) if isinstance(x, (list, np.ndarray)) else x
+                )
+
         if config.interactive:
             fig = px.bar(
                 data,
@@ -264,6 +272,14 @@ class VisualizationEngine:
                 config.x_column = numeric_cols[0]
             else:
                 raise ValueError("Cannot infer column for histogram")
+
+        if data[config.x_column].ndim > 1:
+            # If x_column is 2D, take the mean or first column
+            if isinstance(data[config.x_column].iloc[0], (list, np.ndarray)):
+                data = data.copy()
+                data[config.x_column] = data[config.x_column].apply(
+                    lambda x: np.mean(x) if isinstance(x, (list, np.ndarray)) else x
+                )
 
         if config.interactive:
             fig = px.histogram(

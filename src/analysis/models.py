@@ -170,7 +170,9 @@ class ModelEngine:
         # Handle categorical features
         feature_names = []
         for col in config.feature_columns:
-            if X[col].dtype == "object":
+            # Use pandas dtype access method
+            col_dtype = str(X[col].dtype)
+            if col_dtype == "object":
                 # Encode categorical variables
                 le = LabelEncoder()
                 X[col] = le.fit_transform(X[col].astype(str))
@@ -186,7 +188,9 @@ class ModelEngine:
             ModelType.RANDOM_FOREST,
             ModelType.GRADIENT_BOOSTING,
         ]:
-            if y.dtype == "object":
+            # Use pandas dtype access method
+            y_dtype = str(y.dtype)
+            if y_dtype == "object":
                 le = LabelEncoder()
                 y = le.fit_transform(y.astype(str))
                 self.label_encoders[f"{config.target_column}_encoder"] = le

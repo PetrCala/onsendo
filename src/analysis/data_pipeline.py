@@ -254,27 +254,52 @@ class DataPipeline:
         main_category = categories[0]
         main_config = self._data_mappings[main_category]
 
+        # Determine the starting table and alias
+        if main_config["table"] == "onsens":
+            # Start with onsens table
+            start_table = "onsens"
+            start_alias = "o"
+            base_columns = "o.id as onsen_id, o.name as onsen_name, o.region, o.latitude, o.longitude, o.address"
+        else:
+            # Start with the main table and join to onsens
+            start_table = main_config["table"]
+            start_alias = main_config["table"][0]
+            base_columns = f"{start_alias}.onsen_id, o.name as onsen_name, o.region, o.latitude, o.longitude, o.address"
+
         # Start with the main table
         query = f"""
-        SELECT DISTINCT o.id as onsen_id, o.name as onsen_name, o.region, 
-               o.latitude, o.longitude, o.address
-        FROM {main_config['table']} o
+        SELECT DISTINCT {base_columns}
+        FROM {start_table} {start_alias}
         """
 
         # Add joins for other categories
         join_tables = set()
+        table_aliases = {start_table: start_alias}  # Track table aliases
+
+        # If we didn't start with onsens, add the join to onsens first
+        if start_table != "onsens":
+            query += f"\nLEFT JOIN onsens o ON {start_alias}.onsen_id = o.id"
+            table_aliases["onsens"] = "o"
+            join_tables.add("onsens")
+
         for category in categories:
             config = self._data_mappings[category]
             for join_table, join_col, ref_col in config.get("joins", []):
                 if join_table not in join_tables:
-                    query += f"\nLEFT JOIN {join_table} {join_table[0]} ON {join_table[0]}.{join_col} = o.{ref_col}"
+                    # Use proper table alias for joins
+                    if join_table == "onsens":
+                        # Already joined to onsens above
+                        continue
+                    else:
+                        alias = join_table[0]
+                        query += f"\nLEFT JOIN {join_table} {alias} ON {alias}.{join_col} = o.{ref_col}"
+                        table_aliases[join_table] = alias
                     join_tables.add(join_table)
 
         # Add columns from all categories
         select_columns = []
         for category in categories:
             config = self._data_mappings[category]
-            table_alias = config["table"][0] if config["table"] != "onsens" else "o"
 
             for col in config["columns"]:
                 if col not in [
@@ -286,10 +311,43 @@ class DataPipeline:
                     "longitude",
                     "address",
                 ]:
+                    # Use the correct table alias for each column
+                    if config["table"] == "onsens":
+                        table_alias = "o"
+                    elif config["table"] == "onsen_visits":
+                        # For onsen_visits, we need to use the source table alias
+                        # Since we're starting from onsens, we need to join to onsen_visits
+                        if "onsen_visits" not in table_aliases:
+                            # Add the join to onsen_visits
+                            query += (
+                                f"\nLEFT JOIN onsen_visits ov ON ov.onsen_id = o.id"
+                            )
+                            table_aliases["onsen_visits"] = "ov"
+                        table_alias = "ov"
+                    else:
+                        table_alias = table_aliases.get(
+                            config["table"], config["table"][0]
+                        )
+
                     select_columns.append(f"{table_alias}.{col}")
 
+        # Reconstruct the query with all columns in the SELECT statement
         if select_columns:
-            query += f"\n, {', '.join(select_columns)}"
+            # Remove the original SELECT DISTINCT line and replace it
+            lines = query.split("\n")
+            select_line = lines[0]
+            from_line = lines[1]
+            remaining_lines = lines[2:]
+
+            # Create new SELECT statement with all columns
+            all_columns = base_columns + ", " + ", ".join(select_columns)
+            new_query = f"{select_line.replace(base_columns, all_columns)}\n{from_line}"
+
+            # Add remaining lines (joins, WHERE, etc.)
+            for line in remaining_lines:
+                new_query += f"\n{line}"
+
+            query = new_query
 
         # Add WHERE clause
         where_conditions = []
