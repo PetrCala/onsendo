@@ -8,6 +8,7 @@ import argparse
 import logging
 import json
 
+from src.const import CONST
 from src.db.conn import get_db
 from src.analysis.engine import AnalysisEngine
 from src.types.analysis import AnalysisScenario
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 def run_scenario_analysis(args: argparse.Namespace) -> None:
     """Run a predefined analysis scenario."""
     try:
-        with get_db() as session:
+        with get_db(url=CONST.DATABASE_URL) as session:
             # Initialize analysis engine
             engine = AnalysisEngine(session, args.output_dir)
 

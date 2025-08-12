@@ -10,6 +10,7 @@ from pathlib import Path
 import json
 import logging
 
+from src.const import CONST
 from src.db.conn import get_db
 from src.analysis.engine import AnalysisEngine
 from src.types.analysis import (
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 def run_analysis(args: argparse.Namespace) -> None:
     """Run a custom analysis."""
     try:
-        with get_db() as session:
+        with get_db(url=CONST.DATABASE_URL) as session:
             # Initialize analysis engine
             engine = AnalysisEngine(session, args.output_dir)
 

@@ -7,6 +7,7 @@ Create a sample analysis to demonstrate the system.
 import argparse
 import logging
 
+from src.const import CONST
 from src.db.conn import get_db
 from src.analysis.engine import AnalysisEngine
 from src.types.analysis import (
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 def create_sample_analysis(args: argparse.Namespace) -> None:
     """Create a sample analysis to demonstrate the system."""
     try:
-        with get_db() as session:
+        with get_db(url=CONST.DATABASE_URL) as session:
             # Initialize analysis engine
             engine = AnalysisEngine(session, args.output_dir)
 

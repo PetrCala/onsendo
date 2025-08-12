@@ -7,6 +7,7 @@ Export analysis results.
 import argparse
 import logging
 
+from src.const import CONST
 from src.db.conn import get_db
 from src.analysis.engine import AnalysisEngine
 
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 def export_analysis_results(args: argparse.Namespace) -> None:
     """Export analysis results."""
     try:
-        with get_db() as session:
+        with get_db(url=CONST.DATABASE_URL) as session:
             engine = AnalysisEngine(session, args.output_dir)
 
             # Get analysis summary to find available analyses
