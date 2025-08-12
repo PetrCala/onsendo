@@ -437,6 +437,11 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    "update-artifacts": CommandConfig(
+        func=system_commands.update_artifacts,
+        help="Update database artifacts in the artifacts/db folder for presentation purposes.",
+        args={},
+    ),
     # Heart rate commands
     "heart-rate-import": CommandConfig(
         func=heart_rate_commands.import_heart_rate_data,

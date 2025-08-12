@@ -588,6 +588,13 @@ poetry run onsendo database drop-visits --force
 2. Get recommendations with the new distance categories
 3. Record visits to build your personal database
 
+**Managing Database Artifacts**:
+
+1. Update presentation artifacts: `onsendo system update-artifacts`
+2. Generate empty database templates for distribution
+3. Create sample databases with onsen data and locations
+4. Maintain current database state snapshots for documentation
+
 **Health Tracking**:
 
 1. Record detailed visit data including energy levels and hydration
