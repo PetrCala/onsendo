@@ -711,12 +711,26 @@ CLI_COMMANDS = {
     ),
     "analysis-clear-cache": CommandConfig(
         func=analysis_commands.clear_analysis_cache,
-        help="Clear the analysis cache",
+        help="Clear the analysis cache and optionally clean up old directories",
         args={
             "output_dir": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Output directory for analysis results",
+            ),
+            "cleanup_old_analyses": ArgumentConfig(
+                action="store_true",
+                help="Clean up old analysis directories, keeping only recent ones",
+            ),
+            "keep_recent": ArgumentConfig(
+                type=int,
+                required=False,
+                default=5,
+                help="Number of recent analysis directories to keep (default: 5)",
+            ),
+            "cleanup_shared_dirs": ArgumentConfig(
+                action="store_true",
+                help="Clean up old shared directories (models, visualizations)",
             ),
         },
     ),

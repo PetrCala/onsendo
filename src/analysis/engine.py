@@ -754,6 +754,55 @@ class AnalysisEngine:
         self.data_pipeline.clear_cache()
         logger.info("Analysis cache cleared")
 
+    def cleanup_old_analysis_directories(self, keep_recent: int = 5) -> None:
+        """Clean up old analysis directories, keeping only the most recent ones."""
+        try:
+            analysis_dirs = self.list_analysis_directories()
+
+            # Filter out non-analysis directories (like 'models', 'visualizations')
+            analysis_dirs = [
+                d for d in analysis_dirs if "_" in d.name and d.name.count("_") >= 2
+            ]
+
+            if len(analysis_dirs) <= keep_recent:
+                logger.info(
+                    f"No cleanup needed. Keeping {len(analysis_dirs)} analysis directories."
+                )
+                return
+
+            # Remove old directories
+            to_remove = analysis_dirs[keep_recent:]
+            for old_dir in to_remove:
+                import shutil
+
+                shutil.rmtree(old_dir)
+                logger.info(f"Removed old analysis directory: {old_dir.name}")
+
+            logger.info(
+                f"Cleanup completed. Kept {keep_recent} recent analysis directories."
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to cleanup old analysis directories: {e}")
+
+    def cleanup_shared_directories(self) -> None:
+        """Clean up old shared directories that are no longer needed."""
+        try:
+            shared_dirs = ["models", "visualizations"]
+
+            for dir_name in shared_dirs:
+                shared_dir = self.base_output_dir / dir_name
+                if shared_dir.exists():
+                    import shutil
+
+                    shutil.rmtree(shared_dir)
+                    logger.info(f"Removed old shared directory: {dir_name}")
+
+            logger.info("Shared directories cleanup completed.")
+
+        except Exception as e:
+            logger.error(f"Failed to cleanup shared directories: {e}")
+
     def export_results(
         self, result: AnalysisResult, format: str = "json"
     ) -> Optional[str]:
