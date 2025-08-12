@@ -77,7 +77,7 @@ poetry install
 
 ```bash
 # Run a sample analysis to see the system in action
-onsendo analysis-sample
+onsendo analysis sample
 
 # This will create a basic analysis with:
 # - Data overview
@@ -86,29 +86,41 @@ onsendo analysis-sample
 # - Simple linear regression model
 ```
 
+**Note**: Each analysis run creates its own organized subdirectory in `output/analysis/` with a timestamp and descriptive name (e.g., `descriptive_20250812_145800/`).
+
 ### 3. Explore Available Scenarios
 
 ```bash
 # List all predefined analysis scenarios
-onsendo analysis-list-scenarios
+onsendo analysis list-scenarios
 
 # Run a specific scenario
-onsendo analysis-scenario overview
-onsendo analysis-scenario quality_analysis
-onsendo analysis-scenario spatial_analysis
-onsendo analysis-scenario temporal_analysis
+onsendo analysis scenario overview
+onsendo analysis scenario quality_analysis
+onsendo analysis scenario spatial_analysis
+onsendo analysis scenario temporal_analysis
 ```
 
 ### 4. Create Custom Analysis
 
 ```bash
 # Run a custom analysis
-onsendo analysis-run descriptive \
+onsendo analysis run descriptive \
   --data-categories "onsen_basic,visit_basic,visit_ratings" \
   --metrics "mean,median,std,count" \
   --visualizations "bar,histogram,correlation_matrix" \
   --models "linear_regression" \
   --include-statistical-tests
+```
+
+### 5. Manage Analysis Results
+
+```bash
+# View summary of all analyses and directories
+onsendo analysis summary
+
+# Clean up old analyses (keep only 5 most recent)
+onsendo analysis clear-cache --cleanup_old_analyses --keep_recent 5
 ```
 
 ## CLI Commands
@@ -117,14 +129,14 @@ onsendo analysis-run descriptive \
 
 | Command | Description |
 |---------|-------------|
-| `analysis-run` | Run a custom analysis with specified parameters |
-| `analysis-scenario` | Run a predefined analysis scenario |
-| `analysis-list-scenarios` | List available analysis scenarios |
-| `analysis-list-options` | List available analysis options |
-| `analysis-summary` | Show summary of all analyses performed |
-| `analysis-clear-cache` | Clear the analysis cache |
-| `analysis-export` | Export analysis results |
-| `analysis-sample` | Create a sample analysis |
+| `analysis run` | Run a custom analysis with specified parameters |
+| `analysis scenario` | Run a predefined analysis scenario |
+| `analysis list-scenarios` | List available analysis scenarios |
+| `analysis list-options` | List available analysis options |
+| `analysis summary` | Show summary of all analyses performed |
+| `analysis clear-cache` | Clear the analysis cache and optionally clean up old directories |
+| `analysis export` | Export analysis results |
+| `analysis sample` | Create a sample analysis |
 
 ### Command Examples
 
@@ -132,7 +144,7 @@ onsendo analysis-run descriptive \
 
 ```bash
 # Simple descriptive analysis
-onsendo analysis-run descriptive \
+onsendo analysis run descriptive \
   --data-categories "onsen_basic,visit_basic" \
   --metrics "mean,count" \
   --visualizations "bar,histogram"
@@ -142,7 +154,7 @@ onsendo analysis-run descriptive \
 
 ```bash
 # Comprehensive analysis with models
-onsendo analysis-run correlational \
+onsendo analysis run correlational \
   --data-categories "visit_ratings,visit_experience" \
   --metrics "mean,std,correlation" \
   --visualizations "correlation_matrix,scatter,heatmap" \
@@ -155,7 +167,7 @@ onsendo analysis-run correlational \
 
 ```bash
 # Geographic analysis
-onsendo analysis-run spatial \
+onsendo analysis run spatial \
   --data-categories "spatial,onsen_basic,visit_ratings" \
   --visualizations "point_map,heat_map,cluster_map" \
   --models "kmeans" \
@@ -166,11 +178,27 @@ onsendo analysis-run spatial \
 
 ```bash
 # Time-based analysis
-onsendo analysis-run temporal \
+onsendo analysis run temporal \
   --data-categories "temporal,visit_basic,weather" \
   --visualizations "line,trend,seasonal" \
   --models "time_series" \
   --time-range "2023-01-01 00:00,2023-12-31 23:59"
+```
+
+#### Analysis Maintenance and Cleanup
+
+```bash
+# View summary of all analyses and directories
+onsendo analysis summary
+
+# Clear cache and clean up old analysis directories
+onsendo analysis clear-cache --cleanup_old_analyses --keep_recent 5
+
+# Clean up old shared directories
+onsendo analysis clear-cache --cleanup_shared_dirs
+
+# Perform comprehensive cleanup
+onsendo analysis clear-cache --cleanup_old_analyses --keep_recent 3 --cleanup_shared_dirs
 ```
 
 ## Analysis Scenarios
@@ -326,16 +354,85 @@ The system creates several types of output files:
 
 ### Output Structure
 
+The system now organizes analysis results in separate subdirectories for each analysis run:
+
 ```plain
 output/analysis/
-├── visualizations/          # Chart and graph files
-├── models/                  # Trained model files
-├── analysis_summary_*.json  # Analysis summaries
-├── metrics_*.json          # Calculated metrics
-├── insights_*.txt          # Generated insights
-├── metadata_*.json         # Analysis metadata
-└── export_*.json           # Exported results
+├── descriptive_20250812_145800/     # Individual analysis directory
+│   ├── analysis_summary.json        # Analysis summary
+│   ├── metrics.json                 # Calculated metrics
+│   ├── insights.txt                 # Generated insights
+│   ├── metadata.json                # Analysis metadata
+│   ├── export.json                  # Complete results export
+│   ├── data_export.csv              # Data export (if requested)
+│   ├── visualizations/              # Generated charts and graphs
+│   └── models/                      # Trained models
+├── spatial_20250812_150000/         # Another analysis directory
+│   └── [same structure]
+├── temporal_20250812_151500/        # Yet another analysis directory
+│   └── [same structure]
+└── README.md                        # Directory documentation
 ```
+
+**Benefits of the New Structure:**
+
+- **Organization**: Each analysis is self-contained in its own directory
+- **Versioning**: Clear tracking of different analysis runs over time
+- **Cleanup**: Easy to remove old analyses while keeping recent ones
+- **Sharing**: Simple to share specific analysis results by copying individual directories
+- **Reproducibility**: Each analysis directory contains all necessary files
+
+### Analysis Cleanup and Maintenance
+
+The system provides tools to manage analysis output directories and prevent disk space issues:
+
+#### Automatic Directory Organization
+
+Each analysis run automatically creates a timestamped subdirectory:
+
+- **Naming Convention**: `{analysis_type}_{timestamp}/`
+- **Example**: `descriptive_20250812_145800/`
+- **Self-Contained**: All analysis files are stored within the subdirectory
+
+#### Cleanup Commands
+
+Manage old analysis directories and shared resources:
+
+```bash
+# View summary of all analysis directories
+onsendo analysis summary
+
+# Clean up old analysis directories (keep only recent ones)
+onsendo analysis clear-cache --cleanup_old_analyses --keep_recent 5
+
+# Clean up old shared directories (models, visualizations)
+onsendo analysis clear-cache --cleanup_shared_dirs
+
+# Perform both cleanup operations
+onsendo analysis clear-cache --cleanup_old_analyses --keep_recent 3 --cleanup_shared_dirs
+```
+
+#### Cleanup Options
+
+- **`--cleanup_old_analyses`**: Remove old analysis directories
+- **`--keep_recent N`**: Keep only the N most recent analyses (default: 5)
+- **`--cleanup_shared_dirs`**: Remove old shared directories that are no longer needed
+
+#### Best Practices for Cleanup
+
+1. **Regular Maintenance**: Run cleanup monthly to prevent disk space issues
+2. **Retention Policy**: Keep 5-10 most recent analyses for reference
+3. **Shared Directory Cleanup**: Use after major system updates
+4. **Backup Important Results**: Copy important analysis directories before cleanup
+
+#### Directory Information
+
+The `analysis summary` command provides detailed information about each analysis directory:
+
+- Creation date and time
+- Total file size and count
+- Path information
+- Analysis type and configuration
 
 ## Advanced Usage
 
@@ -344,7 +441,7 @@ output/analysis/
 Define custom metrics using mathematical expressions:
 
 ```bash
-onsendo analysis-run descriptive \
+onsendo analysis run descriptive \
   --custom-metrics '{"value_score": "mean(personal_rating) * 0.7 + mean(cleanliness_rating) * 0.3"}'
 ```
 
@@ -353,7 +450,7 @@ onsendo analysis-run descriptive \
 Apply filters to focus on specific data subsets:
 
 ```bash
-onsendo analysis-run descriptive \
+onsendo analysis run descriptive \
   --filters '{"region": "Beppu", "entry_fee_yen__gte": 500}'
 ```
 
@@ -362,7 +459,7 @@ onsendo analysis-run descriptive \
 Group data by specific columns:
 
 ```bash
-onsendo analysis-run comparative \
+onsendo analysis run comparative \
   --grouping "region,time_of_day" \
   --metrics "mean,std"
 ```
@@ -372,7 +469,7 @@ onsendo analysis-run comparative \
 Analyze specific time periods:
 
 ```bash
-onsendo analysis-run temporal \
+onsendo analysis run temporal \
   --time-range "2023-06-01 00:00,2023-08-31 23:59"
 ```
 
@@ -381,7 +478,7 @@ onsendo analysis-run temporal \
 Focus on specific geographic areas:
 
 ```bash
-onsendo analysis-run spatial \
+onsendo analysis run spatial \
   --spatial-bounds "33.0,34.0,130.0,131.0"
 ```
 
@@ -469,7 +566,7 @@ Enable detailed logging for troubleshooting:
 
 ```bash
 export LOG_LEVEL=DEBUG
-onsendo analysis-run descriptive
+onsendo analysis run descriptive
 ```
 
 ## Future Enhancements
