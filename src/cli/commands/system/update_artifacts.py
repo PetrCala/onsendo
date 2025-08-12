@@ -15,14 +15,14 @@ from loguru import logger
 from src.db.conn import get_db
 from src.db.import_data import import_onsen_data
 from src.const import CONST
+from src.paths import PATHS
 
 
 class ArtifactGenerator:
     """Handles generation of database artifacts without affecting the current database."""
 
     def __init__(self):
-        self.project_root = Path(__file__).parent.parent.parent.parent.parent
-        self.artifacts_dir = self.project_root / "artifacts" / "db"
+        self.artifacts_dir = Path(PATHS.ARTIFACTS_DB_DIR)
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
 
     def _backup_current_db(self) -> str:
@@ -78,10 +78,7 @@ class ArtifactGenerator:
         from sqlalchemy import create_engine
         from src.db.models import Location
 
-        # Read locations from the artifacts/locations/locations.json file
-        locations_file = (
-            self.project_root / "artifacts" / "locations" / "locations.json"
-        )
+        locations_file = Path(PATHS.ARTIFACTS_DIR) / "locations" / "locations.json"
 
         if not locations_file.exists():
             logger.warning(
@@ -145,7 +142,7 @@ class ArtifactGenerator:
 
     def _find_latest_scraped_data(self) -> str:
         """Find the latest scraped onsen data file."""
-        scraping_dir = self.project_root / "artifacts" / "scraping"
+        scraping_dir = Path(PATHS.ARTIFACTS_DIR) / "scraping"
 
         if not scraping_dir.exists():
             raise FileNotFoundError("No artifacts/scraping directory found")
@@ -167,7 +164,7 @@ class ArtifactGenerator:
 
     def generate_onsen_empty_db(self) -> str:
         """Generate onsen_empty.db artifact."""
-        artifact_path = self.artifacts_dir / "onsen_empty.db"
+        artifact_path = Path(PATHS.ARTIFACTS_DB_DIR) / "onsen_empty.db"
 
         # Remove existing artifact if it exists
         if artifact_path.exists():
@@ -181,7 +178,7 @@ class ArtifactGenerator:
 
     def generate_onsen_no_visits_no_locations_db(self) -> str:
         """Generate onsen_no_visits_no_locations.db artifact."""
-        artifact_path = self.artifacts_dir / "onsen_no_visits_no_locations.db"
+        artifact_path = Path(PATHS.ARTIFACTS_DB_DIR) / "onsen_no_visits_no_locations.db"
 
         # Remove existing artifact if it exists
         if artifact_path.exists():
@@ -203,7 +200,7 @@ class ArtifactGenerator:
 
     def generate_onsen_with_locations_db(self) -> str:
         """Generate onsen_with_locations.db artifact - database with onsens and locations."""
-        artifact_path = self.artifacts_dir / "onsen_with_locations.db"
+        artifact_path = Path(PATHS.ARTIFACTS_DB_DIR) / "onsen_with_locations.db"
 
         # Remove existing artifact if it exists
         if artifact_path.exists():
@@ -229,7 +226,7 @@ class ArtifactGenerator:
 
     def generate_onsen_latest_db(self) -> str:
         """Generate onsen_latest.db artifact - copy of current database state."""
-        artifact_path = self.artifacts_dir / "onsen_latest.db"
+        artifact_path = Path(PATHS.ONSEN_LATEST_ARTIFACT)
         current_db_path = CONST.DATABASE_URL.replace("sqlite:///", "")
 
         # Remove existing artifact if it exists
