@@ -11,11 +11,14 @@ class PATHS(CustomStrEnum):
     TMP_DATA_DIR = os.path.join(DATA_DIR, "tmp")
     DB_DIR = os.path.join(DATA_DIR, "db")
     OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output")
+    ARTIFACTS_DIR = os.path.join(PROJECT_ROOT, "artifacts")
+    ARTIFACTS_DB_DIR = os.path.join(ARTIFACTS_DIR, "db")
 
     # Files
     DB_PATH = os.path.join(DB_DIR, "onsen.db")
     SCRAPED_ONSEN_DATA_FILE = os.path.join(OUTPUT_DIR, "scraped_onsen_data.json")
     ONSEN_MAPPING_FILE = os.path.join(OUTPUT_DIR, "onsen_mapping.json")
+    ONSEN_LATEST_ARTIFACT = os.path.join(ARTIFACTS_DB_DIR, "onsen_latest.db")
 
     FIXTURES_PATH_REL = "src.testing.testutils.fixtures"
     """Path to the fixtures directory relative to the app root."""

@@ -321,7 +321,7 @@ CLI_COMMANDS = {
     ),
     "database-backup": CommandConfig(
         func=database_commands.backup_db,
-        help="Backup the current database to a specified folder. In interactive mode, type 'browse' to open folder selection dialog.",
+        help="Backup the current database to a specified folder. In interactive mode, type 'browse' to open folder selection dialog, or type 'artifact' to backup to latest artifact.",
         args={
             "no_interactive": ArgumentConfig(
                 action="store_true",
@@ -332,6 +332,11 @@ CLI_COMMANDS = {
                 type=str,
                 required=False,
                 help="Folder path where the backup should be stored (optional in interactive mode)",
+            ),
+            "to_latest_artifact": ArgumentConfig(
+                action="store_true",
+                short="a",
+                help="Backup directly to the latest artifact path (artifacts/db/onsen_latest.db)",
             ),
         },
     ),
