@@ -488,7 +488,6 @@ class VisualizationEngine:
                 title=config.title,
                 aspect="auto",
                 color_continuous_scale="RdBu",
-                zmid=0,
             )
             return fig
         else:

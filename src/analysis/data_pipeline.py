@@ -13,7 +13,6 @@ import warnings
 
 from src.db.models import Onsen, OnsenVisit, Location, HeartRateData
 from src.types.analysis import DataCategory, AnalysisRequest
-from src.lib.distance import calculate_distance
 
 
 logger = logging.getLogger(__name__)

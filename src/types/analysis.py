@@ -88,6 +88,7 @@ class MetricType(StrEnum):
 
     # Custom
     CUSTOM = "custom"
+    TREND = "trend"
 
 
 class ModelType(StrEnum):
@@ -110,6 +111,7 @@ class ModelType(StrEnum):
     HIERARCHICAL = "hierarchical"
 
     # Time series
+    TIME_SERIES = "time_series"
     ARIMA = "arima"
     SARIMA = "sarima"
     EXPONENTIAL_SMOOTHING = "exponential_smoothing"
@@ -377,7 +379,7 @@ ANALYSIS_SCENARIOS: Dict[AnalysisScenario, AnalysisScenarioConfig] = {
         analysis_types=[
             AnalysisType.TEMPORAL,
             AnalysisType.TREND,
-            AnalysisType.SEASONAL,
+            AnalysisType.TIME_SERIES,
         ],
         data_categories=[
             DataCategory.TEMPORAL,

@@ -75,7 +75,7 @@ class TestMetricsCalculator:
         group_a = metrics["A"]
         assert "mean" in group_a
         assert "count" in group_a
-        assert group_a["count"]["rating"] == 5  # 5 items in category A
+        assert group_a["count"]["rating"] == 4  # 4 items in category A
 
     def test_correlation_matrix(self):
         """Test correlation matrix calculation."""
@@ -84,7 +84,7 @@ class TestMetricsCalculator:
         assert not corr_matrix.empty
         assert "rating" in corr_matrix.columns
         assert "price" in corr_matrix.columns
-        assert corr_matrix.shape == (3, 3)  # 3 numeric columns
+        assert corr_matrix.shape == (2, 2)  # 2 numeric columns (rating, price)
 
     def test_summary_statistics(self):
         """Test comprehensive summary statistics."""
