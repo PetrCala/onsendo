@@ -92,7 +92,7 @@ source .venv/bin/activate
 5. **Generate test data** (optional, for development/testing):
 
    ```bash
-   poetry run onsendo database insert-mock --scenario random
+   poetry run onsendo database insert-mock-visits --scenario random
    ```
 
 ### Preparing a database
@@ -479,18 +479,18 @@ Generate realistic onsen visit data to test the system or populate your database
 
 ```bash
 # Insert random mock data (default: 7 days, 1 visit per day)
-poetry run onsendo database insert-mock
+poetry run onsendo database insert-mock-visits
 
 # Insert specific scenario types
-poetry run onsendo database insert-mock --scenario weekend_warrior
-poetry run onsendo database insert-mock --scenario daily_visitor
-poetry run onsendo database insert-mock --scenario seasonal_explorer
-poetry run onsendo database insert-mock --scenario multi_onsen_enthusiast
+poetry run onsendo database insert-mock-visits --scenario weekend_warrior
+poetry run onsendo database insert-mock-visits --scenario daily_visitor
+poetry run onsendo database insert-mock-visits --scenario seasonal_explorer
+poetry run onsendo database insert-mock-visits --scenario multi_onsen_enthusiast
 
 # Custom scenarios with parameters
-poetry run onsendo database insert-mock --scenario custom --num_days 14 --visits_per_day 2
-poetry run onsendo database insert-mock --scenario seasonal --season winter --num_visits 20
-poetry run onsendo database insert-mock --scenario custom --start_date 2024-01-01 --num_days 30
+poetry run onsendo database insert-mock-visits --scenario custom --num_days 14 --visits_per_day 2
+poetry run onsendo database insert-mock-visits --scenario seasonal --season winter --num_visits 20
+poetry run onsendo database insert-mock-visits --scenario custom --start_date 2024-01-01 --num_days 30
 ```
 
 **Available Scenarios**:
@@ -556,7 +556,7 @@ poetry run onsendo database drop-visits-by-criteria --rating_above 9 --force
 
 ```bash
 # 1. Generate test data
-poetry run onsendo database insert-mock --scenario weekend_warrior
+poetry run onsendo database insert-mock-visits --scenario weekend_warrior
 
 # 2. Test the system with the data
 poetry run onsendo visit list

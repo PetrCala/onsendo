@@ -335,7 +335,7 @@ CLI_COMMANDS = {
             ),
         },
     ),
-    "database-insert-mock": CommandConfig(
+    "database-insert-mock-visits": CommandConfig(
         func=database_commands.insert_mock_data,
         help="Insert mock onsen visit data into the database for testing purposes.",
         args={
