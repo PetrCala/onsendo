@@ -1,3 +1,13 @@
+from .analysis import (
+    run_analysis,
+    run_scenario_analysis,
+    list_scenarios,
+    list_analysis_options,
+    show_analysis_summary,
+    clear_analysis_cache,
+    create_sample_analysis,
+    export_analysis_results,
+)
 from .location import add_location, list_locations, delete_location, modify_location
 from .visit import add_visit, list_visits, delete_visit, modify_visit
 from .onsen import add_onsen, print_summary, recommend_onsen, scrape_onsen_data
@@ -36,4 +46,12 @@ __all__ = [
     "link_heart_rate_to_visit",
     "unlink_heart_rate_from_visit",
     "delete_heart_rate_record",
+    "run_analysis",
+    "run_scenario_analysis",
+    "list_scenarios",
+    "list_analysis_options",
+    "show_analysis_summary",
+    "clear_analysis_cache",
+    "create_sample_analysis",
+    "export_analysis_results",
 ]
