@@ -8,7 +8,7 @@ from pathlib import Path
 import json
 import logging
 
-from src.db.conn import get_session
+from src.db.conn import get_db
 from src.analysis.engine import AnalysisEngine
 from src.types.analysis import (
     AnalysisType,
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 def run_analysis(args: argparse.Namespace) -> None:
     """Run a custom analysis."""
     try:
-        with get_session() as session:
+        with get_db() as session:
             # Initialize analysis engine
             engine = AnalysisEngine(session, args.output_dir)
 
@@ -147,7 +147,7 @@ def run_analysis(args: argparse.Namespace) -> None:
 def run_scenario_analysis(args: argparse.Namespace) -> None:
     """Run a predefined analysis scenario."""
     try:
-        with get_session() as session:
+        with get_db() as session:
             # Initialize analysis engine
             engine = AnalysisEngine(session, args.output_dir)
 
@@ -256,7 +256,7 @@ def list_analysis_options(args: argparse.Namespace) -> None:
 def show_analysis_summary(args: argparse.Namespace) -> None:
     """Show summary of all analyses performed."""
     try:
-        with get_session() as session:
+        with get_db() as session:
             engine = AnalysisEngine(session, args.output_dir)
             summary = engine.get_analysis_summary()
 
@@ -292,7 +292,7 @@ def show_analysis_summary(args: argparse.Namespace) -> None:
 def clear_analysis_cache(args: argparse.Namespace) -> None:
     """Clear the analysis cache."""
     try:
-        with get_session() as session:
+        with get_db() as session:
             engine = AnalysisEngine(session, args.output_dir)
             engine.clear_cache()
             print("Analysis cache cleared successfully.")
@@ -305,7 +305,7 @@ def clear_analysis_cache(args: argparse.Namespace) -> None:
 def export_analysis_results(args: argparse.Namespace) -> None:
     """Export analysis results."""
     try:
-        with get_session() as session:
+        with get_db() as session:
             engine = AnalysisEngine(session, args.output_dir)
 
             # Get analysis summary to find available analyses
@@ -357,7 +357,7 @@ def export_analysis_results(args: argparse.Namespace) -> None:
 def create_sample_analysis(args: argparse.Namespace) -> None:
     """Create a sample analysis to demonstrate the system."""
     try:
-        with get_session() as session:
+        with get_db() as session:
             # Initialize analysis engine
             engine = AnalysisEngine(session, args.output_dir)
 
