@@ -39,19 +39,43 @@ class AnalysisEngine:
 
     def __init__(self, session, output_dir: Optional[str] = None):
         self.session = session
-        self.output_dir = Path(output_dir) if output_dir else Path("output/analysis")
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.base_output_dir = (
+            Path(output_dir) if output_dir else Path("output/analysis")
+        )
+        self.base_output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Initialize components
+        # Analysis-specific output directory will be set when run_analysis is called
+        self.output_dir = None
+        self.analysis_timestamp = None
+
+        # Initialize components (will be updated with analysis-specific paths)
         self.data_pipeline = DataPipeline(session)
         self.metrics_calculator = MetricsCalculator()
+        self.visualization_engine = None  # Will be initialized per analysis
+        self.model_engine = None  # Will be initialized per analysis
+
+        # Cache for analysis results
+        self._analysis_cache: Dict[str, AnalysisResult] = {}
+
+    def _setup_analysis_directory(self, request: AnalysisRequest) -> None:
+        """Set up the analysis-specific output directory."""
+        # Create timestamp for this analysis
+        self.analysis_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Create analysis name from request
+        analysis_name = f"{request.analysis_type.value}_{self.analysis_timestamp}"
+
+        # Create analysis-specific output directory
+        self.output_dir = self.base_output_dir / analysis_name
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Initialize components with analysis-specific paths
         self.visualization_engine = VisualizationEngine(
             self.output_dir / "visualizations"
         )
         self.model_engine = ModelEngine(self.output_dir / "models")
 
-        # Cache for analysis results
-        self._analysis_cache: Dict[str, AnalysisResult] = {}
+        logger.info(f"Analysis output directory: {self.output_dir}")
 
     def run_analysis(self, request: AnalysisRequest) -> AnalysisResult:
         """
@@ -67,6 +91,9 @@ class AnalysisEngine:
 
         try:
             logger.info(f"Starting analysis: {request.analysis_type.value}")
+
+            # Set up analysis-specific output directory
+            self._setup_analysis_directory(request)
 
             # Get data
             data = self._get_analysis_data(request)
@@ -108,6 +135,7 @@ class AnalysisEngine:
                     "data_shape": data.shape,
                     "data_columns": list(data.columns),
                     "missing_values": data.isnull().sum().to_dict(),
+                    "output_directory": str(self.output_dir),
                 },
             )
 
@@ -617,8 +645,10 @@ class AnalysisEngine:
     def _save_analysis_results(self, result: AnalysisResult) -> None:
         """Save analysis results to disk."""
         try:
-            # Create timestamp for this analysis
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            # Use analysis-specific output directory
+            if not self.output_dir:
+                logger.error("Analysis output directory not set")
+                return
 
             # Save data summary
             data_summary = {
@@ -628,17 +658,17 @@ class AnalysisEngine:
                 "dtypes": result.data.dtypes.to_dict(),
             }
 
-            summary_path = self.output_dir / f"analysis_summary_{timestamp}.json"
+            summary_path = self.output_dir / "analysis_summary.json"
             with open(summary_path, "w") as f:
                 json.dump(data_summary, f, indent=2, default=str)
 
             # Save metrics
-            metrics_path = self.output_dir / f"metrics_{timestamp}.json"
+            metrics_path = self.output_dir / "metrics.json"
             with open(metrics_path, "w") as f:
                 json.dump(result.metrics, f, indent=2, default=str)
 
             # Save insights
-            insights_path = self.output_dir / f"insights_{timestamp}.txt"
+            insights_path = self.output_dir / "insights.txt"
             with open(insights_path, "w") as f:
                 f.write("Analysis Insights\n")
                 f.write("=" * 50 + "\n\n")
@@ -646,7 +676,7 @@ class AnalysisEngine:
                     f.write(f"{i}. {insight}\n")
 
             # Save metadata
-            metadata_path = self.output_dir / f"metadata_{timestamp}.json"
+            metadata_path = self.output_dir / "metadata.json"
             with open(metadata_path, "w") as f:
                 json.dump(result.metadata, f, indent=2, default=str)
 
@@ -655,14 +685,49 @@ class AnalysisEngine:
         except Exception as e:
             logger.error(f"Failed to save analysis results: {e}")
 
+    def get_current_analysis_directory(self) -> Optional[Path]:
+        """Get the current analysis output directory."""
+        return self.output_dir
+
+    def list_analysis_directories(self) -> List[Path]:
+        """List all analysis directories."""
+        if not self.base_output_dir.exists():
+            return []
+
+        analysis_dirs = []
+        for item in self.base_output_dir.iterdir():
+            if item.is_dir() and not item.name.startswith("."):
+                analysis_dirs.append(item)
+
+        # Sort by creation time (newest first)
+        analysis_dirs.sort(key=lambda x: x.stat().st_ctime, reverse=True)
+        return analysis_dirs
+
     def get_analysis_summary(self) -> Dict[str, Any]:
         """Get a summary of all analyses performed."""
         summary = {
             "total_analyses": len(self._analysis_cache),
             "analyses": [],
-            "output_directory": str(self.output_dir),
+            "base_output_directory": str(self.base_output_dir),
+            "analysis_directories": [],
             "cache_size": len(self._analysis_cache),
         }
+
+        # Add information about analysis directories
+        analysis_dirs = self.list_analysis_directories()
+        for analysis_dir in analysis_dirs:
+            dir_info = {
+                "name": analysis_dir.name,
+                "path": str(analysis_dir),
+                "created": datetime.fromtimestamp(
+                    analysis_dir.stat().st_ctime
+                ).isoformat(),
+                "size": sum(
+                    f.stat().st_size for f in analysis_dir.rglob("*") if f.is_file()
+                ),
+                "file_count": len(list(analysis_dir.rglob("*"))),
+            }
+            summary["analysis_directories"].append(dir_info)
 
         for cache_key, result in self._analysis_cache.items():
             analysis_info = {
@@ -694,10 +759,13 @@ class AnalysisEngine:
     ) -> Optional[str]:
         """Export analysis results in the specified format."""
         try:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            # Use analysis-specific output directory
+            if not self.output_dir:
+                logger.error("Analysis output directory not set")
+                return None
 
             if format == "json":
-                export_path = self.output_dir / f"export_{timestamp}.json"
+                export_path = self.output_dir / "export.json"
                 export_data = {
                     "request": {
                         "analysis_type": result.request.analysis_type.value,
@@ -722,7 +790,7 @@ class AnalysisEngine:
 
             elif format == "csv":
                 # Export data to CSV
-                export_path = self.output_dir / f"data_export_{timestamp}.csv"
+                export_path = self.output_dir / "data_export.csv"
                 result.data.to_csv(export_path, index=False)
                 return str(export_path)
 
