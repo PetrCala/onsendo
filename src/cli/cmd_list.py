@@ -352,13 +352,13 @@ CLI_COMMANDS = {
             ),
             "num_days": ArgumentConfig(
                 type=int,
-                default=7,
-                help="Number of days for custom scenario (default: 7)",
+                default=44,
+                help="Number of days for custom scenario (default: 44)",
             ),
             "visits_per_day": ArgumentConfig(
                 type=int,
-                default=1,
-                help="Visits per day for custom scenario (default: 1)",
+                default=2,
+                help="Visits per day for custom scenario (default: 2)",
             ),
             "num_visits": ArgumentConfig(
                 type=int,
