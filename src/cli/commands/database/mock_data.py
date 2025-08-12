@@ -17,7 +17,7 @@ from src.testing.mocks.mock_visit_data import (
 from src.const import CONST
 
 
-def insert_mock_data(args: argparse.Namespace) -> None:
+def insert_mock_visits(args: argparse.Namespace) -> None:
     """
     Insert mock onsen visit data into the database.
     """
