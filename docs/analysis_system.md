@@ -53,7 +53,6 @@ The system consists of several interconnected components:
 - **Tree Models**: Decision trees, random forests, gradient boosting
 - **Clustering**: K-means, DBSCAN, hierarchical clustering
 - **Dimensionality Reduction**: PCA, t-SNE, UMAP
-- **Time Series**: Exponential smoothing
 
 ### 🗺️ **Geographic Analysis**
 
@@ -181,7 +180,6 @@ onsendo analysis run spatial \
 onsendo analysis run temporal \
   --data-categories "temporal,visit_basic,weather" \
   --visualizations "line,trend,seasonal" \
-  --models "exponential_smoothing" \
   --time-range "2023-01-01 00:00,2023-12-31 23:59"
 ```
 
@@ -320,10 +318,6 @@ The system organizes data into logical categories for analysis:
 - **KMEANS**: K-means clustering
 - **DBSCAN**: Density-based clustering
 - **HIERARCHICAL**: Hierarchical clustering
-
-### Time Series Models
-
-- **EXPONENTIAL_SMOOTHING**: Exponential smoothing
 
 ### Dimensionality Reduction
 

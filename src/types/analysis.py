@@ -23,7 +23,6 @@ class AnalysisType(StrEnum):
     CLUSTER = "cluster"
     REGRESSION = "regression"
     CLASSIFICATION = "classification"
-    TIME_SERIES = "time_series"
 
 
 class VisualizationType(StrEnum):
@@ -109,9 +108,6 @@ class ModelType(StrEnum):
     KMEANS = "kmeans"
     DBSCAN = "dbscan"
     HIERARCHICAL = "hierarchical"
-
-    # Time series
-    EXPONENTIAL_SMOOTHING = "exponential_smoothing"
 
     # Dimensionality reduction
     PCA = "pca"
@@ -376,7 +372,6 @@ ANALYSIS_SCENARIOS: Dict[AnalysisScenario, AnalysisScenarioConfig] = {
         analysis_types=[
             AnalysisType.TEMPORAL,
             AnalysisType.TREND,
-            AnalysisType.TIME_SERIES,
         ],
         data_categories=[
             DataCategory.TEMPORAL,
@@ -390,7 +385,7 @@ ANALYSIS_SCENARIOS: Dict[AnalysisScenario, AnalysisScenarioConfig] = {
             VisualizationType.SEASONAL,
             VisualizationType.HEATMAP,
         ],
-        models=[ModelType.EXPONENTIAL_SMOOTHING],
+        models=[],
         insights_focus=[
             "temporal_trends",
             "seasonal_patterns",

@@ -12,8 +12,6 @@ from src.types.analysis import (
     DataCategory,
     MetricType,
     VisualizationType,
-    ModelType,
-    ModelConfig,
     AnalysisRequest,
     AnalysisResult,
 )
@@ -206,38 +204,6 @@ class TestModelEngine:
         assert "cluster_labels" in result
         assert "n_clusters" in result
         assert result["model_type"] == "kmeans"
-
-    def test_create_exponential_smoothing(self):
-        """Test creating an exponential smoothing model."""
-        # Create sample time series data
-        data = pd.DataFrame(
-            {
-                "date": pd.date_range("2023-01-01", periods=100, freq="D"),
-                "value": np.random.randn(100).cumsum() + 100,  # Random walk
-                "feature1": np.random.randn(100),
-                "feature2": np.random.randn(100),
-            }
-        )
-
-        config = ModelConfig(
-            type=ModelType.EXPONENTIAL_SMOOTHING,
-            target_column="value",
-            feature_columns=["feature1", "feature2"],
-            validation_split=0.2,
-            cross_validation_folds=3,
-            random_state=42,
-            hyperparameters={"alpha": 0.3},
-        )
-
-        result = self.engine.create_model(data, config)
-
-        # Check that the model was created successfully
-        assert result["model_type"] == "exponential_smoothing"
-        assert "model" in result
-        assert result["training_data_shape"][0] > 0
-        assert result["test_data_shape"] == (0, 0)  # No test set for time series
-        assert "metrics" in result
-        assert "mse" in result["metrics"]  # Should have regression metrics
 
 
 class TestAnalysisTypes:
