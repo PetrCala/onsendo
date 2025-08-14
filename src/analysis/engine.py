@@ -418,18 +418,20 @@ class AnalysisEngine:
         missing_data = data.isnull().sum().sum()
         missing_percentage = (missing_data / (total_rows * len(data.columns))) * 100
 
+        missing_quality_map = {
+            "high": f"Data quality concern: {missing_percentage:.1f}% of values are missing.",
+            "moderate": f"Moderate data quality: {missing_percentage:.1f}% of values are missing.",
+            "none": "Good data quality: None of the values are missing.",
+            "good": f"Good data quality: Only {missing_percentage:.1f}% of values are missing.",
+        }
         if missing_percentage > 20:
-            insights.append(
-                f"Data quality concern: {missing_percentage:.1f}% of values are missing"
-            )
+            insights.append(missing_quality_map["high"])
         elif missing_percentage > 5:
-            insights.append(
-                f"Moderate data quality: {missing_percentage:.1f}% of values are missing"
-            )
+            insights.append(missing_quality_map["moderate"])
+        elif missing_percentage == 0:
+            insights.append(missing_quality_map["none"])
         else:
-            insights.append(
-                f"Good data quality: Only {missing_percentage:.1f}% of values are missing"
-            )
+            insights.append(missing_quality_map["good"])
 
         # Metric-based insights
         if "overall" in metrics:
