@@ -53,7 +53,7 @@ The system consists of several interconnected components:
 - **Tree Models**: Decision trees, random forests, gradient boosting
 - **Clustering**: K-means, DBSCAN, hierarchical clustering
 - **Dimensionality Reduction**: PCA, t-SNE, UMAP
-- **Time Series**: ARIMA, SARIMA, exponential smoothing
+- **Time Series**: Exponential smoothing
 
 ### 🗺️ **Geographic Analysis**
 
@@ -181,7 +181,7 @@ onsendo analysis run spatial \
 onsendo analysis run temporal \
   --data-categories "temporal,visit_basic,weather" \
   --visualizations "line,trend,seasonal" \
-  --models "time_series" \
+  --models "exponential_smoothing" \
   --time-range "2023-01-01 00:00,2023-12-31 23:59"
 ```
 
@@ -239,7 +239,7 @@ onsendo analysis clear-cache --cleanup_old_analyses --keep_recent 3 --cleanup_sh
 - **Analysis Types**: Temporal, Trend, Seasonal
 - **Data Categories**: Temporal, Visit basic, Weather
 - **Visualizations**: Line charts, Trend plots, Seasonal plots
-- **Models**: Time series, ARIMA
+- **Models**: Exponential smoothing
 - **Focus**: Temporal trends, seasonal patterns, time-based recommendations
 
 ## Data Categories
@@ -323,8 +323,6 @@ The system organizes data into logical categories for analysis:
 
 ### Time Series Models
 
-- **ARIMA**: Auto-regressive integrated moving average
-- **SARIMA**: Seasonal ARIMA
 - **EXPONENTIAL_SMOOTHING**: Exponential smoothing
 
 ### Dimensionality Reduction

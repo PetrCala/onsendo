@@ -111,9 +111,6 @@ class ModelType(StrEnum):
     HIERARCHICAL = "hierarchical"
 
     # Time series
-    TIME_SERIES = "time_series"
-    ARIMA = "arima"
-    SARIMA = "sarima"
     EXPONENTIAL_SMOOTHING = "exponential_smoothing"
 
     # Dimensionality reduction
@@ -393,7 +390,7 @@ ANALYSIS_SCENARIOS: Dict[AnalysisScenario, AnalysisScenarioConfig] = {
             VisualizationType.SEASONAL,
             VisualizationType.HEATMAP,
         ],
-        models=[ModelType.TIME_SERIES, ModelType.ARIMA],
+        models=[ModelType.EXPONENTIAL_SMOOTHING],
         insights_focus=[
             "temporal_trends",
             "seasonal_patterns",

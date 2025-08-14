@@ -26,6 +26,7 @@ from sklearn.metrics import (
     mean_absolute_error,
 )
 from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.base import BaseEstimator
 import logging
 import warnings
 from datetime import datetime
@@ -37,6 +38,76 @@ from src.analysis.metrics import MetricsCalculator
 
 warnings.filterwarnings("ignore")
 logger = logging.getLogger(__name__)
+
+
+class ExponentialSmoothing(BaseEstimator):
+    """
+    Simple exponential smoothing implementation for time series forecasting.
+    """
+
+    def __init__(self, alpha: float = 0.3):
+        self.alpha = alpha
+        self.fitted_values = None
+        self.is_fitted = False
+
+    def fit(self, X, y=None):
+        """Fit the exponential smoothing model."""
+        if y is not None:
+            # If y is provided, use it directly
+            data = y
+        else:
+            # Otherwise, assume X is the time series
+            data = X
+
+        if len(data) == 0:
+            raise ValueError("Cannot fit exponential smoothing on empty data")
+
+        # Initialize with first value
+        self.fitted_values = [data.iloc[0] if hasattr(data, "iloc") else data[0]]
+
+        # Apply exponential smoothing
+        for i in range(1, len(data)):
+            current_value = data.iloc[i] if hasattr(data, "iloc") else data[i]
+            smoothed_value = (
+                self.alpha * current_value + (1 - self.alpha) * self.fitted_values[-1]
+            )
+            self.fitted_values.append(smoothed_value)
+
+        self.is_fitted = True
+        return self
+
+    def predict(self, X):
+        """Make predictions using the fitted model."""
+        if not self.is_fitted:
+            raise ValueError("Model must be fitted before making predictions")
+
+        # For exponential smoothing, we can predict future values
+        # by continuing the smoothing process
+        n_predictions = len(X) if hasattr(X, "__len__") else 1
+
+        if n_predictions == 1:
+            # Single prediction
+            last_value = self.fitted_values[-1]
+            return np.array([last_value])
+        else:
+            # Multiple predictions
+            predictions = []
+            last_value = self.fitted_values[-1]
+
+            for _ in range(n_predictions):
+                predictions.append(last_value)
+
+            return np.array(predictions)
+
+    def get_params(self, deep=True):
+        """Get parameters for this estimator."""
+        return {"alpha": self.alpha}
+
+    def set_params(self, **parameters):
+        """Set parameters for this estimator."""
+        for parameter, value in parameters.items():
+            setattr(self, parameter, value)
+        return self
 
 
 class ModelEngine:
@@ -95,25 +166,32 @@ class ModelEngine:
         # Create and train the model
         model = self._create_model_instance(config)
 
-        # Train the model
-        model.fit(X_train_scaled, y_train)
+        if config.type == ModelType.EXPONENTIAL_SMOOTHING:
+            model.fit(X_train, y_train)
 
-        # Make predictions
-        y_pred = model.predict(X_test_scaled)
+            y_pred = model.predict(X_train)
 
-        # Evaluate the model
-        metrics = self._evaluate_model(y_test, y_pred, config.type)
+            metrics = self._evaluate_model(y_train, y_pred, config.type)
 
-        # Cross-validation
-        cv_scores = cross_val_score(
-            model, X_train_scaled, y_train, cv=config.cross_validation_folds
-        )
+            cv_scores = np.array([0.0])  # Placeholder
+        else:
+            model.fit(X_train_scaled, y_train)
+
+            # Make predictions
+            y_pred = model.predict(X_test_scaled)
+
+            # Evaluate the model
+            metrics = self._evaluate_model(y_test, y_pred, config.type)
+
+            # Cross-validation
+            cv_scores = cross_val_score(
+                model, X_train_scaled, y_train, cv=config.cross_validation_folds
+            )
 
         # Store the model
         model_key = f"{config.type.value}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         self.models[model_key] = model
 
-        # Create results
         results = {
             "model_type": config.type.value,
             "model": model,
@@ -121,7 +199,11 @@ class ModelEngine:
             "target_column": config.target_column,
             "feature_columns": config.feature_columns,
             "training_data_shape": X_train.shape,
-            "test_data_shape": X_test.shape,
+            "test_data_shape": (
+                X_test.shape
+                if config.type != ModelType.EXPONENTIAL_SMOOTHING
+                else (0, 0)
+            ),
             "metrics": metrics,
             "cross_validation_scores": cv_scores.tolist(),
             "cross_validation_mean": cv_scores.mean(),
@@ -132,7 +214,6 @@ class ModelEngine:
                 model, feature_names, config.type
             ),
         }
-
         # Save the model
         self._save_model(model_key, results)
 
@@ -227,6 +308,8 @@ class ModelEngine:
             return PCA(**config.hyperparameters or {})
         elif config.type == ModelType.TSNE:
             return TSNE(**config.hyperparameters or {})
+        elif config.type == ModelType.EXPONENTIAL_SMOOTHING:
+            return ExponentialSmoothing(**config.hyperparameters or {})
         else:
             raise ValueError(f"Unsupported model type: {config.type}")
 
@@ -243,6 +326,7 @@ class ModelEngine:
             ModelType.DECISION_TREE,
             ModelType.RANDOM_FOREST,
             ModelType.GRADIENT_BOOSTING,
+            ModelType.EXPONENTIAL_SMOOTHING,
         ]:
             # Regression metrics
             metrics["mse"] = mean_squared_error(y_true, y_pred)

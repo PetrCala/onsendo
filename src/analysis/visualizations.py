@@ -667,7 +667,7 @@ class VisualizationEngine:
                 color="year",
                 title=config.title,
             )
-            fig.update_xaxis(
+            fig.update_xaxes(
                 tickmode="array",
                 tickvals=list(range(1, 13)),
                 ticktext=[
