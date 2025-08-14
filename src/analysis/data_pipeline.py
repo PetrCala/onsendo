@@ -54,6 +54,7 @@ class DataPipeline:
                     "parking",
                     "remarks",
                 ],
+                "alias": "o",
                 "filters": {},
                 "joins": [],
             },
@@ -72,6 +73,7 @@ class DataPipeline:
                     "had_food_service",
                     "massage_chair_available",
                 ],
+                "alias": "o",
                 "filters": {},
                 "joins": [],
             },
@@ -93,6 +95,7 @@ class DataPipeline:
                     "multi_onsen_day",
                     "visit_order",
                 ],
+                "alias": "v",
                 "filters": {},
                 "joins": [("onsens", "onsen_id", "id")],
             },
@@ -112,6 +115,7 @@ class DataPipeline:
                     "sauna_rating",
                     "outdoor_bath_rating",
                 ],
+                "alias": "v",
                 "filters": {},
                 "joins": [("onsens", "onsen_id", "id")],
             },
@@ -131,6 +135,7 @@ class DataPipeline:
                     "water_color",
                     "smell_intensity_rating",
                 ],
+                "alias": "v",
                 "filters": {},
                 "joins": [("onsens", "onsen_id", "id")],
             },
@@ -148,6 +153,7 @@ class DataPipeline:
                     "multi_onsen_day",
                     "visit_order",
                 ],
+                "alias": "v",
                 "filters": {},
                 "joins": [("onsens", "onsen_id", "id")],
             },
@@ -163,6 +169,7 @@ class DataPipeline:
                     "locker_availability_rating",
                     "sauna_duration_minutes",
                 ],
+                "alias": "v",
                 "filters": {},
                 "joins": [("onsens", "onsen_id", "id")],
             },
@@ -180,12 +187,14 @@ class DataPipeline:
                     "data_points_count",
                     "notes",
                 ],
+                "alias": "h",
                 "filters": {},
                 "joins": [("onsen_visits", "visit_id", "id")],
             },
             DataCategory.SPATIAL: {
                 "table": "onsens",
                 "columns": ["id", "name", "latitude", "longitude", "region", "address"],
+                "alias": "o",
                 "filters": {"latitude__notnull": True, "longitude__notnull": True},
                 "joins": [],
             },
@@ -199,6 +208,7 @@ class DataPipeline:
                     "weather",
                     "temperature_outside_celsius",
                 ],
+                "alias": "v",
                 "filters": {"visit_time__notnull": True},
                 "joins": [("onsens", "onsen_id", "id")],
             },
@@ -211,6 +221,7 @@ class DataPipeline:
                     "temperature_outside_celsius",
                     "visit_time",
                 ],
+                "alias": "v",
                 "filters": {},
                 "joins": [("onsens", "onsen_id", "id")],
             },
@@ -223,6 +234,7 @@ class DataPipeline:
                     "exercise_type",
                     "exercise_length_minutes",
                 ],
+                "alias": "v",
                 "filters": {},
                 "joins": [("onsens", "onsen_id", "id")],
             },
@@ -254,19 +266,12 @@ class DataPipeline:
         main_category = categories[0]
         main_config = self._data_mappings[main_category]
 
-        # Determine the starting table and alias
-        if main_config["table"] == "onsens":
-            # Start with onsens table
-            start_table = "onsens"
-            start_alias = "o"
-            base_columns = "o.id as onsen_id, o.name as onsen_name, o.region, o.latitude, o.longitude, o.address"
-        else:
-            # Start with the main table and join to onsens
-            start_table = main_config["table"]
-            start_alias = main_config["table"][0]
-            base_columns = f"{start_alias}.onsen_id, o.name as onsen_name, o.region, o.latitude, o.longitude, o.address"
+        start_table = main_config["table"]
+        start_alias = main_config["alias"]
+        base_columns = ", ".join(
+            [f"{start_alias}.{col}" for col in main_config["columns"]]
+        )
 
-        # Start with the main table
         query = f"""
         SELECT DISTINCT {base_columns}
         FROM {start_table} {start_alias}
@@ -286,9 +291,7 @@ class DataPipeline:
             config = self._data_mappings[category]
             for join_table, join_col, ref_col in config.get("joins", []):
                 if join_table not in join_tables:
-                    # Use proper table alias for joins
                     if join_table == "onsens":
-                        # Already joined to onsens above
                         continue
                     else:
                         alias = join_table[0]
@@ -315,15 +318,10 @@ class DataPipeline:
                     if config["table"] == "onsens":
                         table_alias = "o"
                     elif config["table"] == "onsen_visits":
-                        # For onsen_visits, we need to use the source table alias
-                        # Since we're starting from onsens, we need to join to onsen_visits
                         if "onsen_visits" not in table_aliases:
-                            # Add the join to onsen_visits
-                            query += (
-                                f"\nLEFT JOIN onsen_visits ov ON ov.onsen_id = o.id"
-                            )
-                            table_aliases["onsen_visits"] = "ov"
-                        table_alias = "ov"
+                            query += f"\nLEFT JOIN onsen_visits v ON v.onsen_id = o.id"
+                            table_aliases["onsen_visits"] = "v"
+                        table_alias = "v"
                     else:
                         table_alias = table_aliases.get(
                             config["table"], config["table"][0]
