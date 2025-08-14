@@ -75,6 +75,24 @@ def run_analysis(args: argparse.Namespace) -> None:
                         logger.warning(f"Unknown model: {model_str}")
                         continue
 
+            # Parse filters
+            filters = None
+            if args.filters:
+                try:
+                    filters = json.loads(args.filters)
+                except json.JSONDecodeError:
+                    logger.error("Invalid JSON in filters")
+                    return
+
+            # Parse custom metrics
+            custom_metrics = None
+            if args.custom_metrics:
+                try:
+                    custom_metrics = json.loads(args.custom_metrics)
+                except json.JSONDecodeError:
+                    logger.error("Invalid JSON in custom_metrics")
+                    return
+
             # Parse analysis type
             try:
                 analysis_type = AnalysisType(args.analysis_type)
@@ -91,11 +109,11 @@ def run_analysis(args: argparse.Namespace) -> None:
                 visualizations=visualizations
                 or [VisualizationType.BAR, VisualizationType.HISTOGRAM],
                 models=models,
-                filters=args.filters,
+                filters=filters,
                 grouping=args.grouping.split(",") if args.grouping else None,
                 time_range=args.time_range,
                 spatial_bounds=args.spatial_bounds,
-                custom_metrics=args.custom_metrics,
+                custom_metrics=custom_metrics,
                 output_format=args.output_format,
                 include_raw_data=args.include_raw_data,
                 include_statistical_tests=args.include_statistical_tests,
