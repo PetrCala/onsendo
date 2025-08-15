@@ -31,67 +31,6 @@ class ModelEngine:
         self.scalers: Dict[str, Any] = {}
         self.label_encoders: Dict[str, Any] = {}
 
-    def _get_sklearn_models(self):
-        """Lazy import scikit-learn models."""
-        from sklearn.linear_model import (
-            LinearRegression,
-            LogisticRegression,
-            Ridge,
-            Lasso,
-        )
-        from sklearn.ensemble import (
-            RandomForestRegressor,
-            RandomForestClassifier,
-            GradientBoostingRegressor,
-        )
-        from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
-        from sklearn.cluster import KMeans, DBSCAN
-        from sklearn.decomposition import PCA
-        from sklearn.manifold import TSNE
-        from sklearn.model_selection import (
-            train_test_split,
-            cross_val_score,
-            GridSearchCV,
-        )
-        from sklearn.metrics import (
-            mean_squared_error,
-            r2_score,
-            accuracy_score,
-            classification_report,
-            confusion_matrix,
-            silhouette_score,
-            mean_absolute_error,
-        )
-        from sklearn.preprocessing import StandardScaler, LabelEncoder
-
-        return (
-            LinearRegression,
-            LogisticRegression,
-            Ridge,
-            Lasso,
-            RandomForestRegressor,
-            RandomForestClassifier,
-            GradientBoostingRegressor,
-            DecisionTreeRegressor,
-            DecisionTreeClassifier,
-            KMeans,
-            DBSCAN,
-            PCA,
-            TSNE,
-            train_test_split,
-            cross_val_score,
-            GridSearchCV,
-            mean_squared_error,
-            r2_score,
-            accuracy_score,
-            classification_report,
-            confusion_matrix,
-            silhouette_score,
-            mean_absolute_error,
-            StandardScaler,
-            LabelEncoder,
-        )
-
     def _get_sklearn_linear_models(self):
         """Lazy import sklearn linear models."""
         from sklearn.linear_model import (
@@ -164,6 +103,120 @@ class ModelEngine:
 
         return silhouette_score
 
+    def _get_sklearn_preprocessing(self):
+        """Lazy import sklearn preprocessing utilities."""
+        from sklearn.preprocessing import StandardScaler, LabelEncoder
+
+        return StandardScaler, LabelEncoder
+
+    def _get_train_test_split(self):
+        """Lazy import train_test_split."""
+        from sklearn.model_selection import train_test_split
+
+        return train_test_split
+
+    def _get_cross_val_score(self):
+        """Lazy import cross_val_score."""
+        from sklearn.model_selection import cross_val_score
+
+        return cross_val_score
+
+    def _get_standard_scaler(self):
+        """Lazy import StandardScaler."""
+        from sklearn.preprocessing import StandardScaler
+
+        return StandardScaler
+
+    def _get_label_encoder(self):
+        """Lazy import LabelEncoder."""
+        from sklearn.preprocessing import LabelEncoder
+
+        return LabelEncoder
+
+    def _get_kmeans(self):
+        """Lazy import KMeans."""
+        from sklearn.cluster import KMeans
+
+        return KMeans
+
+    def _get_silhouette_score(self):
+        """Lazy import silhouette_score."""
+        from sklearn.metrics import silhouette_score
+
+        return silhouette_score
+
+    def _get_linear_regression(self):
+        """Lazy import LinearRegression."""
+        from sklearn.linear_model import LinearRegression
+
+        return LinearRegression
+
+    def _get_logistic_regression(self):
+        """Lazy import LogisticRegression."""
+        from sklearn.linear_model import LogisticRegression
+
+        return LogisticRegression
+
+    def _get_ridge(self):
+        """Lazy import Ridge."""
+        from sklearn.linear_model import Ridge
+
+        return Ridge
+
+    def _get_lasso(self):
+        """Lazy import Lasso."""
+        from sklearn.linear_model import Lasso
+
+        return Lasso
+
+    def _get_random_forest_regressor(self):
+        """Lazy import RandomForestRegressor."""
+        from sklearn.ensemble import RandomForestRegressor
+
+        return RandomForestRegressor
+
+    def _get_random_forest_classifier(self):
+        """Lazy import RandomForestClassifier."""
+        from sklearn.ensemble import RandomForestClassifier
+
+        return RandomForestClassifier
+
+    def _get_gradient_boosting_regressor(self):
+        """Lazy import GradientBoostingRegressor."""
+        from sklearn.ensemble import GradientBoostingRegressor
+
+        return GradientBoostingRegressor
+
+    def _get_decision_tree_regressor(self):
+        """Lazy import DecisionTreeRegressor."""
+        from sklearn.tree import DecisionTreeRegressor
+
+        return DecisionTreeRegressor
+
+    def _get_decision_tree_classifier(self):
+        """Lazy import DecisionTreeClassifier."""
+        from sklearn.tree import DecisionTreeClassifier
+
+        return DecisionTreeClassifier
+
+    def _get_dbscan(self):
+        """Lazy import DBSCAN."""
+        from sklearn.cluster import DBSCAN
+
+        return DBSCAN
+
+    def _get_pca(self):
+        """Lazy import PCA."""
+        from sklearn.decomposition import PCA
+
+        return PCA
+
+    def _get_tsne(self):
+        """Lazy import TSNE."""
+        from sklearn.manifold import TSNE
+
+        return TSNE
+
     def create_model(self, data: pd.DataFrame, config: ModelConfig) -> Dict[str, Any]:
         """
         Create and train a model based on the configuration.
@@ -177,6 +230,10 @@ class ModelEngine:
         """
         if data.empty:
             raise ValueError("Cannot create model with empty data")
+
+        train_test_split = self._get_train_test_split()
+        cross_val_score = self._get_cross_val_score()
+        StandardScaler = self._get_standard_scaler()
 
         # Prepare the data
         X, y, feature_names = self._prepare_data(data, config)
@@ -253,6 +310,8 @@ class ModelEngine:
         self, data: pd.DataFrame, config: ModelConfig
     ) -> Tuple[pd.DataFrame, pd.Series, List[str]]:
         """Prepare data for modeling."""
+        # Get sklearn imports
+        LabelEncoder = self._get_label_encoder()
 
         # Check if required columns exist
         missing_cols = [
@@ -311,6 +370,33 @@ class ModelEngine:
 
     def _create_model_instance(self, config: ModelConfig) -> Any:
         """Create a model instance based on the configuration."""
+        # Get sklearn imports based on model type
+        if config.type in [
+            ModelType.LINEAR_REGRESSION,
+            ModelType.RIDGE_REGRESSION,
+            ModelType.LASSO_REGRESSION,
+        ]:
+            LinearRegression, Ridge, Lasso = self._get_sklearn_linear_models()
+        elif config.type == ModelType.LOGISTIC_REGRESSION:
+            LogisticRegression = self._get_logistic_regression()
+        elif config.type == ModelType.DECISION_TREE:
+            DecisionTreeRegressor, DecisionTreeClassifier = (
+                self._get_sklearn_tree_models()
+            )
+        elif config.type == ModelType.RANDOM_FOREST:
+            RandomForestRegressor, RandomForestClassifier = (
+                self._get_sklearn_ensemble_models()[:2]
+            )
+        elif config.type == ModelType.GRADIENT_BOOSTING:
+            GradientBoostingRegressor = self._get_gradient_boosting_regressor()
+        elif config.type == ModelType.KMEANS:
+            KMeans = self._get_kmeans()
+        elif config.type == ModelType.DBSCAN:
+            DBSCAN = self._get_dbscan()
+        elif config.type == ModelType.PCA:
+            PCA = self._get_pca()
+        elif config.type == ModelType.TSNE:
+            TSNE = self._get_tsne()
 
         if config.type == ModelType.LINEAR_REGRESSION:
             return LinearRegression(**config.hyperparameters or {})
@@ -347,6 +433,15 @@ class ModelEngine:
         self, y_true: pd.Series, y_pred: np.ndarray, model_type: ModelType
     ) -> Dict[str, float]:
         """Evaluate the model performance."""
+        # Get sklearn imports
+        mean_squared_error, r2_score, mean_absolute_error = (
+            self._get_sklearn_regression_metrics()
+        )
+        accuracy_score, classification_report, confusion_matrix = (
+            self._get_sklearn_classification_metrics()
+        )
+        silhouette_score = self._get_silhouette_score()
+
         metrics = {}
 
         if model_type in [
@@ -478,6 +573,10 @@ class ModelEngine:
         if config.type not in [ModelType.KMEANS, ModelType.DBSCAN]:
             raise ValueError(f"Model type {config.type} is not a clustering model")
 
+        # Get sklearn imports
+        StandardScaler = self._get_standard_scaler()
+        silhouette_score = self._get_silhouette_score()
+
         # Prepare data
         X = data[config.feature_columns].dropna()
 
@@ -542,6 +641,10 @@ class ModelEngine:
 
     def _find_optimal_clusters(self, X: np.ndarray, max_clusters: int = 10) -> int:
         """Find optimal number of clusters using elbow method."""
+        # Get sklearn imports
+        KMeans = self._get_kmeans()
+        silhouette_score = self._get_silhouette_score()
+
         inertias = []
         silhouette_scores = []
         K_range = range(2, min(max_clusters + 1, X.shape[0]))
@@ -578,6 +681,9 @@ class ModelEngine:
             raise ValueError(
                 f"Model type {config.type} is not a dimensionality reduction model"
             )
+
+        # Get sklearn imports
+        StandardScaler = self._get_standard_scaler()
 
         # Prepare data
         X = data[config.feature_columns].dropna()
