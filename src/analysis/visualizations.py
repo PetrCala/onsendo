@@ -821,6 +821,8 @@ class VisualizationEngine:
             logger.error("Point map requires latitude and longitude columns")
             return None
 
+        folium, HeatMap, MarkerCluster = self._get_folium()
+
         # Filter out rows without coordinates
         map_data = data.dropna(subset=["latitude", "longitude"])
 
@@ -861,6 +863,8 @@ class VisualizationEngine:
             logger.error("Heat map requires latitude and longitude columns")
             return None
 
+        folium, HeatMap, MarkerCluster = self._get_folium()
+
         # Filter out rows without coordinates
         map_data = data.dropna(subset=["latitude", "longitude"])
 
@@ -895,7 +899,6 @@ class VisualizationEngine:
                 heat_data.append([row["latitude"], row["longitude"], value])
 
         if heat_data:
-            folium, HeatMap, MarkerCluster = self._get_folium()
             HeatMap(heat_data, radius=25).add_to(m)
 
         if config.save_path:
@@ -932,12 +935,11 @@ class VisualizationEngine:
         center_lat = map_data["latitude"].mean()
         center_lon = map_data["longitude"].mean()
 
+        # Create marker cluster
+        folium, HeatMap, MarkerCluster = self._get_folium()
         m = folium.Map(
             location=[center_lat, center_lon], zoom_start=10, tiles="OpenStreetMap"
         )
-
-        # Create marker cluster
-        folium, HeatMap, MarkerCluster = self._get_folium()
         marker_cluster = MarkerCluster().add_to(m)
 
         # Add points to cluster
