@@ -5,23 +5,12 @@ Visualization system for onsen analysis.
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Optional, Any, Union, Tuple
-import matplotlib.pyplot as plt
-import seaborn as sns
-import plotly.express as px
-import plotly.graph_objects as go
-import plotly.subplots as sp
-import folium
-from folium.plugins import HeatMap, MarkerCluster
 import logging
 import warnings
 from pathlib import Path
 
 from src.types.analysis import VisualizationType, VisualizationConfig
 from src.analysis.metrics import MetricsCalculator
-
-# Set style for matplotlib
-plt.style.use("default")
-sns.set_palette("husl")
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +25,15 @@ class VisualizationEngine:
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.metrics_calculator = MetricsCalculator()
 
+    def _get_matplotlib(self):
+        """Lazy import matplotlib and configure it."""
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+
+        # Set style for matplotlib
+        plt.style.use("default")
+        sns.set_palette("husl")
+
         # Configure matplotlib for better quality
         plt.rcParams["figure.dpi"] = 300
         plt.rcParams["savefig.dpi"] = 300
@@ -43,6 +41,23 @@ class VisualizationEngine:
 
         # Configure seaborn
         sns.set_style("whitegrid")
+
+        return plt, sns
+
+    def _get_plotly(self):
+        """Lazy import plotly."""
+        import plotly.express as px
+        import plotly.graph_objects as go
+        import plotly.subplots as sp
+
+        return px, go, sp
+
+    def _get_folium(self):
+        """Lazy import folium."""
+        import folium
+        from folium.plugins import HeatMap, MarkerCluster
+
+        return folium, HeatMap, MarkerCluster
 
     def create_visualization(
         self, data: pd.DataFrame, config: VisualizationConfig
@@ -131,6 +146,7 @@ class VisualizationEngine:
                 )
 
         if config.interactive:
+            px, go, sp = self._get_plotly()
             fig = px.bar(
                 data,
                 x=config.x_column,
@@ -145,6 +161,7 @@ class VisualizationEngine:
             fig.update_layout(xaxis_tickangle=-45, showlegend=True)
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(12, 8))
 
             if config.color_column:
@@ -183,6 +200,7 @@ class VisualizationEngine:
                 raise ValueError("Cannot infer columns for line chart")
 
         if config.interactive:
+            px, go, sp = self._get_plotly()
             fig = px.line(
                 data,
                 x=config.x_column,
@@ -192,6 +210,7 @@ class VisualizationEngine:
             )
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(12, 8))
 
             if config.color_column:
@@ -226,6 +245,7 @@ class VisualizationEngine:
                 raise ValueError("Cannot infer columns for scatter plot")
 
         if config.interactive:
+            px, go, sp = self._get_plotly()
             fig = px.scatter(
                 data,
                 x=config.x_column,
@@ -237,6 +257,7 @@ class VisualizationEngine:
             )
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(10, 8))
 
             scatter = ax.scatter(
@@ -282,6 +303,7 @@ class VisualizationEngine:
                 )
 
         if config.interactive:
+            px, go, sp = self._get_plotly()
             fig = px.histogram(
                 data,
                 x=config.x_column,
@@ -291,6 +313,7 @@ class VisualizationEngine:
             )
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(10, 8))
 
             if config.color_column:
@@ -326,6 +349,7 @@ class VisualizationEngine:
                 raise ValueError("Cannot infer columns for box plot")
 
         if config.interactive:
+            px, go, sp = self._get_plotly()
             fig = px.box(
                 data,
                 x=config.x_column,
@@ -335,6 +359,7 @@ class VisualizationEngine:
             )
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(12, 8))
 
             if config.color_column:
@@ -377,6 +402,7 @@ class VisualizationEngine:
                 raise ValueError("Cannot infer columns for violin plot")
 
         if config.interactive:
+            px, go, sp = self._get_plotly()
             fig = px.violin(
                 data,
                 x=config.x_column,
@@ -386,6 +412,7 @@ class VisualizationEngine:
             )
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(12, 8))
 
             if config.color_column:
@@ -423,12 +450,14 @@ class VisualizationEngine:
                 raise ValueError("Cannot infer column for pie chart")
 
         if config.interactive:
+            px, go, sp = self._get_plotly()
             value_counts = data[config.x_column].value_counts()
             fig = px.pie(
                 values=value_counts.values, names=value_counts.index, title=config.title
             )
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(10, 8))
 
             value_counts = data[config.x_column].value_counts()
@@ -451,6 +480,7 @@ class VisualizationEngine:
                     columns=config.x_column,
                     aggfunc="mean",
                 )
+                px, go, sp = self._get_plotly()
                 fig = px.imshow(pivot_data, title=config.title, aspect="auto")
                 return fig
             else:
@@ -458,9 +488,11 @@ class VisualizationEngine:
                 numeric_data = data.select_dtypes(include=[np.number])
                 if not numeric_data.empty:
                     corr_matrix = numeric_data.corr()
+                    px, go, sp = self._get_plotly()
                     fig = px.imshow(corr_matrix, title=config.title, aspect="auto")
                     return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(12, 10))
 
             if config.x_column and config.y_column and config.color_column:
@@ -499,6 +531,7 @@ class VisualizationEngine:
         corr_matrix = self.metrics_calculator.calculate_correlation_matrix(numeric_data)
 
         if config.interactive:
+            px, go, sp = self._get_plotly()
             fig = px.imshow(
                 corr_matrix,
                 title=config.title,
@@ -507,6 +540,7 @@ class VisualizationEngine:
             )
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(12, 10))
             sns.heatmap(
                 corr_matrix, annot=True, cmap="RdBu", center=0, square=True, ax=ax
@@ -532,6 +566,7 @@ class VisualizationEngine:
                 raise ValueError("Cannot infer column for distribution plot")
 
         if config.interactive:
+            px, go, sp = self._get_plotly()
             fig = px.histogram(
                 data,
                 x=config.x_column,
@@ -542,6 +577,7 @@ class VisualizationEngine:
             )
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(12, 8))
 
             if config.color_column:
@@ -577,6 +613,7 @@ class VisualizationEngine:
                 raise ValueError("Cannot infer columns for trend plot")
 
         if config.interactive:
+            px, go, sp = self._get_plotly()
             fig = px.line(
                 data,
                 x=config.x_column,
@@ -603,6 +640,7 @@ class VisualizationEngine:
 
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(12, 8))
 
             if config.color_column:
@@ -660,6 +698,7 @@ class VisualizationEngine:
         data_copy["year"] = data_copy[config.x_column].dt.year
 
         if config.interactive:
+            px, go, sp = self._get_plotly()
             fig = px.line(
                 data_copy,
                 x="month",
@@ -687,6 +726,7 @@ class VisualizationEngine:
             )
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(12, 8))
 
             for year in data_copy["year"].unique():
@@ -740,6 +780,7 @@ class VisualizationEngine:
                 raise ValueError("Cannot infer columns for cluster plot")
 
         if config.interactive:
+            px, go, sp = self._get_plotly()
             fig = px.scatter(
                 data,
                 x=config.x_column,
@@ -749,6 +790,7 @@ class VisualizationEngine:
             )
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             fig, ax = plt.subplots(figsize=(10, 8))
 
             if config.color_column:
@@ -853,6 +895,7 @@ class VisualizationEngine:
                 heat_data.append([row["latitude"], row["longitude"], value])
 
         if heat_data:
+            folium, HeatMap, MarkerCluster = self._get_folium()
             HeatMap(heat_data, radius=25).add_to(m)
 
         if config.save_path:
@@ -894,6 +937,7 @@ class VisualizationEngine:
         )
 
         # Create marker cluster
+        folium, HeatMap, MarkerCluster = self._get_folium()
         marker_cluster = MarkerCluster().add_to(m)
 
         # Add points to cluster
@@ -927,6 +971,7 @@ class VisualizationEngine:
         """Create a dashboard with multiple visualizations."""
         # This is a simplified dashboard - in production you might want more sophisticated layouts
         if config.interactive:
+            px, go, sp = self._get_plotly()
             # Create subplots for interactive dashboard
             fig = sp.make_subplots(
                 rows=2,
@@ -949,6 +994,7 @@ class VisualizationEngine:
             fig.update_layout(height=800, title_text=config.title)
             return fig
         else:
+            plt, sns = self._get_matplotlib()
             # Create matplotlib subplots
             fig, axes = plt.subplots(2, 2, figsize=(16, 12))
             fig.suptitle(config.title, fontsize=16)

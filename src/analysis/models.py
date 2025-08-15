@@ -5,27 +5,6 @@ Modeling system for onsen analysis.
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Optional, Any, Union, Tuple
-from sklearn.linear_model import LinearRegression, LogisticRegression, Ridge, Lasso
-from sklearn.ensemble import (
-    RandomForestRegressor,
-    RandomForestClassifier,
-    GradientBoostingRegressor,
-)
-from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
-from sklearn.cluster import KMeans, DBSCAN
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
-from sklearn.metrics import (
-    mean_squared_error,
-    r2_score,
-    accuracy_score,
-    classification_report,
-    confusion_matrix,
-    silhouette_score,
-    mean_absolute_error,
-)
-from sklearn.preprocessing import StandardScaler, LabelEncoder
 import logging
 import warnings
 from datetime import datetime
@@ -49,8 +28,69 @@ class ModelEngine:
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.metrics_calculator = MetricsCalculator()
         self.models: Dict[str, Any] = {}
-        self.scalers: Dict[str, StandardScaler] = {}
-        self.label_encoders: Dict[str, LabelEncoder] = {}
+        self.scalers: Dict[str, Any] = {}
+        self.label_encoders: Dict[str, Any] = {}
+
+    def _get_sklearn_models(self):
+        """Lazy import scikit-learn models."""
+        from sklearn.linear_model import (
+            LinearRegression,
+            LogisticRegression,
+            Ridge,
+            Lasso,
+        )
+        from sklearn.ensemble import (
+            RandomForestRegressor,
+            RandomForestClassifier,
+            GradientBoostingRegressor,
+        )
+        from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
+        from sklearn.cluster import KMeans, DBSCAN
+        from sklearn.decomposition import PCA
+        from sklearn.manifold import TSNE
+        from sklearn.model_selection import (
+            train_test_split,
+            cross_val_score,
+            GridSearchCV,
+        )
+        from sklearn.metrics import (
+            mean_squared_error,
+            r2_score,
+            accuracy_score,
+            classification_report,
+            confusion_matrix,
+            silhouette_score,
+            mean_absolute_error,
+        )
+        from sklearn.preprocessing import StandardScaler, LabelEncoder
+
+        return (
+            LinearRegression,
+            LogisticRegression,
+            Ridge,
+            Lasso,
+            RandomForestRegressor,
+            RandomForestClassifier,
+            GradientBoostingRegressor,
+            DecisionTreeRegressor,
+            DecisionTreeClassifier,
+            KMeans,
+            DBSCAN,
+            PCA,
+            TSNE,
+            train_test_split,
+            cross_val_score,
+            GridSearchCV,
+            mean_squared_error,
+            r2_score,
+            accuracy_score,
+            classification_report,
+            confusion_matrix,
+            silhouette_score,
+            mean_absolute_error,
+            StandardScaler,
+            LabelEncoder,
+        )
 
     def create_model(self, data: pd.DataFrame, config: ModelConfig) -> Dict[str, Any]:
         """
@@ -65,6 +105,35 @@ class ModelEngine:
         """
         if data.empty:
             raise ValueError("Cannot create model with empty data")
+
+        # Get sklearn imports
+        (
+            LinearRegression,
+            LogisticRegression,
+            Ridge,
+            Lasso,
+            RandomForestRegressor,
+            RandomForestClassifier,
+            GradientBoostingRegressor,
+            DecisionTreeRegressor,
+            DecisionTreeClassifier,
+            KMeans,
+            DBSCAN,
+            PCA,
+            TSNE,
+            train_test_split,
+            cross_val_score,
+            GridSearchCV,
+            mean_squared_error,
+            r2_score,
+            accuracy_score,
+            classification_report,
+            confusion_matrix,
+            silhouette_score,
+            mean_absolute_error,
+            StandardScaler,
+            LabelEncoder,
+        ) = self._get_sklearn_models()
 
         # Prepare the data
         X, y, feature_names = self._prepare_data(data, config)
@@ -141,6 +210,35 @@ class ModelEngine:
         self, data: pd.DataFrame, config: ModelConfig
     ) -> Tuple[pd.DataFrame, pd.Series, List[str]]:
         """Prepare data for modeling."""
+        # Get sklearn imports
+        (
+            LinearRegression,
+            LogisticRegression,
+            Ridge,
+            Lasso,
+            RandomForestRegressor,
+            RandomForestClassifier,
+            GradientBoostingRegressor,
+            DecisionTreeRegressor,
+            DecisionTreeClassifier,
+            KMeans,
+            DBSCAN,
+            PCA,
+            TSNE,
+            train_test_split,
+            cross_val_score,
+            GridSearchCV,
+            mean_squared_error,
+            r2_score,
+            accuracy_score,
+            classification_report,
+            confusion_matrix,
+            silhouette_score,
+            mean_absolute_error,
+            StandardScaler,
+            LabelEncoder,
+        ) = self._get_sklearn_models()
+
         # Check if required columns exist
         missing_cols = [
             col for col in config.feature_columns if col not in data.columns
@@ -198,6 +296,34 @@ class ModelEngine:
 
     def _create_model_instance(self, config: ModelConfig) -> Any:
         """Create a model instance based on the configuration."""
+        (
+            LinearRegression,
+            LogisticRegression,
+            Ridge,
+            Lasso,
+            RandomForestRegressor,
+            RandomForestClassifier,
+            GradientBoostingRegressor,
+            DecisionTreeRegressor,
+            DecisionTreeClassifier,
+            KMeans,
+            DBSCAN,
+            PCA,
+            TSNE,
+            train_test_split,
+            cross_val_score,
+            GridSearchCV,
+            mean_squared_error,
+            r2_score,
+            accuracy_score,
+            classification_report,
+            confusion_matrix,
+            silhouette_score,
+            mean_absolute_error,
+            StandardScaler,
+            LabelEncoder,
+        ) = self._get_sklearn_models()
+
         if config.type == ModelType.LINEAR_REGRESSION:
             return LinearRegression(**config.hyperparameters or {})
         elif config.type == ModelType.LOGISTIC_REGRESSION:
@@ -234,6 +360,34 @@ class ModelEngine:
     ) -> Dict[str, float]:
         """Evaluate the model performance."""
         metrics = {}
+
+        (
+            LinearRegression,
+            LogisticRegression,
+            Ridge,
+            Lasso,
+            RandomForestRegressor,
+            RandomForestClassifier,
+            GradientBoostingRegressor,
+            DecisionTreeRegressor,
+            DecisionTreeClassifier,
+            KMeans,
+            DBSCAN,
+            PCA,
+            TSNE,
+            train_test_split,
+            cross_val_score,
+            GridSearchCV,
+            mean_squared_error,
+            r2_score,
+            accuracy_score,
+            classification_report,
+            confusion_matrix,
+            silhouette_score,
+            mean_absolute_error,
+            StandardScaler,
+            LabelEncoder,
+        ) = self._get_sklearn_models()
 
         if model_type in [
             ModelType.LINEAR_REGRESSION,
@@ -364,6 +518,35 @@ class ModelEngine:
         if config.type not in [ModelType.KMEANS, ModelType.DBSCAN]:
             raise ValueError(f"Model type {config.type} is not a clustering model")
 
+        # Get sklearn imports
+        (
+            LinearRegression,
+            LogisticRegression,
+            Ridge,
+            Lasso,
+            RandomForestRegressor,
+            RandomForestClassifier,
+            GradientBoostingRegressor,
+            DecisionTreeRegressor,
+            DecisionTreeClassifier,
+            KMeans,
+            DBSCAN,
+            PCA,
+            TSNE,
+            train_test_split,
+            cross_val_score,
+            GridSearchCV,
+            mean_squared_error,
+            r2_score,
+            accuracy_score,
+            classification_report,
+            confusion_matrix,
+            silhouette_score,
+            mean_absolute_error,
+            StandardScaler,
+            LabelEncoder,
+        ) = self._get_sklearn_models()
+
         # Prepare data
         X = data[config.feature_columns].dropna()
 
@@ -461,6 +644,35 @@ class ModelEngine:
             raise ValueError(
                 f"Model type {config.type} is not a dimensionality reduction model"
             )
+
+        # Get sklearn imports
+        (
+            LinearRegression,
+            LogisticRegression,
+            Ridge,
+            Lasso,
+            RandomForestRegressor,
+            RandomForestClassifier,
+            GradientBoostingRegressor,
+            DecisionTreeRegressor,
+            DecisionTreeClassifier,
+            KMeans,
+            DBSCAN,
+            PCA,
+            TSNE,
+            train_test_split,
+            cross_val_score,
+            GridSearchCV,
+            mean_squared_error,
+            r2_score,
+            accuracy_score,
+            classification_report,
+            confusion_matrix,
+            silhouette_score,
+            mean_absolute_error,
+            StandardScaler,
+            LabelEncoder,
+        ) = self._get_sklearn_models()
 
         # Prepare data
         X = data[config.feature_columns].dropna()
