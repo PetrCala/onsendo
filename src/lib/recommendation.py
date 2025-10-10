@@ -1,10 +1,9 @@
-"""
-Onsen recommendation engine.
-"""
+"""Onsen recommendation engine."""
 
+import math
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Set, Tuple
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, load_only
 
 from src.db.models import Onsen, Location, OnsenVisit
 from src.lib.parsers.usage_time import parse_usage_time
@@ -209,8 +208,9 @@ class OnsenRecommendationEngine:
         # Refresh visit cache for each recommendation request to keep data accurate
         self._visited_onsen_ids = None
 
-        # Start with all onsens
-        onsens = self.db_session.query(Onsen).all()
+        # Start with onsens scoped to the requested distance bucket to avoid
+        # scanning the entire catalogue on every request.
+        onsens = self._get_candidate_onsens(location, distance_category)
 
         # Filter by availability if requested
         if exclude_closed:
@@ -228,7 +228,10 @@ class OnsenRecommendationEngine:
 
         # Filter by distance
         distance_filtered = filter_onsens_by_distance(
-            onsens, location, distance_category
+            onsens,
+            location,
+            distance_category,
+            limit=limit if limit and limit > 0 else None,
         )
 
         # Add metadata and limit results
@@ -259,6 +262,71 @@ class OnsenRecommendationEngine:
                 break
 
         return recommendations
+
+    def _get_candidate_onsens(
+        self, location: Location, distance_category: str
+    ) -> List[Onsen]:
+        """Return onsens roughly matching the requested distance bucket."""
+
+        query = self.db_session.query(Onsen).options(
+            load_only(
+                Onsen.id,
+                Onsen.ban_number,
+                Onsen.name,
+                Onsen.address,
+                Onsen.latitude,
+                Onsen.longitude,
+                Onsen.usage_time,
+                Onsen.closed_days,
+                Onsen.admission_fee,
+                Onsen.remarks,
+            )
+        )
+
+        radius_km = self._get_distance_radius_for_category(distance_category)
+
+        if (
+            radius_km is not None
+            and location.latitude is not None
+            and location.longitude is not None
+        ):
+            # Latitude degrees are ~111km apart. Longitude shrinks by cos(latitude).
+            lat_delta = radius_km / 111.0
+            cos_lat = math.cos(math.radians(location.latitude))
+            if abs(cos_lat) < 1e-6:
+                lon_delta = 180.0
+            else:
+                lon_delta = radius_km / (111.320 * cos_lat)
+
+            lat_min = location.latitude - lat_delta
+            lat_max = location.latitude + lat_delta
+            lon_min = location.longitude - lon_delta
+            lon_max = location.longitude + lon_delta
+
+            query = query.filter(Onsen.latitude.isnot(None)).filter(
+                Onsen.longitude.isnot(None)
+            )
+            query = query.filter(Onsen.latitude.between(lat_min, lat_max)).filter(
+                Onsen.longitude.between(lon_min, lon_max)
+            )
+
+        return query.all()
+
+    def _get_distance_radius_for_category(self, distance_category: str) -> Optional[float]:
+        """Return an approximate radius to use for the provided distance bucket."""
+
+        milestones = self._distance_milestones
+
+        if distance_category == "very_close":
+            return (milestones.very_close_max if milestones else 5.0)
+        if distance_category == "close":
+            return (milestones.close_max if milestones else 15.0)
+        if distance_category == "medium":
+            return (milestones.medium_max if milestones else 50.0)
+
+        # For "far" we intentionally avoid clamping results so that callers can
+        # still explore the full catalogue.
+        return None
 
     def _calculate_and_update_milestones(self, location: Location) -> None:
         """Calculate and update distance milestones for the given location."""

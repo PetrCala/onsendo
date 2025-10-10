@@ -131,6 +131,33 @@ class TestOnsenRecommendationEngine:
         assert engine._get_distance_category_name(30.0) == "medium"
         assert engine._get_distance_category_name(100.0) == "far"
 
+    def test_get_distance_radius_for_category_with_milestones(self):
+        """The distance radius should come from calculated milestones when available."""
+        mock_session = Mock(spec=Session)
+        location = Mock(spec=Location)
+        location.latitude = 33.0
+        location.longitude = 131.0
+
+        milestones = DistanceMilestones(1.5, 4.0, 12.0, 12.0)
+
+        with patch("src.lib.recommendation.calculate_location_milestones") as mock_calc:
+            mock_calc.return_value = milestones
+            engine = OnsenRecommendationEngine(mock_session, location)
+
+        assert engine._get_distance_radius_for_category("very_close") == pytest.approx(1.5)
+        assert engine._get_distance_radius_for_category("close") == pytest.approx(4.0)
+        assert engine._get_distance_radius_for_category("medium") == pytest.approx(12.0)
+        assert engine._get_distance_radius_for_category("far") is None
+
+    def test_get_distance_radius_for_category_defaults(self):
+        """Fallback radii should match the static distance categories."""
+        engine = OnsenRecommendationEngine(Mock(spec=Session))
+
+        assert engine._get_distance_radius_for_category("very_close") == pytest.approx(5.0)
+        assert engine._get_distance_radius_for_category("close") == pytest.approx(15.0)
+        assert engine._get_distance_radius_for_category("medium") == pytest.approx(50.0)
+        assert engine._get_distance_radius_for_category("far") is None
+
     def test_has_been_visited_true(self):
         """Test checking if onsen has been visited (true case)."""
         mock_session = Mock(spec=Session)
@@ -259,6 +286,8 @@ class TestRecommendOnsens:
 
         mock_query = Mock()
         mock_query.all.return_value = onsens
+        mock_query.options.return_value = mock_query
+        mock_query.filter.return_value = mock_query
         mock_session.query.return_value = mock_query
 
         milestones = DistanceMilestones(1.0, 3.0, 5.0, 5.0)
@@ -305,6 +334,8 @@ class TestRecommendOnsens:
 
         mock_query = Mock()
         mock_query.all.return_value = onsens
+        mock_query.options.return_value = mock_query
+        mock_query.filter.return_value = mock_query
         mock_session.query.return_value = mock_query
 
         milestones = DistanceMilestones(1.0, 3.0, 5.0, 5.0)
@@ -351,6 +382,8 @@ class TestRecommendOnsens:
 
         mock_query = Mock()
         mock_query.all.return_value = onsens
+        mock_query.options.return_value = mock_query
+        mock_query.filter.return_value = mock_query
         mock_session.query.return_value = mock_query
 
         milestones = DistanceMilestones(1.0, 3.0, 5.0, 5.0)
@@ -401,6 +434,8 @@ class TestRecommendOnsens:
 
         mock_query = Mock()
         mock_query.all.return_value = onsens
+        mock_query.options.return_value = mock_query
+        mock_query.filter.return_value = mock_query
         mock_session.query.return_value = mock_query
 
         milestones = DistanceMilestones(1.0, 3.0, 5.0, 5.0)
@@ -450,6 +485,8 @@ class TestRecommendOnsens:
 
         mock_query = Mock()
         mock_query.all.return_value = [onsen]
+        mock_query.options.return_value = mock_query
+        mock_query.filter.return_value = mock_query
         mock_session.query.return_value = mock_query
 
         milestones = DistanceMilestones(1.0, 3.0, 5.0, 5.0)

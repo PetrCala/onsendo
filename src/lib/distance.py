@@ -1,7 +1,6 @@
-"""
-Distance calculation utilities for onsen recommendations.
-"""
+"""Distance calculation utilities for onsen recommendations."""
 
+import heapq
 import math
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
@@ -202,7 +201,10 @@ def calculate_distance_to_onsen(location: Location, onsen: Onsen) -> Optional[fl
 
 
 def filter_onsens_by_distance(
-    onsens: List[Onsen], location: Location, distance_category: str
+    onsens: List[Onsen],
+    location: Location,
+    distance_category: str,
+    limit: Optional[int] = None,
 ) -> List[Tuple[Onsen, float]]:
     """
     Filter onsens by distance from a location.
@@ -218,7 +220,13 @@ def filter_onsens_by_distance(
     if distance_category not in DISTANCE_CATEGORIES:
         raise ValueError(f"Invalid distance category: {distance_category}")
 
-    filtered_onsens = []
+    if limit is not None and limit <= 0:
+        return []
+
+    filtered_onsens: List[Tuple[Onsen, float]] = []
+    use_heap = limit is not None
+    heap: List[Tuple[float, int, Onsen, float]] = []
+    counter = 0
 
     for onsen in onsens:
         distance = calculate_distance_to_onsen(location, onsen)
@@ -227,10 +235,26 @@ def filter_onsens_by_distance(
 
         # Check if the onsen falls within the requested distance category
         if _is_distance_in_category(distance, distance_category):
-            filtered_onsens.append((onsen, distance))
+            if use_heap:
+                if len(heap) < (limit or 0):
+                    counter += 1
+                    heapq.heappush(heap, (-distance, counter, onsen, distance))
+                else:
+                    if heap and distance < -heap[0][0]:
+                        counter += 1
+                        heapq.heapreplace(heap, (-distance, counter, onsen, distance))
+            else:
+                filtered_onsens.append((onsen, distance))
 
-    # Sort by distance (closest first)
-    filtered_onsens.sort(key=lambda x: x[1])
+    if use_heap:
+        # Convert the heap into a sorted list of (onsen, distance) pairs
+        filtered_onsens = [
+            (onsen, dist) for _, _, onsen, dist in sorted(heap, key=lambda item: item[3])
+        ]
+    else:
+        # Sort by distance (closest first)
+        filtered_onsens.sort(key=lambda x: x[1])
+
     return filtered_onsens
 
 
