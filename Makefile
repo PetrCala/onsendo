@@ -265,29 +265,11 @@ backup-cloud: ## Sync backups to Google Drive
 		echo "  3. Run 'make backup-cloud' again to authenticate"; \
 		exit 1; \
 	fi
-	@poetry run python -c "from src.lib.cloud_backup import get_backup_manager; \
-		import sys; \
-		try: \
-			manager = get_backup_manager('$(GDRIVE_CREDENTIALS)', '$(GDRIVE_TOKEN)'); \
-			stats = manager.sync_directory('$(BACKUP_DIR)', 'db_backups'); \
-			print(f\"\n$(GREEN)[SUCCESS]$(NC) Cloud sync complete:\"); \
-			print(f\"  Uploaded: {stats['uploaded']}\"); \
-			print(f\"  Skipped: {stats['skipped']}\"); \
-			print(f\"  Failed: {stats['failed']}\"); \
-			sys.exit(0 if stats['failed'] == 0 else 1); \
-		except Exception as e: \
-			print(f\"$(RED)[ERROR]$(NC) Cloud sync failed: {e}\"); \
-			sys.exit(1);"
+	@poetry run python scripts/backup_to_drive.py sync "$(GDRIVE_CREDENTIALS)" "$(GDRIVE_TOKEN)" "$(BACKUP_DIR)" "db_backups"
 
 backup-cloud-list: ## List backups in Google Drive
 	@echo "$(BLUE)[INFO]$(NC) Listing backups in Google Drive..."
-	@poetry run python -c "from src.lib.cloud_backup import get_backup_manager; \
-		manager = get_backup_manager('$(GDRIVE_CREDENTIALS)', '$(GDRIVE_TOKEN)'); \
-		backups = manager.list_backups(); \
-		print(f'\nFound {len(backups)} backups in Google Drive:\n'); \
-		for backup in backups[:20]: \
-			size_mb = int(backup.get('size', 0)) / (1024*1024); \
-			print(f\"  {backup['name']} ({size_mb:.2f} MB) - {backup.get('modifiedTime', 'N/A')}\");"
+	@poetry run python scripts/backup_to_drive.py list "$(GDRIVE_CREDENTIALS)" "$(GDRIVE_TOKEN)"
 
 backup-full: backup backup-cloud ## Create local backup and sync to Google Drive
 	@echo "$(GREEN)[SUCCESS]$(NC) Full backup complete (local + cloud)"
