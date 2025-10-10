@@ -45,41 +45,86 @@ def run_scenario_analysis(args: argparse.Namespace) -> None:
                 )
                 return
 
-            # Parse custom configuration
-            custom_config = None
-            if args.custom_config:
-                try:
-                    custom_config = json.loads(args.custom_config)
-                except json.JSONDecodeError:
-                    logger.error("Invalid JSON in custom_config")
-                    return
+            # Econometric scenarios use the new econometric analysis engine
+            econometric_scenarios = [
+                AnalysisScenario.ENJOYMENT_DRIVERS,
+                AnalysisScenario.HEART_RATE_IMPACT,
+                AnalysisScenario.PRICING_OPTIMIZATION,
+                AnalysisScenario.TEMPORAL_PATTERNS_ADVANCED,
+            ]
 
-            # Run scenario analysis
-            logger.info(f"Running scenario: {scenario.value}")
-            result = engine.run_scenario_analysis(scenario, custom_config)
+            if scenario in econometric_scenarios:
+                # Use econometric analysis engine for professional analysis
+                logger.info(f"Running econometric scenario: {scenario.value}")
+                scenario_config = ANALYSIS_SCENARIOS[scenario]
 
-            if result.errors:
-                logger.error("Scenario analysis completed with errors:")
-                for error in result.errors:
-                    logger.error(f"  - {error}")
+                result = engine.run_econometric_analysis(
+                    dependent_var='personal_rating',
+                    data_categories=scenario_config.data_categories,
+                    max_models=20,
+                    analysis_name=scenario_config.description,
+                )
+
+                if result['status'] == 'error':
+                    logger.error(f"Econometric analysis failed: {result['error']}")
+                    print(f"\nError: {result['error']}")
+                else:
+                    logger.info("Econometric analysis completed successfully!")
+                    print(f"\n✅ Analysis complete in {result['execution_time']:.1f}s")
+                    print(f"📊 Estimated {result['n_models_estimated']} models")
+                    print(f"💡 Discovered {result['n_insights_discovered']} insights")
+
+                    if result['best_model']['name']:
+                        print(f"\n🏆 Best model: {result['best_model']['name']}")
+                        print(f"   Adjusted R²: {result['best_model']['adj_r2']:.3f}")
+                        print(f"   Quality: {result['best_model']['quality']}")
+
+                    print(f"\n📁 Output directory: {result['output_directory']}")
+                    print(f"📄 Report: {result['report_path']}")
+                    print(f"\n🌐 Open report in browser:")
+                    print(f"   file://{result['report_path']}")
+
+                    if result['map_files']:
+                        print(f"\n🗺️  Interactive maps:")
+                        for map_type, map_path in result['map_files'].items():
+                            print(f"   {map_type}: file://{map_path}")
+
             else:
-                logger.info("Scenario analysis completed successfully!")
-                logger.info(f"Generated {len(result.visualizations)} visualizations")
-                logger.info(f"Generated {len(result.insights)} insights")
-                if result.models:
-                    logger.info(f"Trained {len(result.models)} models")
+                # Use standard analysis engine for basic scenarios
+                # Parse custom configuration
+                custom_config = None
+                if args.custom_config:
+                    try:
+                        custom_config = json.loads(args.custom_config)
+                    except json.JSONDecodeError:
+                        logger.error("Invalid JSON in custom_config")
+                        return
 
-                # Print insights
-                if result.insights:
-                    print("\n=== Analysis Insights ===")
-                    for i, insight in enumerate(result.insights, 1):
-                        print(f"{i}. {insight}")
+                logger.info(f"Running scenario: {scenario.value}")
+                result = engine.run_scenario_analysis(scenario, custom_config)
 
-                # Export results if requested
-                if args.export:
-                    export_path = engine.export_results(result, args.export)
-                    if export_path:
-                        print(f"\nResults exported to: {export_path}")
+                if result.errors:
+                    logger.error("Scenario analysis completed with errors:")
+                    for error in result.errors:
+                        logger.error(f"  - {error}")
+                else:
+                    logger.info("Scenario analysis completed successfully!")
+                    logger.info(f"Generated {len(result.visualizations)} visualizations")
+                    logger.info(f"Generated {len(result.insights)} insights")
+                    if result.models:
+                        logger.info(f"Trained {len(result.models)} models")
+
+                    # Print insights
+                    if result.insights:
+                        print("\n=== Analysis Insights ===")
+                        for i, insight in enumerate(result.insights, 1):
+                            print(f"{i}. {insight}")
+
+                    # Export results if requested
+                    if args.export:
+                        export_path = engine.export_results(result, args.export)
+                        if export_path:
+                            print(f"\nResults exported to: {export_path}")
 
     except Exception as e:
         logger.error(f"Scenario analysis failed: {e}")

@@ -232,14 +232,26 @@ class AnalysisEngine:
 
     def _calculate_metrics(
         self, data: pd.DataFrame, request: AnalysisRequest
-    ) -> Dict[str, Dict[str, float]]:
+    ) -> Dict[str, Any]:
         """Calculate metrics based on the request."""
-        return self.metrics_calculator.calculate_metrics(
-            data=data,
-            metrics=request.metrics,
-            grouping=request.grouping,
-            custom_metrics=request.custom_metrics,
-        )
+        # Use simplified metrics calculator - summary stats and correlations only
+        metrics = {}
+
+        # Get summary statistics
+        metrics['summary'] = self.metrics_calculator.calculate_summary_statistics(data)
+
+        # Get numeric summary for quick stats
+        metrics['numeric'] = self.metrics_calculator.get_numeric_summary(data)
+
+        # Get correlation matrix if requested
+        if MetricType.CUSTOM in request.metrics or any(
+            m in [MetricType.CUSTOM] for m in request.metrics
+        ):
+            corr_matrix = self.metrics_calculator.calculate_correlation_matrix(data)
+            if not corr_matrix.empty:
+                metrics['correlations'] = corr_matrix.to_dict()
+
+        return metrics
 
     def _create_visualizations(
         self, data: pd.DataFrame, request: AnalysisRequest
@@ -320,7 +332,12 @@ class AnalysisEngine:
     def _create_models(
         self, data: pd.DataFrame, request: AnalysisRequest
     ) -> Optional[Dict[str, Any]]:
-        """Create models based on the request."""
+        """
+        Create models based on the request.
+
+        Note: Only clustering and dimensionality reduction are supported.
+        For regression analysis, use run_econometric_analysis() instead.
+        """
         if not request.models:
             return None
 
@@ -328,6 +345,14 @@ class AnalysisEngine:
 
         for model_type in request.models:
             try:
+                # Only support clustering and dimensionality reduction
+                if model_type not in [ModelType.KMEANS, ModelType.DBSCAN, ModelType.PCA, ModelType.TSNE]:
+                    logger.warning(
+                        f"Model type {model_type.value} not supported in basic analysis. "
+                        f"Use run_econometric_analysis() for regression models."
+                    )
+                    continue
+
                 # Create model configuration
                 config = self._create_model_config(model_type, data, request)
 
@@ -338,8 +363,6 @@ class AnalysisEngine:
                     result = self.model_engine.create_dimensionality_reduction_model(
                         data, config
                     )
-                else:
-                    result = self.model_engine.create_model(data, config)
 
                 models[model_type.value] = result
 
@@ -352,57 +375,24 @@ class AnalysisEngine:
     def _create_model_config(
         self, model_type: ModelType, data: pd.DataFrame, request: AnalysisRequest
     ) -> ModelConfig:
-        """Create model configuration based on type and data."""
-        # Select appropriate target and feature columns
+        """Create model configuration for clustering/dimensionality reduction."""
+        # Select numeric columns for features
         numeric_cols = data.select_dtypes(include=[np.number]).columns.tolist()
 
         if not numeric_cols:
             raise ValueError("No numeric columns available for modeling")
 
-        # For now, use simple heuristics for target and feature selection
-        # In production, you might want more sophisticated logic
-
-        if model_type in [
-            ModelType.LINEAR_REGRESSION,
-            ModelType.RIDGE_REGRESSION,
-            ModelType.LASSO_REGRESSION,
-        ]:
-            # Use first numeric column as target, rest as features
-            target_col = numeric_cols[0]
-            feature_cols = numeric_cols[1 : min(6, len(numeric_cols))]  # Limit features
-
-        elif model_type in [
-            ModelType.LOGISTIC_REGRESSION,
-            ModelType.DECISION_TREE,
-            ModelType.RANDOM_FOREST,
-        ]:
-            # For classification, try to find a categorical target
-            categorical_cols = data.select_dtypes(
-                include=["object", "category"]
-            ).columns
-            if len(categorical_cols) > 0:
-                target_col = categorical_cols[0]
-            else:
-                # Use first numeric column as target
-                target_col = numeric_cols[0]
+        # Clustering and dimensionality reduction don't need target columns
+        if model_type in [ModelType.KMEANS, ModelType.DBSCAN]:
             feature_cols = numeric_cols[: min(5, len(numeric_cols))]
-
-        elif model_type in [ModelType.KMEANS, ModelType.DBSCAN]:
-            # For clustering, use numeric columns as features
-            target_col = None
-            feature_cols = numeric_cols[: min(5, len(numeric_cols))]
-
         elif model_type in [ModelType.PCA, ModelType.TSNE]:
-            # For dimensionality reduction, use numeric columns as features
-            target_col = None
             feature_cols = numeric_cols[: min(10, len(numeric_cols))]
-
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
         return ModelConfig(
             type=model_type,
-            target_column=target_col if target_col else "dummy",
+            target_column="dummy",  # Not used for clustering/dim reduction
             feature_columns=feature_cols,
             hyperparameters=(
                 request.custom_metrics.get("hyperparameters", {})
@@ -414,109 +404,46 @@ class AnalysisEngine:
     def _generate_insights(
         self,
         data: pd.DataFrame,
-        metrics: Dict[str, Dict[str, float]],
+        metrics: Dict[str, Any],
         models: Optional[Dict[str, Any]],
         request: AnalysisRequest,
     ) -> List[str]:
-        """Generate insights from the analysis results."""
+        """
+        Generate basic insights from the analysis results.
+
+        Note: For comprehensive econometric insights, use InsightDiscovery
+        from src.analysis.insight_discovery
+        """
         insights = []
 
         # Data quality insights
         total_rows = len(data)
-        missing_data = data.isnull().sum().sum()
-        missing_percentage = (missing_data / (total_rows * len(data.columns))) * 100
+        if total_rows > 0 and len(data.columns) > 0:
+            missing_data = data.isnull().sum().sum()
+            missing_percentage = (missing_data / (total_rows * len(data.columns))) * 100
 
-        missing_quality_map = {
-            "high": f"Data quality concern: {missing_percentage:.1f}% of values are missing.",
-            "moderate": f"Moderate data quality: {missing_percentage:.1f}% of values are missing.",
-            "none": "Good data quality: None of the values are missing.",
-            "good": f"Good data quality: Only {missing_percentage:.1f}% of values are missing.",
-        }
-        if missing_percentage > 20:
-            insights.append(missing_quality_map["high"])
-        elif missing_percentage > 5:
-            insights.append(missing_quality_map["moderate"])
-        elif missing_percentage == 0:
-            insights.append(missing_quality_map["none"])
-        else:
-            insights.append(missing_quality_map["good"])
+            if missing_percentage > 20:
+                insights.append(f"Data quality concern: {missing_percentage:.1f}% of values are missing.")
+            elif missing_percentage > 5:
+                insights.append(f"Moderate data quality: {missing_percentage:.1f}% of values are missing.")
+            elif missing_percentage == 0:
+                insights.append("Good data quality: No missing values.")
+            else:
+                insights.append(f"Good data quality: Only {missing_percentage:.1f}% of values are missing.")
 
-        # Metric-based insights
-        if "overall" in metrics:
-            overall_metrics = metrics["overall"]
-
-            # Rating insights
-            if (
-                "mean" in overall_metrics
-                and "personal_rating" in overall_metrics["mean"]
-            ):
-                avg_rating = overall_metrics["mean"]["personal_rating"]
+        # Basic numeric summary insights
+        if 'numeric' in metrics and metrics['numeric']:
+            if 'personal_rating' in metrics['numeric']:
+                rating_stats = metrics['numeric']['personal_rating']
+                avg_rating = rating_stats.get('mean', 0)
                 if avg_rating > 8:
-                    insights.append(
-                        f"High satisfaction: Average personal rating is {avg_rating:.1f}/10"
-                    )
+                    insights.append(f"High satisfaction: Average rating is {avg_rating:.1f}/10")
                 elif avg_rating > 6:
-                    insights.append(
-                        f"Moderate satisfaction: Average personal rating is {avg_rating:.1f}/10"
-                    )
-                else:
-                    insights.append(
-                        f"Low satisfaction: Average personal rating is {avg_rating:.1f}/10"
-                    )
+                    insights.append(f"Moderate satisfaction: Average rating is {avg_rating:.1f}/10")
+                elif avg_rating > 0:
+                    insights.append(f"Low satisfaction: Average rating is {avg_rating:.1f}/10")
 
-            # Price insights
-            if "mean" in overall_metrics and "entry_fee_yen" in overall_metrics["mean"]:
-                avg_price = overall_metrics["mean"]["entry_fee_yen"]
-                if avg_price > 1000:
-                    insights.append(
-                        f"Premium pricing: Average entry fee is ¥{avg_price:.0f}"
-                    )
-                elif avg_price > 500:
-                    insights.append(
-                        f"Standard pricing: Average entry fee is ¥{avg_price:.0f}"
-                    )
-                else:
-                    insights.append(
-                        f"Budget-friendly: Average entry fee is ¥{avg_price:.0f}"
-                    )
-
-        # Model-based insights
-        if models:
-            for model_name, model_result in models.items():
-                if "metrics" in model_result:
-                    model_metrics = model_result["metrics"]
-
-                    if "r2" in model_metrics:
-                        r2 = model_metrics["r2"]
-                        if r2 > 0.7:
-                            insights.append(
-                                f"Strong model performance: {model_name} explains {r2:.1%} of variance"
-                            )
-                        elif r2 > 0.5:
-                            insights.append(
-                                f"Moderate model performance: {model_name} explains {r2:.1%} of variance"
-                            )
-                        else:
-                            insights.append(
-                                f"Weak model performance: {model_name} explains {r2:.1%} of variance"
-                            )
-
-                    if "accuracy" in model_metrics:
-                        accuracy = model_metrics["accuracy"]
-                        if accuracy > 0.8:
-                            insights.append(
-                                f"High classification accuracy: {model_name} achieves {accuracy:.1%} accuracy"
-                            )
-                        elif accuracy > 0.6:
-                            insights.append(
-                                f"Moderate classification accuracy: {model_name} achieves {accuracy:.1%} accuracy"
-                            )
-                        else:
-                            insights.append(
-                                f"Low classification accuracy: {model_name} achieves {accuracy:.1%} accuracy"
-                            )
-
-        # Analysis-specific insights
+        # Spatial coverage
         if request.analysis_type == AnalysisType.SPATIAL:
             if "latitude" in data.columns and "longitude" in data.columns:
                 lat_range = data["latitude"].max() - data["latitude"].min()
@@ -525,10 +452,25 @@ class AnalysisEngine:
                     f"Geographic coverage: {lat_range:.2f}° latitude × {lon_range:.2f}° longitude"
                 )
 
+        # Temporal coverage
         elif request.analysis_type == AnalysisType.TEMPORAL:
             if "visit_time" in data.columns:
                 date_range = data["visit_time"].max() - data["visit_time"].min()
                 insights.append(f"Time coverage: {date_range.days} days of data")
+
+        # Clustering insights
+        if models:
+            for model_name, model_result in models.items():
+                if model_result.get("n_clusters"):
+                    insights.append(
+                        f"Found {model_result['n_clusters']} clusters in the data"
+                    )
+                if "metrics" in model_result and "silhouette_score" in model_result["metrics"]:
+                    score = model_result["metrics"]["silhouette_score"]
+                    quality = "excellent" if score > 0.7 else "good" if score > 0.5 else "moderate"
+                    insights.append(
+                        f"Clustering quality: {quality} (silhouette score: {score:.3f})"
+                    )
 
         return insights
 
