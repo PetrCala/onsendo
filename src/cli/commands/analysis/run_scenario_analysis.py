@@ -105,6 +105,7 @@ def run_scenario_analysis(args: argparse.Namespace) -> None:
                     logger.error("Scenario analysis completed with errors:")
                     for error in result.errors:
                         logger.error(f"  - {error}")
+                        print(f"\nError: {error}")
                 else:
                     logger.info("Scenario analysis completed successfully!")
                     logger.info(f"Generated {len(result.visualizations)} visualizations")
@@ -112,8 +113,36 @@ def run_scenario_analysis(args: argparse.Namespace) -> None:
                     if result.models:
                         logger.info(f"Trained {len(result.models)} models")
 
-                    # Print insights
-                    if result.insights:
+                    # Print scenario-specific summaries
+                    if scenario == AnalysisScenario.OVERVIEW:
+                        # Print comprehensive overview summary
+                        overview_summary = engine.generate_overview_summary(result)
+                        print(overview_summary)
+                    elif scenario == AnalysisScenario.SPATIAL_ANALYSIS:
+                        # Print spatial analysis summary
+                        print(f"\n✅ Spatial analysis complete in {result.execution_time:.1f}s")
+                        print(f"📊 Analyzed {len(result.data)} locations")
+                        print(f"🗺️  Generated {len(result.visualizations)} maps")
+                        if result.models:
+                            print(f"🔍 Identified spatial clusters using {len(result.models)} models")
+                        print(f"\n📁 Output directory: {result.metadata.get('output_directory', 'N/A')}")
+                    elif scenario == AnalysisScenario.TEMPORAL_ANALYSIS:
+                        # Print temporal analysis summary
+                        print(f"\n✅ Temporal analysis complete in {result.execution_time:.1f}s")
+                        print(f"📊 Analyzed {len(result.data)} time points")
+                        print(f"📈 Generated {len(result.visualizations)} trend visualizations")
+                        print(f"\n📁 Output directory: {result.metadata.get('output_directory', 'N/A')}")
+                    else:
+                        # Generic summary for other scenarios
+                        print(f"\n✅ Analysis complete in {result.execution_time:.1f}s")
+                        print(f"📊 Processed {len(result.data)} records")
+                        print(f"📈 Generated {len(result.visualizations)} visualizations")
+                        if result.insights:
+                            print(f"💡 Discovered {len(result.insights)} insights")
+                        print(f"\n📁 Output directory: {result.metadata.get('output_directory', 'N/A')}")
+
+                    # Print insights for non-overview scenarios
+                    if scenario != AnalysisScenario.OVERVIEW and result.insights:
                         print("\n=== Analysis Insights ===")
                         for i, insight in enumerate(result.insights, 1):
                             print(f"{i}. {insight}")

@@ -803,6 +803,105 @@ class AnalysisEngine:
             logger.error(f"Failed to export results: {e}")
             return None
 
+    def generate_overview_summary(self, result: AnalysisResult) -> str:
+        """
+        Generate a console-friendly overview summary from analysis results.
+
+        Args:
+            result: Analysis result to summarize
+
+        Returns:
+            Formatted summary string for console output
+        """
+        lines = []
+        lines.append("\n" + "=" * 70)
+        lines.append("ONSEN DATA OVERVIEW")
+        lines.append("=" * 70)
+
+        # Dataset dimensions
+        if not result.data.empty:
+            lines.append(f"\n📊 Dataset: {result.data.shape[0]} rows × {result.data.shape[1]} columns")
+
+            # Data quality
+            if 'summary' in result.metrics and result.metrics['summary']:
+                summary = result.metrics['summary']
+                total_cells = result.data.shape[0] * result.data.shape[1]
+                if total_cells > 0:
+                    missing_pct = (sum(summary.get('missing_values', {}).values()) / total_cells) * 100
+                    lines.append(f"   Data completeness: {100 - missing_pct:.1f}%")
+
+        # Categorical summaries
+        if 'summary' in result.metrics and 'categorical_summary' in result.metrics['summary']:
+            cat_summary = result.metrics['summary']['categorical_summary']
+
+            # Regions
+            if 'region' in cat_summary:
+                region_data = cat_summary['region']
+                lines.append(f"\n🗺️  Regions: {region_data['unique_count']} unique regions")
+                top_regions = list(region_data['top_values'].items())[:3]
+                for region, count in top_regions:
+                    lines.append(f"   • {region}: {count} onsens")
+
+            # Business forms
+            if 'business_form' in cat_summary:
+                business_data = cat_summary['business_form']
+                lines.append(f"\n🏢 Business Types: {business_data['unique_count']} categories")
+                top_types = list(business_data['top_values'].items())[:3]
+                for btype, count in top_types:
+                    lines.append(f"   • {btype}: {count} onsens")
+
+            # Spring quality
+            if 'spring_quality' in cat_summary:
+                spring_data = cat_summary['spring_quality']
+                lines.append(f"\n💧 Spring Quality: {spring_data['unique_count']} types")
+                top_springs = list(spring_data['top_values'].items())[:3]
+                for stype, count in top_springs:
+                    lines.append(f"   • {stype}: {count} onsens")
+
+            # Admission fees
+            if 'admission_fee' in cat_summary:
+                fee_data = cat_summary['admission_fee']
+                top_fees = list(fee_data['top_values'].items())[:5]
+                lines.append(f"\n💰 Most Common Admission Fees:")
+                for fee, count in top_fees:
+                    lines.append(f"   • {fee}: {count} onsens")
+
+        # Numeric summaries
+        if 'numeric' in result.metrics and result.metrics['numeric']:
+            numeric = result.metrics['numeric']
+
+            # Geographic coverage
+            if 'latitude' in numeric and 'longitude' in numeric:
+                lat_range = numeric['latitude']['max'] - numeric['latitude']['min']
+                lon_range = numeric['longitude']['max'] - numeric['longitude']['min']
+                lines.append(f"\n🌍 Geographic Coverage:")
+                lines.append(f"   Latitude range: {lat_range:.4f}° ({numeric['latitude']['min']:.4f} to {numeric['latitude']['max']:.4f})")
+                lines.append(f"   Longitude range: {lon_range:.4f}° ({numeric['longitude']['min']:.4f} to {numeric['longitude']['max']:.4f})")
+
+        # Visualizations
+        if result.visualizations:
+            lines.append(f"\n📈 Visualizations: {len(result.visualizations)} charts generated")
+            for viz_type, viz_data in result.visualizations.items():
+                if 'config' in viz_data and viz_data['config'].save_path:
+                    path = viz_data['config'].save_path
+                    lines.append(f"   • {viz_type}: {path}")
+
+        # Execution stats
+        if result.execution_time:
+            lines.append(f"\n⏱️  Analysis completed in {result.execution_time:.2f} seconds")
+
+        # Output directory
+        if result.metadata and 'output_directory' in result.metadata:
+            output_dir = result.metadata['output_directory']
+            lines.append(f"\n📁 Output directory: {output_dir}")
+            lines.append(f"   • metrics.json - Detailed statistics")
+            lines.append(f"   • visualizations/ - Charts and maps")
+            lines.append(f"   • insights.txt - Analysis insights")
+
+        lines.append("\n" + "=" * 70 + "\n")
+
+        return "\n".join(lines)
+
     def run_econometric_analysis(
         self,
         dependent_var: str = 'personal_rating',
