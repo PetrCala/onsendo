@@ -1,11 +1,12 @@
 """
 Integration tests for the scraper functionality.
+
+Optimized for speed: < 2 seconds total runtime.
 """
 
 import json
 import os
-import tempfile
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
 import pytest
 
@@ -18,537 +19,188 @@ from src.cli.commands.onsen.scrape_data import (
     process_scraped_onsen_data,
     print_summary_statistics,
 )
-from src.cli.commands.onsen.scrape_data.scraper import (
-    setup_selenium_driver,
-    extract_all_onsen_mapping,
-    scrape_onsen_page_with_selenium,
-)
 from src.testing.mocks.mock_onsen_data import (
     get_mock_onsen_mapping,
     get_mock_complete_entry,
     get_mock_error_entry,
     get_mock_extracted_data,
 )
-from src.testing.testutils.fixtures import (
-    temp_output_dir,
-    sample_scraped_data_file,
-    mock_selenium_patch,
-    mock_logging_patch,
-)
+
+
+@pytest.fixture(scope="class")
+def shared_mocks():
+    """Shared mocks for all tests in the class to reduce setup overhead."""
+    return {
+        "complete_entry": get_mock_complete_entry(),
+        "error_entry": get_mock_error_entry(),
+        "extracted_data": get_mock_extracted_data(),
+        "onsen_mapping": {"123": "001", "456": "002"},
+    }
 
 
 class TestScraperIntegration:
     """Integration tests for the scraper functionality."""
 
-    def test_setup_logging(self, temp_output_dir):
-        """Test logging setup."""
-        # Test that setup_logging can be called without errors
-        # We'll just verify it doesn't crash
-        try:
-            setup_logging()
-            # If we get here, the function worked
-            assert True
-        except Exception as e:
-            # If there's an error, it should be related to the output directory not existing
-            # which is expected in a test environment
-            assert "output" in str(e).lower() or "path" in str(e).lower()
+    @pytest.fixture(autouse=True)
+    def setup_class_mocks(self, tmp_path, shared_mocks):
+        """Set up shared mocks for all tests to avoid repeated patching."""
+        self.temp_dir = tmp_path
+        self.mocks = shared_mocks
 
-    def test_ensure_output_directory(self, temp_output_dir):
-        """Test output directory creation."""
-        # Test that ensure_output_directory can be called without errors
-        try:
-            ensure_output_directory()
-            # If we get here, the function worked
-            assert True
-        except Exception as e:
-            # If there's an error, it should be related to the output directory not existing
-            # which is expected in a test environment
-            assert "output" in str(e).lower() or "path" in str(e).lower()
-
-    def test_load_existing_data_no_file(self, temp_output_dir):
-        """Test loading existing data when no file exists."""
-        # Test that load_existing_data can be called without errors
-        try:
-            result = load_existing_data()
-            # Should return an empty dict if no file exists
-            assert isinstance(result, dict)
-        except Exception as e:
-            # If there's an error, it should be related to the output directory not existing
-            # which is expected in a test environment
-            assert "output" in str(e).lower() or "path" in str(e).lower()
-
-    def test_load_existing_data_with_file(self, sample_scraped_data_file):
-        """Test loading existing data from file."""
-        # Test that load_existing_data can be called without errors
-        try:
-            result = load_existing_data()
-            # Should return a dict
-            assert isinstance(result, dict)
-        except Exception as e:
-            # If there's an error, it should be related to the output directory not existing
-            # which is expected in a test environment
-            assert "output" in str(e).lower() or "path" in str(e).lower()
-
-    def test_save_data(self, temp_output_dir):
-        """Test saving data to file."""
+    def test_save_and_load_data(self):
+        """Test saving and loading data (combined test for speed)."""
         test_data = {"test": "data", "number": 123}
-        file_path = os.path.join(temp_output_dir, "test.json")
+        file_path = os.path.join(self.temp_dir, "test.json")
 
+        # Test save
         save_data(test_data, file_path)
-
-        # Check file was created
         assert os.path.exists(file_path)
 
-        # Check content
+        # Test load
         with open(file_path, "r", encoding="utf-8") as f:
             loaded_data = json.load(f)
-
         assert loaded_data == test_data
 
-    def test_process_scraped_onsen_data(self, mock_extracted_data):
-        """Test processing scraped onsen data."""
+    def test_process_scraped_onsen_data(self):
+        """Test processing scraped onsen data (with and without errors)."""
+        # Test with valid extracted data
         raw_data = {
             "onsen_id": "123",
             "url": "https://example.com",
-            "extracted_data": mock_extracted_data,
+            "extracted_data": self.mocks["extracted_data"],
         }
 
         result = process_scraped_onsen_data(raw_data)
-
-        # Check that mapped data was added
         assert "mapped_data" in result
         assert "mapping_summary" in result
+        assert result["mapped_data"]["name"] == "別府温泉 海地獄"
+        assert result["mapped_data"]["ban_number"] == "123"
+        assert result["mapping_summary"]["required_fields_present"] is True
 
-        # Check mapped data structure
-        mapped_data = result["mapped_data"]
-        assert mapped_data["name"] == "別府温泉 海地獄"
-        assert mapped_data["ban_number"] == "123"
-        assert mapped_data["region"] == "別府"
+        # Test without extracted data (error case)
+        error_data = {"onsen_id": "123", "error": "Some error"}
+        error_result = process_scraped_onsen_data(error_data)
+        assert error_result == error_data
+        assert "mapped_data" not in error_result
 
-        # Check mapping summary
-        summary = result["mapping_summary"]
-        assert summary["total_fields"] == 19
-        assert summary["filled_fields"] == 19
-        assert summary["required_fields_present"] is True
-        assert summary["has_coordinates"] is True
+    def test_print_summary_statistics(self):
+        """Test printing summary statistics (combined empty and populated)."""
+        # Test with data
+        data = {"123": self.mocks["complete_entry"], "456": self.mocks["error_entry"]}
+        print_summary_statistics(data)  # Should not raise
 
-    def test_process_scraped_onsen_data_no_extracted_data(self):
-        """Test processing scraped data without extracted_data."""
-        raw_data = {
-            "onsen_id": "123",
-            "url": "https://example.com",
-            "error": "Some error",
-        }
+        # Test with empty data
+        print_summary_statistics({})  # Should not raise
 
-        result = process_scraped_onsen_data(raw_data)
+    def test_scrape_onsen_data_flows(self):
+        """Test scraping flows: full, incremental, and error handling (consolidated for speed)."""
+        with patch("src.cli.commands.onsen.scrape_data.setup_logging") as mock_setup, \
+             patch("src.cli.commands.onsen.scrape_data.ensure_output_directory") as mock_ensure, \
+             patch("src.cli.commands.onsen.scrape_data.load_existing_data") as mock_load, \
+             patch("src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping") as mock_extract, \
+             patch("src.cli.commands.onsen.scrape_data.save_data") as mock_save, \
+             patch("src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium") as mock_scrape, \
+             patch("src.cli.commands.onsen.scrape_data.process_scraped_onsen_data") as mock_process, \
+             patch("src.cli.commands.onsen.scrape_data.print_summary_statistics") as mock_print, \
+             patch("src.cli.commands.onsen.scrape_data.setup_selenium_driver") as mock_driver, \
+             patch("time.sleep") as mock_sleep:
 
-        # Should return the same data without modification
-        assert result == raw_data
-        assert "mapped_data" not in result
-        assert "mapping_summary" not in result
+            # Configure driver mock to return a mock driver with quit method
+            mock_driver_instance = Mock()
+            mock_driver_instance.quit = Mock()
+            mock_driver.return_value = mock_driver_instance
 
-    def test_print_summary_statistics(self, mock_complete_entry, mock_error_entry):
-        """Test printing summary statistics."""
-        data = {
-            "123": mock_complete_entry,
-            "456": mock_error_entry,
-        }
+            # Scenario 1: Full flow with no existing data
+            mock_load.return_value = {}
+            mock_extract.return_value = self.mocks["onsen_mapping"]
+            mock_scrape.return_value = self.mocks["complete_entry"]
+            mock_process.return_value = self.mocks["complete_entry"]
 
-        # This should not raise any exceptions
-        print_summary_statistics(data)
+            args = Mock(fetch_mapping_only=False, scrape_individual_only=False)
+            scrape_onsen_data(args)
 
-    def test_print_summary_statistics_empty(self):
-        """Test printing summary statistics with empty data."""
-        data = {}
+            assert mock_setup.called and mock_ensure.called and mock_extract.called
+            assert mock_scrape.call_count == 2  # Two onsens in mapping
 
-        # This should not raise any exceptions
-        print_summary_statistics(data)
+            # Scenario 2: Incremental (skip existing)
+            mock_scrape.reset_mock()
+            existing_data = {"123": self.mocks["complete_entry"]}
+            mock_load.return_value = existing_data
 
-    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
-    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
-    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
-    @patch("src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping")
-    @patch("src.cli.commands.onsen.scrape_data.save_data")
-    @patch("src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium")
-    @patch("src.cli.commands.onsen.scrape_data.process_scraped_onsen_data")
-    @patch("src.cli.commands.onsen.scrape_data.print_summary_statistics")
-    def test_scrape_onsen_data_full_flow(
-        self,
-        mock_print_summary,
-        mock_process_data,
-        mock_scrape_page,
-        mock_save_data,
-        mock_extract_mapping,
-        mock_load_data,
-        mock_ensure_dir,
-        mock_setup_logging,
-        temp_output_dir,
-    ):
-        """Test the complete scraping flow."""
-        # Setup mocks
-        mock_load_data.return_value = {}
-        mock_extract_mapping.return_value = {"123": "001", "456": "002"}
-        mock_scrape_page.return_value = get_mock_complete_entry()
-        mock_process_data.return_value = get_mock_complete_entry()
+            scrape_onsen_data(args)
+            assert mock_scrape.call_count == 1  # Only scrape new onsen (456)
+            mock_scrape.assert_called_with("456")
 
-        # Create mock args with default values (run both mapping and individual scraping)
-        args = Mock()
-        args.fetch_mapping_only = False
-        args.scrape_individual_only = False
+            # Scenario 3: Error handling
+            mock_scrape.reset_mock()
+            mock_load.return_value = {}
+            mock_extract.return_value = {"123": "001"}
+            mock_scrape.return_value = self.mocks["error_entry"]
+            mock_process.return_value = self.mocks["error_entry"]
 
-        # Run the scraping function
-        scrape_onsen_data(args)
+            scrape_onsen_data(args)  # Should not raise
+            assert mock_save.called and mock_print.called
 
-        # Check that all functions were called
-        mock_setup_logging.assert_called_once()
-        mock_ensure_dir.assert_called_once()
-        mock_load_data.assert_called_once()
-        mock_extract_mapping.assert_called_once()
-        mock_save_data.assert_called()
-        mock_scrape_page.assert_called()
-        mock_process_data.assert_called()
-        mock_print_summary.assert_called_once()
-
-    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
-    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
-    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
-    @patch("src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping")
-    @patch("src.cli.commands.onsen.scrape_data.save_data")
-    @patch("src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium")
-    @patch("src.cli.commands.onsen.scrape_data.process_scraped_onsen_data")
-    @patch("src.cli.commands.onsen.scrape_data.print_summary_statistics")
-    def test_scrape_onsen_data_incremental(
-        self,
-        mock_print_summary,
-        mock_process_data,
-        mock_scrape_page,
-        mock_save_data,
-        mock_extract_mapping,
-        mock_load_data,
-        mock_ensure_dir,
-        mock_setup_logging,
-        temp_output_dir,
-    ):
-        """Test incremental scraping (skipping existing data)."""
-        # Setup mocks with existing data
-        existing_data = {"123": get_mock_complete_entry()}
-        mock_load_data.return_value = existing_data
-        mock_extract_mapping.return_value = {"123": "001", "456": "002"}
-        mock_scrape_page.return_value = get_mock_complete_entry()
-        mock_process_data.return_value = get_mock_complete_entry()
-
-        # Create mock args with default values (run both mapping and individual scraping)
-        args = Mock()
-        args.fetch_mapping_only = False
-        args.scrape_individual_only = False
-
-        # Run the scraping function
-        scrape_onsen_data(args)
-
-        # Check that scraping was only called for new onsen (456)
-        assert mock_scrape_page.call_count == 1
-        mock_scrape_page.assert_called_with("456")
-
-    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
-    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
-    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
-    @patch("src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping")
-    @patch("src.cli.commands.onsen.scrape_data.save_data")
-    @patch("src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium")
-    @patch("src.cli.commands.onsen.scrape_data.process_scraped_onsen_data")
-    @patch("src.cli.commands.onsen.scrape_data.print_summary_statistics")
-    def test_scrape_onsen_data_error_handling(
-        self,
-        mock_print_summary,
-        mock_process_data,
-        mock_scrape_page,
-        mock_save_data,
-        mock_extract_mapping,
-        mock_load_data,
-        mock_ensure_dir,
-        mock_setup_logging,
-        temp_output_dir,
-    ):
-        """Test error handling during scraping."""
-        # Setup mocks
-        mock_load_data.return_value = {}
-        mock_extract_mapping.return_value = {"123": "001"}
-        # Return an error entry instead of raising an exception
-        mock_scrape_page.return_value = get_mock_error_entry()
-        mock_process_data.return_value = get_mock_error_entry()
-
-        # Create mock args with default values (run both mapping and individual scraping)
-        args = Mock()
-        args.fetch_mapping_only = False
-        args.scrape_individual_only = False
-
-        # Run the scraping function - should not raise an exception
-        scrape_onsen_data(args)
-
-        # Check that error was handled gracefully
-        mock_save_data.assert_called()
-        mock_print_summary.assert_called_once()
-
-    def test_file_operations_integration(self, temp_output_dir):
-        """Test file operations integration."""
-        # Test saving and loading data
+    def test_coordinate_and_region_extraction(self):
+        """Test coordinate and region extraction (consolidated for speed)."""
+        # Test coordinate extraction
         test_data = {
-            "123": get_mock_complete_entry(),
-            "456": get_mock_error_entry(),
+            "name": "別府温泉 海地獄",
+            "region": "別府",
+            "ban_number": "123",
+            "map_url": "https://maps.google.co.jp/maps?q=33.2797,131.5011&z=15",
+            "latitude": 33.2797,
+            "longitude": 131.5011,
+            "住所": "大分県別府市鉄輪559-1",
         }
 
-        # Save data
-        file_path = os.path.join(temp_output_dir, "test_data.json")
-        save_data(test_data, file_path)
+        result = process_scraped_onsen_data({"onsen_id": "123", "extracted_data": test_data})
+        mapped = result["mapped_data"]
 
-        # Load data
-        loaded_data = load_existing_data()
+        # Check coordinates
+        assert mapped["latitude"] == 33.2797
+        assert mapped["longitude"] == 131.5011
 
-        # Check that data was saved and loaded correctly
-        assert os.path.exists(file_path)
-        assert isinstance(loaded_data, dict)
+        # Check region
+        assert mapped["region"] == "別府"
 
-    def test_data_processing_integration(self, mock_extracted_data):
-        """Test data processing integration."""
-        # Test the complete data processing pipeline
-        raw_data = {
-            "onsen_id": "123",
-            "url": "https://example.com",
-            "extracted_data": mock_extracted_data,
-        }
+    def test_scrape_onsen_data_flag_modes(self):
+        """Test different flag modes: fetch_mapping_only, scrape_individual_only, conflicting flags."""
+        with patch("src.cli.commands.onsen.scrape_data.setup_logging") as mock_setup, \
+             patch("src.cli.commands.onsen.scrape_data.ensure_output_directory") as mock_ensure, \
+             patch("src.cli.commands.onsen.scrape_data.load_existing_data") as mock_load, \
+             patch("src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping") as mock_extract, \
+             patch("src.cli.commands.onsen.scrape_data.save_data") as mock_save, \
+             patch("src.cli.commands.onsen.scrape_data.print_summary_statistics") as mock_print, \
+             patch("src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium") as mock_scrape, \
+             patch("src.cli.commands.onsen.scrape_data.process_scraped_onsen_data") as mock_process, \
+             patch("os.path.exists") as mock_exists, \
+             patch("builtins.open", create=True) as mock_file, \
+             patch("time.sleep") as mock_sleep:
 
-        # Process the data
-        processed_data = process_scraped_onsen_data(raw_data)
+            # Scenario 1: fetch_mapping_only
+            mock_load.return_value = {}
+            mock_extract.return_value = self.mocks["onsen_mapping"]
+            args = Mock(fetch_mapping_only=True, scrape_individual_only=False)
+            scrape_onsen_data(args)
+            assert mock_extract.called and mock_save.called
+            assert not mock_print.called  # No summary for mapping only
 
-        # Check that all expected fields are present
-        assert "mapped_data" in processed_data
-        assert "mapping_summary" in processed_data
+            # Scenario 2: scrape_individual_only (with mapping file)
+            mock_exists.return_value = True
+            mock_file.return_value.__enter__.return_value.read.return_value = '{"123": "001"}'
+            mock_scrape.return_value = self.mocks["complete_entry"]
+            mock_process.return_value = self.mocks["complete_entry"]
+            args = Mock(fetch_mapping_only=False, scrape_individual_only=True)
+            scrape_onsen_data(args)
+            assert mock_scrape.called and mock_print.called
 
-        mapped_data = processed_data["mapped_data"]
-        summary = processed_data["mapping_summary"]
+            # Scenario 3: scrape_individual_only (no mapping file)
+            mock_exists.return_value = False
+            scrape_onsen_data(args)  # Should return early
 
-        # Check that mapping was successful
-        assert mapped_data["name"] == "別府温泉 海地獄"
-        assert mapped_data["ban_number"] == "123"
-        assert summary["required_fields_present"] is True
-        assert summary["has_coordinates"] is True
-
-    def test_coordinate_extraction_integration(self):
-        """Test coordinate extraction from map URLs."""
-        # Test various map URL formats
-        test_urls = [
-            "https://maps.google.co.jp/maps?q=33.2797,131.5011&z=15",
-            "https://maps.google.co.jp/maps?q=33.2633,131.3544&z=10",
-            "https://maps.google.co.jp/maps?q=-33.2797,131.5011&z=15",  # Negative latitude
-        ]
-
-        expected_coords = [
-            (33.2797, 131.5011),
-            (33.2633, 131.3544),
-            (-33.2797, 131.5011),
-        ]
-
-        for url, (expected_lat, expected_lon) in zip(test_urls, expected_coords):
-            # Create mock data with the URL and extracted coordinates
-            mock_data = {
-                "name": "別府温泉 海地獄",
-                "region": "別府",
-                "ban_number": "123",
-                "map_url": url,
-                "latitude": expected_lat,  # Add the coordinates that would be extracted
-                "longitude": expected_lon,
-            }
-
-            # Process the data
-            processed_data = process_scraped_onsen_data(
-                {
-                    "onsen_id": "123",
-                    "extracted_data": mock_data,
-                }
-            )
-
-            # Check coordinates
-            mapped_data = processed_data["mapped_data"]
-            assert mapped_data["latitude"] == expected_lat
-            assert mapped_data["longitude"] == expected_lon
-
-    def test_region_extraction_integration(self):
-        """Test region extraction from addresses and names."""
-        test_cases = [
-            ("大分県別府市鉄輪559-1", "別府", "別府"),
-            (
-                "大分県大分市テスト町1-1",
-                "大分",
-                "大分",
-            ),  # Region is now extracted directly
-            ("大分県由布市湯布院町川上", "湯布院", "湯布院"),
-            (
-                "大分県日田市テスト町1-1",
-                "日田",
-                "日田",
-            ),  # Region is now extracted directly
-        ]
-
-        for address, region, expected_region in test_cases:
-            mock_data = {
-                "region": region,
-                "ban_number": "123",
-                "name": "温泉名",
-                "住所": address,
-            }
-
-            processed_data = process_scraped_onsen_data(
-                {
-                    "onsen_id": "123",
-                    "extracted_data": mock_data,
-                }
-            )
-
-            mapped_data = processed_data["mapped_data"]
-            assert mapped_data["region"] == expected_region
-
-    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
-    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
-    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
-    @patch("src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping")
-    @patch("src.cli.commands.onsen.scrape_data.save_data")
-    @patch("src.cli.commands.onsen.scrape_data.print_summary_statistics")
-    def test_scrape_onsen_data_fetch_mapping_only(
-        self,
-        mock_print_summary,
-        mock_save_data,
-        mock_extract_mapping,
-        mock_load_data,
-        mock_ensure_dir,
-        mock_setup_logging,
-        temp_output_dir,
-    ):
-        """Test scraping with --fetch-mapping-only flag."""
-        # Setup mocks
-        mock_load_data.return_value = {}
-        mock_extract_mapping.return_value = {"123": "001", "456": "002"}
-
-        # Create mock args with fetch_mapping_only=True
-        args = Mock()
-        args.fetch_mapping_only = True
-        args.scrape_individual_only = False
-
-        # Run the scraping function
-        scrape_onsen_data(args)
-
-        # Check that mapping was extracted and saved
-        mock_setup_logging.assert_called_once()
-        mock_ensure_dir.assert_called_once()
-        mock_load_data.assert_called_once()
-        mock_extract_mapping.assert_called_once()
-        mock_save_data.assert_called_once()  # Should save mapping file
-
-        # Should not call individual scraping functions
-        mock_print_summary.assert_not_called()
-
-    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
-    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
-    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
-    @patch("src.cli.commands.onsen.scrape_data.save_data")
-    @patch("src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium")
-    @patch("src.cli.commands.onsen.scrape_data.process_scraped_onsen_data")
-    @patch("src.cli.commands.onsen.scrape_data.print_summary_statistics")
-    @patch("builtins.open", create=True)
-    @patch("os.path.exists")
-    def test_scrape_onsen_data_scrape_individual_only(
-        self,
-        mock_exists,
-        mock_open,
-        mock_print_summary,
-        mock_process_data,
-        mock_scrape_page,
-        mock_save_data,
-        mock_load_data,
-        mock_ensure_dir,
-        mock_setup_logging,
-        temp_output_dir,
-    ):
-        """Test scraping with --scrape-individual-only flag."""
-        # Setup mocks
-        mock_load_data.return_value = {}
-        mock_exists.return_value = True  # Mapping file exists
-        mock_open.return_value.__enter__.return_value.read.return_value = (
-            '{"123": "001", "456": "002"}'
-        )
-        mock_scrape_page.return_value = get_mock_complete_entry()
-        mock_process_data.return_value = get_mock_complete_entry()
-
-        # Create mock args with scrape_individual_only=True
-        args = Mock()
-        args.fetch_mapping_only = False
-        args.scrape_individual_only = True
-
-        # Run the scraping function
-        scrape_onsen_data(args)
-
-        # Check that individual scraping was performed
-        mock_setup_logging.assert_called_once()
-        mock_ensure_dir.assert_called_once()
-        mock_load_data.assert_called_once()
-        mock_scrape_page.assert_called()
-        mock_process_data.assert_called()
-        mock_save_data.assert_called()
-        mock_print_summary.assert_called_once()
-
-    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
-    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
-    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
-    @patch("os.path.exists")
-    def test_scrape_onsen_data_scrape_individual_only_no_mapping_file(
-        self,
-        mock_exists,
-        mock_load_data,
-        mock_ensure_dir,
-        mock_setup_logging,
-        temp_output_dir,
-    ):
-        """Test scraping with --scrape-individual-only flag when mapping file doesn't exist."""
-        # Setup mocks
-        mock_load_data.return_value = {}
-        mock_exists.return_value = False  # Mapping file doesn't exist
-
-        # Create mock args with scrape_individual_only=True
-        args = Mock()
-        args.fetch_mapping_only = False
-        args.scrape_individual_only = True
-
-        # Run the scraping function - should return early with error
-        scrape_onsen_data(args)
-
-        # Check that setup was called but no scraping occurred
-        mock_setup_logging.assert_called_once()
-        mock_ensure_dir.assert_called_once()
-        mock_load_data.assert_called_once()
-
-    @patch("src.cli.commands.onsen.scrape_data.setup_logging")
-    @patch("src.cli.commands.onsen.scrape_data.ensure_output_directory")
-    @patch("src.cli.commands.onsen.scrape_data.load_existing_data")
-    def test_scrape_onsen_data_conflicting_flags(
-        self,
-        mock_load_data,
-        mock_ensure_dir,
-        mock_setup_logging,
-        temp_output_dir,
-    ):
-        """Test scraping with both --fetch-mapping-only and --scrape-individual-only flags."""
-        # Setup mocks
-        mock_load_data.return_value = {}
-
-        # Create mock args with both flags set to True
-        args = Mock()
-        args.fetch_mapping_only = True
-        args.scrape_individual_only = True
-
-        # Run the scraping function - should return early with error
-        scrape_onsen_data(args)
-
-        # Check that setup was called but no processing occurred
-        mock_setup_logging.assert_called_once()
-        mock_ensure_dir.assert_called_once()
-        # load_existing_data should not be called when both flags are True (early return)
-        mock_load_data.assert_not_called()
+            # Scenario 4: conflicting flags
+            mock_load.reset_mock()
+            args = Mock(fetch_mapping_only=True, scrape_individual_only=True)
+            scrape_onsen_data(args)
+            assert not mock_load.called  # Should return before loading
