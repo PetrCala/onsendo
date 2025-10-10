@@ -6,15 +6,9 @@ Defines CLI commands using dataclasses for better structure and type safety.
 
 import argparse
 from dataclasses import dataclass
+from functools import lru_cache
+from importlib import import_module
 from typing import Any, Callable, Dict, Optional
-from src.const import CONST
-import src.cli.commands.location as location_commands
-import src.cli.commands.visit as visit_commands
-import src.cli.commands.onsen as onsen_commands
-import src.cli.commands.system as system_commands
-import src.cli.commands.database as database_commands
-import src.cli.commands.heart_rate as heart_rate_commands
-import src.cli.commands.analysis as analysis_commands
 
 
 @dataclass
@@ -39,11 +33,40 @@ class CommandConfig:
     args: Dict[str, ArgumentConfig]
 
 
+# Lazy loading helpers -----------------------------------------------------
+
+
+def _load_command_callable(module_path: str, func_name: str) -> Callable[[argparse.Namespace], None]:
+    """Import ``module_path`` and return ``func_name`` from it."""
+
+    module = import_module(module_path)
+    function = getattr(module, func_name)
+    if not callable(function):  # pragma: no cover - defensive programming
+        raise TypeError(f"{module_path}.{func_name} is not callable")
+    return function
+
+
+def lazy_command(module_path: str, func_name: str) -> Callable[[argparse.Namespace], None]:
+    """Create a lazily imported CLI command handler."""
+
+    @lru_cache(maxsize=None)
+    def _load() -> Callable[[argparse.Namespace], None]:
+        return _load_command_callable(module_path, func_name)
+
+    def _command(args: argparse.Namespace) -> None:
+        return _load()(args)
+
+    _command.__name__ = func_name
+    _command.__qualname__ = func_name
+    _command.__doc__ = f"Lazy loader for {module_path}.{func_name}"
+    return _command
+
+
 # Define all CLI commands with new grouped structure
 CLI_COMMANDS = {
     # Location commands
     "location-add": CommandConfig(
-        func=location_commands.add_location,
+        func=lazy_command("src.cli.commands.location.add", "add_location"),
         help="Add a new location for distance calculations.",
         args={
             "no_interactive": ArgumentConfig(
@@ -64,12 +87,12 @@ CLI_COMMANDS = {
         },
     ),
     "location-list": CommandConfig(
-        func=location_commands.list_locations,
+        func=lazy_command("src.cli.commands.location.list", "list_locations"),
         help="List all locations in the database.",
         args={},
     ),
     "location-delete": CommandConfig(
-        func=location_commands.delete_location,
+        func=lazy_command("src.cli.commands.location.delete", "delete_location"),
         help="Delete a location from the database.",
         args={
             "no_interactive": ArgumentConfig(
@@ -86,7 +109,7 @@ CLI_COMMANDS = {
         },
     ),
     "location-modify": CommandConfig(
-        func=location_commands.modify_location,
+        func=lazy_command("src.cli.commands.location.modify", "modify_location"),
         help="Modify an existing location.",
         args={
             "no_interactive": ArgumentConfig(
@@ -109,7 +132,7 @@ CLI_COMMANDS = {
     ),
     # Visit commands
     "visit-add": CommandConfig(
-        func=visit_commands.add_visit,
+        func=lazy_command("src.cli.commands.visit.add", "add_visit"),
         help="Add a new onsen visit.",
         args={
             "no_interactive": ArgumentConfig(
@@ -172,12 +195,12 @@ CLI_COMMANDS = {
         },
     ),
     "visit-list": CommandConfig(
-        func=visit_commands.list_visits,
+        func=lazy_command("src.cli.commands.visit.list", "list_visits"),
         help="List all visits in the database.",
         args={},
     ),
     "visit-delete": CommandConfig(
-        func=visit_commands.delete_visit,
+        func=lazy_command("src.cli.commands.visit.delete", "delete_visit"),
         help="Delete a visit from the database.",
         args={
             "no_interactive": ArgumentConfig(
@@ -192,7 +215,7 @@ CLI_COMMANDS = {
         },
     ),
     "visit-modify": CommandConfig(
-        func=visit_commands.modify_visit,
+        func=lazy_command("src.cli.commands.visit.modify", "modify_visit"),
         help="Modify an existing visit.",
         args={
             "no_interactive": ArgumentConfig(
@@ -218,7 +241,7 @@ CLI_COMMANDS = {
     ),
     # Onsen commands
     "onsen-add": CommandConfig(
-        func=onsen_commands.add_onsen,
+        func=lazy_command("src.cli.commands.onsen.add", "add_onsen"),
         help="Add a new onsen.",
         args={
             "ban_number": ArgumentConfig(type=str, required=True),
@@ -227,7 +250,7 @@ CLI_COMMANDS = {
         },
     ),
     "onsen-print-summary": CommandConfig(
-        func=onsen_commands.print_summary,
+        func=lazy_command("src.cli.commands.onsen.print_summary", "print_summary"),
         help="Print a summary for an onsen by ID or ban number.",
         args={
             "onsen_id": ArgumentConfig(type=int, required=False, help="Onsen ID"),
@@ -240,7 +263,7 @@ CLI_COMMANDS = {
         },
     ),
     "onsen-recommend": CommandConfig(
-        func=onsen_commands.recommend_onsen,
+        func=lazy_command("src.cli.commands.onsen.recommend", "recommend_onsen"),
         help="Get onsen recommendations based on location and criteria.",
         args={
             "no_interactive": ArgumentConfig(
@@ -283,7 +306,7 @@ CLI_COMMANDS = {
         },
     ),
     "onsen-scrape-data": CommandConfig(
-        func=onsen_commands.scrape_onsen_data,
+        func=lazy_command("src.cli.commands.onsen.scrape_data", "scrape_onsen_data"),
         help="Scrape onsen data from the web.",
         args={
             "fetch_mapping_only": ArgumentConfig(
@@ -298,14 +321,14 @@ CLI_COMMANDS = {
     ),
     # Database commands
     "database-init": CommandConfig(
-        func=database_commands.init_db,
+        func=lazy_command("src.cli.commands.database.init_db", "init_db"),
         help="Initialize the database.",
         args={
             "force": ArgumentConfig(action="store_true"),
         },
     ),
     "database-fill": CommandConfig(
-        func=database_commands.fill_db,
+        func=lazy_command("src.cli.commands.database.fill_db", "fill_db"),
         help="Fill the database with onsen data. In interactive mode, will search for scraped data files.",
         args={
             "no_interactive": ArgumentConfig(
@@ -321,7 +344,7 @@ CLI_COMMANDS = {
         },
     ),
     "database-backup": CommandConfig(
-        func=database_commands.backup_db,
+        func=lazy_command("src.cli.commands.database.backup", "backup_db"),
         help="Backup the current database to a specified folder. In interactive mode, type 'browse' to open folder selection dialog, or type 'artifact' to backup to latest artifact.",
         args={
             "no_interactive": ArgumentConfig(
@@ -342,7 +365,7 @@ CLI_COMMANDS = {
         },
     ),
     "database-insert-mock-visits": CommandConfig(
-        func=database_commands.insert_mock_visits,
+        func=lazy_command("src.cli.commands.database.mock_data", "insert_mock_visits"),
         help="Insert mock onsen visit data into the database for testing purposes.",
         args={
             "scenario": ArgumentConfig(
@@ -377,7 +400,7 @@ CLI_COMMANDS = {
         },
     ),
     "database-drop-visits": CommandConfig(
-        func=database_commands.drop_all_visits,
+        func=lazy_command("src.cli.commands.database.drop_visits", "drop_all_visits"),
         help="Drop all onsen visits from the database.",
         args={
             "force": ArgumentConfig(
@@ -392,7 +415,7 @@ CLI_COMMANDS = {
         },
     ),
     "database-drop-visits-by-criteria": CommandConfig(
-        func=database_commands.drop_visits_by_criteria,
+        func=lazy_command("src.cli.commands.database.drop_visits", "drop_visits_by_criteria"),
         help="Drop visits from the database based on specific criteria.",
         args={
             "onsen_id": ArgumentConfig(
@@ -427,7 +450,7 @@ CLI_COMMANDS = {
         },
     ),
     "calculate-milestones": CommandConfig(
-        func=system_commands.calculate_milestones,
+        func=lazy_command("src.cli.commands.system.calculate_milestones", "calculate_milestones"),
         help="Calculate distance milestones for a location based on onsen distribution.",
         args={
             "location_identifier": ArgumentConfig(
@@ -444,13 +467,13 @@ CLI_COMMANDS = {
         },
     ),
     "update-artifacts": CommandConfig(
-        func=system_commands.update_artifacts,
+        func=lazy_command("src.cli.commands.system.update_artifacts", "update_artifacts"),
         help="Update database artifacts in the artifacts/db folder for presentation purposes.",
         args={},
     ),
     # Heart rate commands
     "heart-rate-import": CommandConfig(
-        func=heart_rate_commands.import_heart_rate_data,
+        func=lazy_command("src.cli.commands.heart_rate.import_", "import_heart_rate_data"),
         help="Import heart rate data from a file",
         args={
             "file_path": ArgumentConfig(
@@ -475,7 +498,7 @@ CLI_COMMANDS = {
         },
     ),
     "heart-rate-list": CommandConfig(
-        func=heart_rate_commands.list_heart_rate_data,
+        func=lazy_command("src.cli.commands.heart_rate.list", "list_heart_rate_data"),
         help="List and manage heart rate data records",
         args={
             "linked_only": ArgumentConfig(
@@ -496,7 +519,7 @@ CLI_COMMANDS = {
         },
     ),
     "heart-rate-link": CommandConfig(
-        func=heart_rate_commands.link_heart_rate_to_visit,
+        func=lazy_command("src.cli.commands.heart_rate.list", "link_heart_rate_to_visit"),
         help="Link heart rate data to a visit",
         args={
             "heart_rate_id": ArgumentConfig(
@@ -514,7 +537,7 @@ CLI_COMMANDS = {
         },
     ),
     "heart-rate-unlink": CommandConfig(
-        func=heart_rate_commands.unlink_heart_rate_from_visit,
+        func=lazy_command("src.cli.commands.heart_rate.list", "unlink_heart_rate_from_visit"),
         help="Unlink heart rate data from its visit",
         args={
             "heart_rate_id": ArgumentConfig(
@@ -526,7 +549,7 @@ CLI_COMMANDS = {
         },
     ),
     "heart-rate-delete": CommandConfig(
-        func=heart_rate_commands.delete_heart_rate_record,
+        func=lazy_command("src.cli.commands.heart_rate.list", "delete_heart_rate_record"),
         help="Delete a heart rate record",
         args={
             "heart_rate_id": ArgumentConfig(
@@ -541,7 +564,7 @@ CLI_COMMANDS = {
         },
     ),
     "heart-rate-batch-import": CommandConfig(
-        func=heart_rate_commands.batch_import_heart_rate_data,
+        func=lazy_command("src.cli.commands.heart_rate.batch_import", "batch_import_heart_rate_data"),
         help="Batch import heart rate data from a directory",
         args={
             "directory": ArgumentConfig(
@@ -574,7 +597,7 @@ CLI_COMMANDS = {
     ),
     # Analysis commands
     "analysis-run": CommandConfig(
-        func=analysis_commands.run_analysis,
+        func=lazy_command("src.cli.commands.analysis.run_analysis", "run_analysis"),
         help="Run a custom analysis",
         args={
             "analysis_type": ArgumentConfig(
@@ -662,7 +685,7 @@ CLI_COMMANDS = {
         },
     ),
     "analysis-scenario": CommandConfig(
-        func=analysis_commands.run_scenario_analysis,
+        func=lazy_command("src.cli.commands.analysis.run_scenario_analysis", "run_scenario_analysis"),
         help="Run a predefined analysis scenario",
         args={
             "scenario": ArgumentConfig(
@@ -689,17 +712,17 @@ CLI_COMMANDS = {
         },
     ),
     "analysis-list-scenarios": CommandConfig(
-        func=analysis_commands.list_scenarios,
+        func=lazy_command("src.cli.commands.analysis.list_scenarios", "list_scenarios"),
         help="List available analysis scenarios",
         args={},
     ),
     "analysis-list-options": CommandConfig(
-        func=analysis_commands.list_analysis_options,
+        func=lazy_command("src.cli.commands.analysis.list_analysis_options", "list_analysis_options"),
         help="List available analysis options",
         args={},
     ),
     "analysis-summary": CommandConfig(
-        func=analysis_commands.show_analysis_summary,
+        func=lazy_command("src.cli.commands.analysis.show_analysis_summary", "show_analysis_summary"),
         help="Show summary of all analyses performed",
         args={
             "output_dir": ArgumentConfig(
@@ -710,7 +733,7 @@ CLI_COMMANDS = {
         },
     ),
     "analysis-clear-cache": CommandConfig(
-        func=analysis_commands.clear_analysis_cache,
+        func=lazy_command("src.cli.commands.analysis.clear_analysis_cache", "clear_analysis_cache"),
         help="Clear the analysis cache and optionally clean up old directories",
         args={
             "output_dir": ArgumentConfig(
@@ -735,7 +758,7 @@ CLI_COMMANDS = {
         },
     ),
     "analysis-export": CommandConfig(
-        func=analysis_commands.export_analysis_results,
+        func=lazy_command("src.cli.commands.analysis.export_analysis_results", "export_analysis_results"),
         help="Export analysis results",
         args={
             "analysis_key": ArgumentConfig(
@@ -757,7 +780,7 @@ CLI_COMMANDS = {
         },
     ),
     "analysis-sample": CommandConfig(
-        func=analysis_commands.create_sample_analysis,
+        func=lazy_command("src.cli.commands.analysis.create_sample_analysis", "create_sample_analysis"),
         help="Create a sample analysis to demonstrate the system",
         args={
             "output_dir": ArgumentConfig(
