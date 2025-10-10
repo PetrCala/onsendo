@@ -24,6 +24,10 @@ class AnalysisType(StrEnum):
     REGRESSION = "regression"
     CLASSIFICATION = "classification"
 
+    # Professional econometric analysis
+    ECONOMETRIC = "econometric"  # Full regression suite with diagnostics
+    EXPLORATORY_DEEP = "exploratory_deep"  # Comprehensive multi-model exploration
+
 
 class VisualizationType(StrEnum):
     """Types of visualizations that can be generated."""
@@ -260,6 +264,12 @@ class AnalysisScenario(StrEnum):
     TRAVEL_ANALYSIS = "travel_analysis"  # Travel patterns and efficiency
     HEALTH_IMPACT = "health_impact"  # Health and wellness impact
     COMPETITIVE_ANALYSIS = "competitive_analysis"  # Compare onsens
+
+    # Professional econometric scenarios
+    ENJOYMENT_DRIVERS = "enjoyment_drivers"  # What drives personal_rating?
+    HEART_RATE_IMPACT = "heart_rate_impact"  # Physiological factors and ratings
+    PRICING_OPTIMIZATION = "pricing_optimization"  # Fee vs quality tradeoffs
+    TEMPORAL_PATTERNS_ADVANCED = "temporal_patterns_advanced"  # Deep temporal analysis
 
     # Custom scenarios
     CUSTOM = "custom"  # User-defined analysis
