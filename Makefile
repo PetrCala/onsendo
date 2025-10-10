@@ -1,0 +1,333 @@
+.PHONY: help install test test-unit test-integration lint coverage clean
+.PHONY: hr-import hr-batch hr-status hr-maintenance
+.PHONY: backup backup-cloud backup-full backup-cleanup backup-restore backup-list backup-verify
+.PHONY: db-init db-fill db-path
+.PHONY: run-cli
+
+# Color output
+BLUE := \033[0;34m
+GREEN := \033[0;32m
+YELLOW := \033[1;33m
+RED := \033[0;31m
+NC := \033[0m # No Color
+
+# Backup configuration
+KEEP_BACKUPS ?= 50
+BACKUP_DIR := artifacts/db/backups
+DB_FILE := data/db/onsen.db
+TIMESTAMP := $(shell date +%Y%m%d_%H%M%S)
+BACKUP_FILE := $(BACKUP_DIR)/onsen_backup_$(TIMESTAMP).db
+
+# Google Drive configuration (can be overridden via environment)
+GDRIVE_CREDENTIALS ?= local/gdrive/credentials.json
+GDRIVE_TOKEN ?= local/gdrive/token.json
+
+##@ Help
+
+help: ## Display this help message
+	@awk 'BEGIN {FS = ":.*##"; printf "\n$(BLUE)Usage:$(NC)\n  make $(GREEN)<target>$(NC)\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  $(GREEN)%-20s$(NC) %s\n", $$1, $$2 } /^##@/ { printf "\n$(YELLOW)%s$(NC)\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+##@ Development
+
+install: ## Install project dependencies
+	@echo "$(BLUE)[INFO]$(NC) Installing dependencies with poetry..."
+	poetry install
+	@echo "$(GREEN)[SUCCESS]$(NC) Dependencies installed"
+
+test: ## Run all tests
+	@echo "$(BLUE)[INFO]$(NC) Running all tests..."
+	poetry run pytest
+	@echo "$(GREEN)[SUCCESS]$(NC) All tests passed"
+
+test-unit: ## Run unit tests only (fast)
+	@echo "$(BLUE)[INFO]$(NC) Running unit tests..."
+	poetry run pytest -q -m "not integration"
+	@echo "$(GREEN)[SUCCESS]$(NC) Unit tests passed"
+
+test-integration: ## Run integration tests only
+	@echo "$(BLUE)[INFO]$(NC) Running integration tests..."
+	poetry run pytest -q -m "integration"
+	@echo "$(GREEN)[SUCCESS]$(NC) Integration tests passed"
+
+lint: ## Run pylint on source and tests
+	@echo "$(BLUE)[INFO]$(NC) Running pylint..."
+	poetry run pylint src tests
+	@echo "$(GREEN)[SUCCESS]$(NC) Linting complete"
+
+coverage: ## Run tests with coverage report
+	@echo "$(BLUE)[INFO]$(NC) Running tests with coverage..."
+	poetry run coverage run -m pytest
+	poetry run coverage report
+	@echo "$(GREEN)[SUCCESS]$(NC) Coverage report generated"
+
+coverage-html: ## Generate HTML coverage report
+	@echo "$(BLUE)[INFO]$(NC) Generating HTML coverage report..."
+	poetry run coverage run -m pytest
+	poetry run coverage html
+	@echo "$(GREEN)[SUCCESS]$(NC) Coverage report at htmlcov/index.html"
+
+clean: ## Clean up temporary files and caches
+	@echo "$(BLUE)[INFO]$(NC) Cleaning up temporary files..."
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	rm -rf htmlcov/ .coverage 2>/dev/null || true
+	@echo "$(GREEN)[SUCCESS]$(NC) Cleanup complete"
+
+##@ Database Operations
+
+db-init: ## Initialize a new database
+	@echo "$(BLUE)[INFO]$(NC) Initializing database..."
+	poetry run onsendo system init-db
+	@echo "$(GREEN)[SUCCESS]$(NC) Database initialized"
+
+db-fill: ## Fill database from data.json (requires data.json argument)
+	@if [ -z "$(DATA_FILE)" ]; then \
+		echo "$(RED)[ERROR]$(NC) DATA_FILE not specified. Usage: make db-fill DATA_FILE=path/to/data.json"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[INFO]$(NC) Filling database from $(DATA_FILE)..."
+	poetry run onsendo system fill-db "$(DATA_FILE)"
+	@echo "$(GREEN)[SUCCESS]$(NC) Database filled"
+
+db-path: ## Show database path
+	@echo "$(BLUE)Database path:$(NC) $(DB_FILE)"
+
+##@ Heart Rate Management
+
+hr-import: ## Import single heart rate file (Usage: make hr-import FILE=path/to/file.csv [FORMAT=apple_health] [NOTES="notes"])
+	@if [ -z "$(FILE)" ]; then \
+		echo "$(RED)[ERROR]$(NC) FILE not specified. Usage: make hr-import FILE=path/to/file.csv"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[INFO]$(NC) Importing heart rate file: $(FILE)"
+	@./scripts/heart_rate_import.sh "$(FILE)" "$(FORMAT)" "$(NOTES)"
+
+hr-batch: ## Batch import heart rate files (Usage: make hr-batch DIR=path/to/dir [RECURSIVE=true] [FORMAT=apple_health])
+	@if [ -z "$(DIR)" ]; then \
+		echo "$(RED)[ERROR]$(NC) DIR not specified. Usage: make hr-batch DIR=path/to/directory"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[INFO]$(NC) Batch importing from: $(DIR)"
+	@if [ "$(RECURSIVE)" = "true" ]; then \
+		./scripts/heart_rate_batch_import.sh "$(DIR)" --recursive $(if $(FORMAT),--format $(FORMAT),); \
+	else \
+		./scripts/heart_rate_batch_import.sh "$(DIR)" $(if $(FORMAT),--format $(FORMAT),); \
+	fi
+
+hr-status: ## Show heart rate data status
+	@echo "$(BLUE)[INFO]$(NC) Fetching heart rate data status..."
+	@./scripts/heart_rate_maintenance.sh status
+
+hr-maintenance: ## Run heart rate maintenance (Usage: make hr-maintenance CMD=cleanup|archive|backup|validate)
+	@if [ -z "$(CMD)" ]; then \
+		echo "$(RED)[ERROR]$(NC) CMD not specified. Usage: make hr-maintenance CMD=cleanup|archive|backup|validate"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[INFO]$(NC) Running heart rate maintenance: $(CMD)"
+	@./scripts/heart_rate_maintenance.sh "$(CMD)"
+
+hr-manager: ## Launch interactive heart rate manager
+	@echo "$(BLUE)[INFO]$(NC) Launching heart rate manager..."
+	@./scripts/heart_rate_manager.sh
+
+##@ Backup Operations
+
+backup: ## Create local database backup with timestamp
+	@echo "$(BLUE)[INFO]$(NC) Creating database backup..."
+	@mkdir -p $(BACKUP_DIR)
+	@if [ ! -f "$(DB_FILE)" ]; then \
+		echo "$(RED)[ERROR]$(NC) Database file not found: $(DB_FILE)"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[INFO]$(NC) Checking database integrity..."
+	@if ! sqlite3 "$(DB_FILE)" "PRAGMA integrity_check;" | grep -q "ok"; then \
+		echo "$(RED)[ERROR]$(NC) Database integrity check failed!"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)[SUCCESS]$(NC) Database integrity check passed"
+	@cp "$(DB_FILE)" "$(BACKUP_FILE)"
+	@echo "$(GREEN)[SUCCESS]$(NC) Backup created: $(BACKUP_FILE)"
+	@ls -lh "$(BACKUP_FILE)"
+	@echo "$(BLUE)[INFO]$(NC) Calculating SHA-256 hash..."
+	@shasum -a 256 "$(BACKUP_FILE)" | awk '{print $$1}' > "$(BACKUP_FILE).sha256"
+	@echo "$(GREEN)[SUCCESS]$(NC) Hash saved to: $(BACKUP_FILE).sha256"
+	@cat "$(BACKUP_FILE).sha256"
+
+backup-verify: ## Verify integrity of latest backup
+	@echo "$(BLUE)[INFO]$(NC) Verifying latest backup..."
+	@LATEST=$$(ls -t $(BACKUP_DIR)/onsen_backup_*.db 2>/dev/null | head -1); \
+	if [ -z "$$LATEST" ]; then \
+		echo "$(RED)[ERROR]$(NC) No backups found in $(BACKUP_DIR)"; \
+		exit 1; \
+	fi; \
+	echo "$(BLUE)[INFO]$(NC) Latest backup: $$LATEST"; \
+	if [ ! -f "$$LATEST.sha256" ]; then \
+		echo "$(YELLOW)[WARNING]$(NC) No checksum file found for this backup"; \
+		exit 1; \
+	fi; \
+	STORED_HASH=$$(cat "$$LATEST.sha256"); \
+	ACTUAL_HASH=$$(shasum -a 256 "$$LATEST" | awk '{print $$1}'); \
+	if [ "$$STORED_HASH" = "$$ACTUAL_HASH" ]; then \
+		echo "$(GREEN)[SUCCESS]$(NC) Backup integrity verified"; \
+		echo "Hash: $$ACTUAL_HASH"; \
+	else \
+		echo "$(RED)[ERROR]$(NC) Backup integrity check failed!"; \
+		echo "Expected: $$STORED_HASH"; \
+		echo "Actual:   $$ACTUAL_HASH"; \
+		exit 1; \
+	fi
+
+backup-list: ## List all backups with sizes and dates
+	@echo "$(BLUE)[INFO]$(NC) Listing all backups..."
+	@if [ ! -d "$(BACKUP_DIR)" ]; then \
+		echo "$(YELLOW)[WARNING]$(NC) Backup directory not found: $(BACKUP_DIR)"; \
+		exit 0; \
+	fi
+	@ls -lht $(BACKUP_DIR)/onsen_backup_*.db 2>/dev/null | head -20 || \
+		echo "$(YELLOW)[WARNING]$(NC) No backups found in $(BACKUP_DIR)"
+	@echo ""
+	@TOTAL_SIZE=$$(du -sh $(BACKUP_DIR) 2>/dev/null | awk '{print $$1}'); \
+	COUNT=$$(ls -1 $(BACKUP_DIR)/onsen_backup_*.db 2>/dev/null | wc -l | tr -d ' '); \
+	echo "$(BLUE)[INFO]$(NC) Total backups: $$COUNT"; \
+	echo "$(BLUE)[INFO]$(NC) Total size: $$TOTAL_SIZE"
+
+backup-cleanup: ## Remove old backups (keeps KEEP_BACKUPS most recent, default: 50)
+	@echo "$(BLUE)[INFO]$(NC) Cleaning up old backups (keeping $(KEEP_BACKUPS) most recent)..."
+	@if [ ! -d "$(BACKUP_DIR)" ]; then \
+		echo "$(YELLOW)[WARNING]$(NC) Backup directory not found: $(BACKUP_DIR)"; \
+		exit 0; \
+	fi
+	@TOTAL=$$(ls -1 $(BACKUP_DIR)/onsen_backup_*.db 2>/dev/null | wc -l | tr -d ' '); \
+	if [ $$TOTAL -le $(KEEP_BACKUPS) ]; then \
+		echo "$(GREEN)[SUCCESS]$(NC) No cleanup needed ($$TOTAL backups, keeping $(KEEP_BACKUPS))"; \
+		exit 0; \
+	fi; \
+	TO_DELETE=$$(($$TOTAL - $(KEEP_BACKUPS))); \
+	echo "$(YELLOW)[WARNING]$(NC) Will delete $$TO_DELETE old backups"; \
+	ls -t $(BACKUP_DIR)/onsen_backup_*.db | tail -$$TO_DELETE; \
+	echo ""; \
+	read -p "Proceed with deletion? [y/N] " -n 1 -r; \
+	echo ""; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		ls -t $(BACKUP_DIR)/onsen_backup_*.db | tail -$$TO_DELETE | while read f; do \
+			echo "$(BLUE)[INFO]$(NC) Deleting: $$f"; \
+			rm -f "$$f" "$$f.sha256"; \
+		done; \
+		echo "$(GREEN)[SUCCESS]$(NC) Cleanup complete"; \
+	else \
+		echo "$(YELLOW)[WARNING]$(NC) Cleanup cancelled"; \
+	fi
+
+backup-restore: ## Restore database from backup (interactive selection)
+	@echo "$(BLUE)[INFO]$(NC) Available backups:"
+	@echo ""
+	@ls -lht $(BACKUP_DIR)/onsen_backup_*.db 2>/dev/null | head -10 || \
+		(echo "$(RED)[ERROR]$(NC) No backups found" && exit 1)
+	@echo ""
+	@read -p "Enter backup filename (or full path): " BACKUP; \
+	if [ ! -f "$$BACKUP" ]; then \
+		BACKUP="$(BACKUP_DIR)/$$BACKUP"; \
+	fi; \
+	if [ ! -f "$$BACKUP" ]; then \
+		echo "$(RED)[ERROR]$(NC) Backup file not found: $$BACKUP"; \
+		exit 1; \
+	fi; \
+	echo ""; \
+	echo "$(YELLOW)[WARNING]$(NC) This will replace the current database!"; \
+	echo "Current database: $(DB_FILE)"; \
+	echo "Restore from: $$BACKUP"; \
+	echo ""; \
+	read -p "Create backup of current database first? [Y/n] " -n 1 -r; \
+	echo ""; \
+	if [[ ! $$REPLY =~ ^[Nn]$$ ]]; then \
+		$(MAKE) backup; \
+		echo "$(GREEN)[SUCCESS]$(NC) Current database backed up"; \
+	fi; \
+	echo ""; \
+	read -p "Proceed with restore? [y/N] " -n 1 -r; \
+	echo ""; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		cp "$$BACKUP" "$(DB_FILE)"; \
+		echo "$(GREEN)[SUCCESS]$(NC) Database restored from $$BACKUP"; \
+	else \
+		echo "$(YELLOW)[WARNING]$(NC) Restore cancelled"; \
+	fi
+
+backup-cloud: ## Sync backups to Google Drive
+	@echo "$(BLUE)[INFO]$(NC) Syncing backups to Google Drive..."
+	@if [ ! -f "$(GDRIVE_CREDENTIALS)" ]; then \
+		echo "$(RED)[ERROR]$(NC) Google Drive credentials not found: $(GDRIVE_CREDENTIALS)"; \
+		echo "$(BLUE)[INFO]$(NC) To set up Google Drive:"; \
+		echo "  1. Create OAuth2 credentials in Google Cloud Console"; \
+		echo "  2. Download credentials.json to $(GDRIVE_CREDENTIALS)"; \
+		echo "  3. Run 'make backup-cloud' again to authenticate"; \
+		exit 1; \
+	fi
+	@poetry run python -c "from src.lib.cloud_backup import get_backup_manager; \
+		import sys; \
+		try: \
+			manager = get_backup_manager('$(GDRIVE_CREDENTIALS)', '$(GDRIVE_TOKEN)'); \
+			stats = manager.sync_directory('$(BACKUP_DIR)', 'db_backups'); \
+			print(f\"\n$(GREEN)[SUCCESS]$(NC) Cloud sync complete:\"); \
+			print(f\"  Uploaded: {stats['uploaded']}\"); \
+			print(f\"  Skipped: {stats['skipped']}\"); \
+			print(f\"  Failed: {stats['failed']}\"); \
+			sys.exit(0 if stats['failed'] == 0 else 1); \
+		except Exception as e: \
+			print(f\"$(RED)[ERROR]$(NC) Cloud sync failed: {e}\"); \
+			sys.exit(1);"
+
+backup-cloud-list: ## List backups in Google Drive
+	@echo "$(BLUE)[INFO]$(NC) Listing backups in Google Drive..."
+	@poetry run python -c "from src.lib.cloud_backup import get_backup_manager; \
+		manager = get_backup_manager('$(GDRIVE_CREDENTIALS)', '$(GDRIVE_TOKEN)'); \
+		backups = manager.list_backups(); \
+		print(f'\nFound {len(backups)} backups in Google Drive:\n'); \
+		for backup in backups[:20]: \
+			size_mb = int(backup.get('size', 0)) / (1024*1024); \
+			print(f\"  {backup['name']} ({size_mb:.2f} MB) - {backup.get('modifiedTime', 'N/A')}\");"
+
+backup-full: backup backup-cloud ## Create local backup and sync to Google Drive
+	@echo "$(GREEN)[SUCCESS]$(NC) Full backup complete (local + cloud)"
+
+backup-auto: ## Automatic backup with cleanup (for scheduled tasks)
+	@echo "$(BLUE)[INFO]$(NC) Running automatic backup..."
+	@$(MAKE) backup
+	@$(MAKE) backup-cleanup KEEP_BACKUPS=$(KEEP_BACKUPS)
+	@$(MAKE) backup-cloud || echo "$(YELLOW)[WARNING]$(NC) Cloud sync failed (continuing)"
+	@echo "$(GREEN)[SUCCESS]$(NC) Automatic backup complete"
+
+##@ CLI
+
+run-cli: ## Run onsendo CLI with arguments (Usage: make run-cli ARGS="visit list")
+	@poetry run onsendo $(ARGS)
+
+##@ Convenience Shortcuts
+
+onsen-list: ## List all onsens
+	poetry run onsendo onsen list
+
+onsen-recommend: ## Get onsen recommendations (Usage: make onsen-recommend LOCATION="Home" DISTANCE="close")
+	@if [ -z "$(LOCATION)" ]; then \
+		echo "$(RED)[ERROR]$(NC) LOCATION not specified. Usage: make onsen-recommend LOCATION='Home' DISTANCE='close'"; \
+		exit 1; \
+	fi
+	poetry run onsendo onsen recommend --location "$(LOCATION)" $(if $(DISTANCE),--distance $(DISTANCE),) --exclude-visited
+
+visit-add: ## Add a new visit (interactive)
+	poetry run onsendo visit add
+
+visit-list: ## List all visits
+	poetry run onsendo visit list
+
+location-add: ## Add a new location (interactive)
+	poetry run onsendo location add
+
+location-list: ## List all locations
+	poetry run onsendo location list
+
+##@ Default
+
+.DEFAULT_GOAL := help

@@ -8,6 +8,25 @@ Onsendo (温泉道 - "The Way of Onsen") is a Python application for tracking an
 
 ## Development Commands
 
+**IMPORTANT:** The project now uses a Makefile for all common operations. Use `make help` to see all available targets.
+
+### Quick Start
+
+```bash
+# Install dependencies
+make install
+
+# Run tests
+make test              # All tests
+make test-unit         # Unit tests only (fast)
+make test-integration  # Integration tests only
+
+# Code quality
+make lint              # Run pylint
+make coverage          # Test coverage report
+make clean             # Clean temporary files
+```
+
 ### Environment Setup
 ```bash
 # Create and activate virtual environment
@@ -15,44 +34,93 @@ python -m venv .venv
 source .venv/bin/activate
 
 # Install dependencies
-poetry install
+make install
+# OR: poetry install
 
 # Run with poetry
 poetry run onsendo --help
-```
-
-### Testing
-```bash
-# Run unit tests only (fast feedback)
-poetry run pytest -q -m "not integration"
-
-# Run all tests
-poetry run pytest
-
-# Run specific test file
-poetry run pytest tests/unit/test_distance.py
-
-# Run with coverage
-poetry run coverage run -m pytest
-poetry run coverage report
-```
-
-### Linting
-```bash
-# Lint source and tests
-poetry run pylint src tests
+# OR: make run-cli ARGS="--help"
 ```
 
 ### Database Operations
 ```bash
-# Create new database
-poetry run python scripts/init_db.py
-
-# Initialize database via CLI
-poetry run onsendo system init-db
+# Initialize database
+make db-init
 
 # Import onsen data
-poetry run onsendo system fill-db data.json
+make db-fill DATA_FILE=path/to/data.json
+
+# Show database path
+make db-path
+```
+
+### Backup Operations
+
+**Critical:** The project now has a robust backup system with local and cloud (Google Drive) support.
+
+```bash
+# Create local backup
+make backup
+
+# List all backups
+make backup-list
+
+# Verify latest backup integrity
+make backup-verify
+
+# Clean up old backups (keeps 50 most recent by default)
+make backup-cleanup
+make backup-cleanup KEEP_BACKUPS=100  # Keep 100 backups
+
+# Restore from backup (interactive)
+make backup-restore
+
+# Google Drive cloud backup
+make backup-cloud       # Sync to Google Drive
+make backup-cloud-list  # List cloud backups
+make backup-full        # Local + cloud backup
+
+# Automatic backup (for cron jobs)
+make backup-auto        # Backup + cleanup + cloud sync
+```
+
+**Setting up Google Drive backups:**
+
+1. See [.env.example](.env.example) for detailed setup instructions
+2. Create OAuth2 credentials in Google Cloud Console
+3. Save credentials to `local/gdrive/credentials.json`
+4. Run `make backup-cloud` to authenticate (browser will open)
+5. Token saved to `local/gdrive/token.json` for future use
+
+**Backup retention strategy:**
+
+- Local backups are timestamped: `onsen_backup_YYYYMMDD_HHMMSS.db`
+- Each backup includes SHA-256 checksum for integrity verification
+- Default retention: 50 most recent backups (configurable)
+- Backups stored in: `artifacts/db/backups/`
+- Cloud backups mirror local structure in Google Drive
+
+### Heart Rate Management
+
+All heart rate operations can be invoked via Makefile:
+
+```bash
+# Import single file
+make hr-import FILE=path/to/file.csv
+make hr-import FILE=path/to/file.csv FORMAT=apple_health NOTES="Morning workout"
+
+# Batch import
+make hr-batch DIR=path/to/directory
+make hr-batch DIR=path/to/directory RECURSIVE=true FORMAT=apple_health
+
+# Status and maintenance
+make hr-status                           # Show heart rate data status
+make hr-maintenance CMD=cleanup          # Run cleanup
+make hr-maintenance CMD=archive          # Archive old files
+make hr-maintenance CMD=validate         # Validate integrity
+
+# Interactive manager (original shell interface)
+make hr-manager
 ```
 
 ## Architecture & Code Organization

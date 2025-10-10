@@ -15,6 +15,8 @@ class PATHS(CustomStrEnum):
     OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output")
     ARTIFACTS_DIR = os.path.join(PROJECT_ROOT, "artifacts")
     ARTIFACTS_DB_DIR = os.path.join(ARTIFACTS_DIR, "db")
+    ARTIFACTS_DB_BACKUPS_DIR = os.path.join(ARTIFACTS_DB_DIR, "backups")
+    GDRIVE_DIR = os.path.join(LOCAL_DIR, "gdrive")
 
     # Files
     DB_PATH = os.path.join(DB_DIR, "onsen.db")
@@ -22,6 +24,8 @@ class PATHS(CustomStrEnum):
     SCRAPED_ONSEN_DATA_FILE = os.path.join(OUTPUT_DIR, "scraped_onsen_data.json")
     ONSEN_MAPPING_FILE = os.path.join(OUTPUT_DIR, "onsen_mapping.json")
     ONSEN_LATEST_ARTIFACT = os.path.join(ARTIFACTS_DB_DIR, "onsen_latest.db")
+    GDRIVE_CREDENTIALS_FILE = os.path.join(GDRIVE_DIR, "credentials.json")
+    GDRIVE_TOKEN_FILE = os.path.join(GDRIVE_DIR, "token.json")
 
     FIXTURES_PATH_REL = "src.testing.testutils.fixtures"
     """Path to the fixtures directory relative to the app root."""

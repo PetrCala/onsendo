@@ -11,6 +11,20 @@ venv
 .venv
 .mypy_cache/
 
+# Environment files
+.env
+.env.local
+
+# Google Drive credentials and tokens
+local/gdrive/credentials.json
+local/gdrive/token.json
+local/gdrive/*.json
+
+# Backup files (keep structure, ignore content)
+artifacts/db/backups/*.db
+artifacts/db/backups/*.sha256
+artifacts/db/backups/*.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
