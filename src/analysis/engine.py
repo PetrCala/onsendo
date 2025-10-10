@@ -4,7 +4,7 @@ Main analysis engine for orchestrating onsen analysis.
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Any, Union, Tuple
+from typing import Dict, List, Optional, Any
 import logging
 import time
 from datetime import datetime
@@ -238,10 +238,10 @@ class AnalysisEngine:
         metrics = {}
 
         # Get summary statistics
-        metrics['summary'] = self.metrics_calculator.calculate_summary_statistics(data)
+        metrics["summary"] = self.metrics_calculator.calculate_summary_statistics(data)
 
         # Get numeric summary for quick stats
-        metrics['numeric'] = self.metrics_calculator.get_numeric_summary(data)
+        metrics["numeric"] = self.metrics_calculator.get_numeric_summary(data)
 
         # Get correlation matrix if requested
         if MetricType.CUSTOM in request.metrics or any(
@@ -249,7 +249,7 @@ class AnalysisEngine:
         ):
             corr_matrix = self.metrics_calculator.calculate_correlation_matrix(data)
             if not corr_matrix.empty:
-                metrics['correlations'] = corr_matrix.to_dict()
+                metrics["correlations"] = corr_matrix.to_dict()
 
         return metrics
 
@@ -346,7 +346,12 @@ class AnalysisEngine:
         for model_type in request.models:
             try:
                 # Only support clustering and dimensionality reduction
-                if model_type not in [ModelType.KMEANS, ModelType.DBSCAN, ModelType.PCA, ModelType.TSNE]:
+                if model_type not in [
+                    ModelType.KMEANS,
+                    ModelType.DBSCAN,
+                    ModelType.PCA,
+                    ModelType.TSNE,
+                ]:
                     logger.warning(
                         f"Model type {model_type.value} not supported in basic analysis. "
                         f"Use run_econometric_analysis() for regression models."
@@ -423,25 +428,37 @@ class AnalysisEngine:
             missing_percentage = (missing_data / (total_rows * len(data.columns))) * 100
 
             if missing_percentage > 20:
-                insights.append(f"Data quality concern: {missing_percentage:.1f}% of values are missing.")
+                insights.append(
+                    f"Data quality concern: {missing_percentage:.1f}% of values are missing."
+                )
             elif missing_percentage > 5:
-                insights.append(f"Moderate data quality: {missing_percentage:.1f}% of values are missing.")
+                insights.append(
+                    f"Moderate data quality: {missing_percentage:.1f}% of values are missing."
+                )
             elif missing_percentage == 0:
                 insights.append("Good data quality: No missing values.")
             else:
-                insights.append(f"Good data quality: Only {missing_percentage:.1f}% of values are missing.")
+                insights.append(
+                    f"Good data quality: Only {missing_percentage:.1f}% of values are missing."
+                )
 
         # Basic numeric summary insights
-        if 'numeric' in metrics and metrics['numeric']:
-            if 'personal_rating' in metrics['numeric']:
-                rating_stats = metrics['numeric']['personal_rating']
-                avg_rating = rating_stats.get('mean', 0)
+        if "numeric" in metrics and metrics["numeric"]:
+            if "personal_rating" in metrics["numeric"]:
+                rating_stats = metrics["numeric"]["personal_rating"]
+                avg_rating = rating_stats.get("mean", 0)
                 if avg_rating > 8:
-                    insights.append(f"High satisfaction: Average rating is {avg_rating:.1f}/10")
+                    insights.append(
+                        f"High satisfaction: Average rating is {avg_rating:.1f}/10"
+                    )
                 elif avg_rating > 6:
-                    insights.append(f"Moderate satisfaction: Average rating is {avg_rating:.1f}/10")
+                    insights.append(
+                        f"Moderate satisfaction: Average rating is {avg_rating:.1f}/10"
+                    )
                 elif avg_rating > 0:
-                    insights.append(f"Low satisfaction: Average rating is {avg_rating:.1f}/10")
+                    insights.append(
+                        f"Low satisfaction: Average rating is {avg_rating:.1f}/10"
+                    )
 
         # Spatial coverage
         if request.analysis_type == AnalysisType.SPATIAL:
@@ -465,9 +482,16 @@ class AnalysisEngine:
                     insights.append(
                         f"Found {model_result['n_clusters']} clusters in the data"
                     )
-                if "metrics" in model_result and "silhouette_score" in model_result["metrics"]:
+                if (
+                    "metrics" in model_result
+                    and "silhouette_score" in model_result["metrics"]
+                ):
                     score = model_result["metrics"]["silhouette_score"]
-                    quality = "excellent" if score > 0.7 else "good" if score > 0.5 else "moderate"
+                    quality = (
+                        "excellent"
+                        if score > 0.7
+                        else "good" if score > 0.5 else "moderate"
+                    )
                     insights.append(
                         f"Clustering quality: {quality} (silhouette score: {score:.3f})"
                     )
@@ -820,83 +844,104 @@ class AnalysisEngine:
 
         # Dataset dimensions
         if not result.data.empty:
-            lines.append(f"\n📊 Dataset: {result.data.shape[0]} rows × {result.data.shape[1]} columns")
+            lines.append(
+                f"\n📊 Dataset: {result.data.shape[0]} rows × {result.data.shape[1]} columns"
+            )
 
             # Data quality
-            if 'summary' in result.metrics and result.metrics['summary']:
-                summary = result.metrics['summary']
+            if "summary" in result.metrics and result.metrics["summary"]:
+                summary = result.metrics["summary"]
                 total_cells = result.data.shape[0] * result.data.shape[1]
                 if total_cells > 0:
-                    missing_pct = (sum(summary.get('missing_values', {}).values()) / total_cells) * 100
+                    missing_pct = (
+                        sum(summary.get("missing_values", {}).values()) / total_cells
+                    ) * 100
                     lines.append(f"   Data completeness: {100 - missing_pct:.1f}%")
 
         # Categorical summaries
-        if 'summary' in result.metrics and 'categorical_summary' in result.metrics['summary']:
-            cat_summary = result.metrics['summary']['categorical_summary']
+        if (
+            "summary" in result.metrics
+            and "categorical_summary" in result.metrics["summary"]
+        ):
+            cat_summary = result.metrics["summary"]["categorical_summary"]
 
             # Regions
-            if 'region' in cat_summary:
-                region_data = cat_summary['region']
-                lines.append(f"\n🗺️  Regions: {region_data['unique_count']} unique regions")
-                top_regions = list(region_data['top_values'].items())[:3]
+            if "region" in cat_summary:
+                region_data = cat_summary["region"]
+                lines.append(
+                    f"\n🗺️  Regions: {region_data['unique_count']} unique regions"
+                )
+                top_regions = list(region_data["top_values"].items())[:3]
                 for region, count in top_regions:
                     lines.append(f"   • {region}: {count} onsens")
 
             # Business forms
-            if 'business_form' in cat_summary:
-                business_data = cat_summary['business_form']
-                lines.append(f"\n🏢 Business Types: {business_data['unique_count']} categories")
-                top_types = list(business_data['top_values'].items())[:3]
+            if "business_form" in cat_summary:
+                business_data = cat_summary["business_form"]
+                lines.append(
+                    f"\n🏢 Business Types: {business_data['unique_count']} categories"
+                )
+                top_types = list(business_data["top_values"].items())[:3]
                 for btype, count in top_types:
                     lines.append(f"   • {btype}: {count} onsens")
 
             # Spring quality
-            if 'spring_quality' in cat_summary:
-                spring_data = cat_summary['spring_quality']
-                lines.append(f"\n💧 Spring Quality: {spring_data['unique_count']} types")
-                top_springs = list(spring_data['top_values'].items())[:3]
+            if "spring_quality" in cat_summary:
+                spring_data = cat_summary["spring_quality"]
+                lines.append(
+                    f"\n💧 Spring Quality: {spring_data['unique_count']} types"
+                )
+                top_springs = list(spring_data["top_values"].items())[:3]
                 for stype, count in top_springs:
                     lines.append(f"   • {stype}: {count} onsens")
 
             # Admission fees
-            if 'admission_fee' in cat_summary:
-                fee_data = cat_summary['admission_fee']
-                top_fees = list(fee_data['top_values'].items())[:5]
-                lines.append(f"\n💰 Most Common Admission Fees:")
+            if "admission_fee" in cat_summary:
+                fee_data = cat_summary["admission_fee"]
+                top_fees = list(fee_data["top_values"].items())[:5]
+                lines.append("\n💰 Most Common Admission Fees:")
                 for fee, count in top_fees:
                     lines.append(f"   • {fee}: {count} onsens")
 
         # Numeric summaries
-        if 'numeric' in result.metrics and result.metrics['numeric']:
-            numeric = result.metrics['numeric']
+        if "numeric" in result.metrics and result.metrics["numeric"]:
+            numeric = result.metrics["numeric"]
 
             # Geographic coverage
-            if 'latitude' in numeric and 'longitude' in numeric:
-                lat_range = numeric['latitude']['max'] - numeric['latitude']['min']
-                lon_range = numeric['longitude']['max'] - numeric['longitude']['min']
-                lines.append(f"\n🌍 Geographic Coverage:")
-                lines.append(f"   Latitude range: {lat_range:.4f}° ({numeric['latitude']['min']:.4f} to {numeric['latitude']['max']:.4f})")
-                lines.append(f"   Longitude range: {lon_range:.4f}° ({numeric['longitude']['min']:.4f} to {numeric['longitude']['max']:.4f})")
+            if "latitude" in numeric and "longitude" in numeric:
+                lat_range = numeric["latitude"]["max"] - numeric["latitude"]["min"]
+                lon_range = numeric["longitude"]["max"] - numeric["longitude"]["min"]
+                lines.append("\n🌍 Geographic Coverage:")
+                lines.append(
+                    f"   Latitude range: {lat_range:.4f}° ({numeric['latitude']['min']:.4f} to {numeric['latitude']['max']:.4f})"
+                )
+                lines.append(
+                    f"   Longitude range: {lon_range:.4f}° ({numeric['longitude']['min']:.4f} to {numeric['longitude']['max']:.4f})"
+                )
 
         # Visualizations
         if result.visualizations:
-            lines.append(f"\n📈 Visualizations: {len(result.visualizations)} charts generated")
+            lines.append(
+                f"\n📈 Visualizations: {len(result.visualizations)} charts generated"
+            )
             for viz_type, viz_data in result.visualizations.items():
-                if 'config' in viz_data and viz_data['config'].save_path:
-                    path = viz_data['config'].save_path
+                if "config" in viz_data and viz_data["config"].save_path:
+                    path = viz_data["config"].save_path
                     lines.append(f"   • {viz_type}: {path}")
 
         # Execution stats
         if result.execution_time:
-            lines.append(f"\n⏱️  Analysis completed in {result.execution_time:.2f} seconds")
+            lines.append(
+                f"\n⏱️  Analysis completed in {result.execution_time:.2f} seconds"
+            )
 
         # Output directory
-        if result.metadata and 'output_directory' in result.metadata:
-            output_dir = result.metadata['output_directory']
+        if result.metadata and "output_directory" in result.metadata:
+            output_dir = result.metadata["output_directory"]
             lines.append(f"\n📁 Output directory: {output_dir}")
-            lines.append(f"   • metrics.json - Detailed statistics")
-            lines.append(f"   • visualizations/ - Charts and maps")
-            lines.append(f"   • insights.txt - Analysis insights")
+            lines.append("   • metrics.json - Detailed statistics")
+            lines.append("   • visualizations/ - Charts and maps")
+            lines.append("   • insights.txt - Analysis insights")
 
         lines.append("\n" + "=" * 70 + "\n")
 
@@ -904,7 +949,7 @@ class AnalysisEngine:
 
     def run_econometric_analysis(
         self,
-        dependent_var: str = 'personal_rating',
+        dependent_var: str = "personal_rating",
         data_categories: Optional[List[DataCategory]] = None,
         max_models: int = 20,
         analysis_name: str = "Econometric Analysis",
@@ -954,7 +999,9 @@ class AnalysisEngine:
             if data.empty:
                 raise ValueError("No data available for analysis")
 
-            logger.info(f"Data loaded: {data.shape[0]} observations, {data.shape[1]} variables")
+            logger.info(
+                f"Data loaded: {data.shape[0]} observations, {data.shape[1]} variables"
+            )
 
             # Step 2: Feature Engineering
             logger.info("Applying feature engineering...")
@@ -969,10 +1016,14 @@ class AnalysisEngine:
                 include_heart_rate=True,
             )
 
-            logger.info(f"Feature engineering complete: {len(enhanced_data.columns)} total features")
+            logger.info(
+                f"Feature engineering complete: {len(enhanced_data.columns)} total features"
+            )
 
             # Save enhanced data
-            enhanced_data.to_csv(self.output_dir / "transformed_features.csv", index=False)
+            enhanced_data.to_csv(
+                self.output_dir / "transformed_features.csv", index=False
+            )
 
             # Step 3: Model Search
             logger.info("Running automated model search...")
@@ -1008,14 +1059,17 @@ class AnalysisEngine:
             map_generator = InteractiveMapGenerator(self.output_dir / "maps")
 
             map_files = {}
-            if 'latitude' in enhanced_data.columns and 'longitude' in enhanced_data.columns:
+            if (
+                "latitude" in enhanced_data.columns
+                and "longitude" in enhanced_data.columns
+            ):
                 # Main overview map
                 overview_map = map_generator.create_comprehensive_onsen_map(
                     data=enhanced_data,
                     map_name="onsen_overview.html",
                 )
                 if overview_map:
-                    map_files['overview'] = str(overview_map)
+                    map_files["overview"] = str(overview_map)
 
                 # Rating heatmap
                 rating_map = map_generator.create_rating_heatmap(
@@ -1023,7 +1077,7 @@ class AnalysisEngine:
                     map_name="rating_heatmap.html",
                 )
                 if rating_map:
-                    map_files['rating_heatmap'] = str(rating_map)
+                    map_files["rating_heatmap"] = str(rating_map)
 
             # Step 6: Generate Report
             logger.info("Generating HTML report...")
@@ -1031,10 +1085,13 @@ class AnalysisEngine:
 
             # Prepare data summary
             data_summary = {
-                'n_observations': len(enhanced_data),
-                'n_variables': len(enhanced_data.columns),
-                'date_range': f"{enhanced_data['visit_time'].min()} to {enhanced_data['visit_time'].max()}"
-                if 'visit_time' in enhanced_data.columns else 'N/A',
+                "n_observations": len(enhanced_data),
+                "n_variables": len(enhanced_data.columns),
+                "date_range": (
+                    f"{enhanced_data['visit_time'].min()} to {enhanced_data['visit_time'].max()}"
+                    if "visit_time" in enhanced_data.columns
+                    else "N/A"
+                ),
             }
 
             # Generate HTML report
@@ -1054,14 +1111,15 @@ class AnalysisEngine:
 
             # Step 7: Save model comparison
             model_comparison = search_engine.compare_specifications()
-            model_comparison.to_csv(self.output_dir / "model_comparison.csv", index=False)
+            model_comparison.to_csv(
+                self.output_dir / "model_comparison.csv", index=False
+            )
 
             # Save regression tables
             for i, result in enumerate(best_models, 1):
                 # Save coefficients
                 result.coefficients.to_csv(
-                    self.output_dir / f"model_{i}_coefficients.csv",
-                    index=False
+                    self.output_dir / f"model_{i}_coefficients.csv", index=False
                 )
 
             # Calculate execution time
@@ -1069,20 +1127,20 @@ class AnalysisEngine:
 
             # Prepare return value
             output = {
-                'status': 'success',
-                'execution_time': execution_time,
-                'output_directory': str(self.output_dir),
-                'report_path': str(report_path),
-                'markdown_summary': str(md_summary),
-                'n_models_estimated': len(regression_results),
-                'n_insights_discovered': len(insights),
-                'best_model': {
-                    'name': best_models[0].model_name if best_models else None,
-                    'adj_r2': best_models[0].adj_r_squared if best_models else None,
-                    'quality': best_models[0].overall_quality if best_models else None,
+                "status": "success",
+                "execution_time": execution_time,
+                "output_directory": str(self.output_dir),
+                "report_path": str(report_path),
+                "markdown_summary": str(md_summary),
+                "n_models_estimated": len(regression_results),
+                "n_insights_discovered": len(insights),
+                "best_model": {
+                    "name": best_models[0].model_name if best_models else None,
+                    "adj_r2": best_models[0].adj_r_squared if best_models else None,
+                    "quality": best_models[0].overall_quality if best_models else None,
                 },
-                'map_files': map_files,
-                'feature_summary': engineer.get_feature_summary(),
+                "map_files": map_files,
+                "feature_summary": engineer.get_feature_summary(),
             }
 
             logger.info(f"Econometric analysis complete in {execution_time:.2f}s")
@@ -1094,7 +1152,7 @@ class AnalysisEngine:
         except Exception as e:
             logger.error(f"Econometric analysis failed: {e}", exc_info=True)
             return {
-                'status': 'error',
-                'error': str(e),
-                'output_directory': str(self.output_dir) if self.output_dir else None,
+                "status": "error",
+                "error": str(e),
+                "output_directory": str(self.output_dir) if self.output_dir else None,
             }
