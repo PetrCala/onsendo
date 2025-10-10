@@ -450,6 +450,62 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    "database-generate-realistic-data": CommandConfig(
+        func=lazy_command("src.cli.commands.database.generate_realistic_data", "generate_realistic_data"),
+        help="Generate comprehensive realistic mock data with user profiles and correlations.",
+        args={
+            "scenario": ArgumentConfig(
+                type=str,
+                default="comprehensive",
+                help="Data scenario (comprehensive, econometric, heart_rate, pricing, spatial, temporal, tourist, local_regular, integrated)",
+            ),
+            "num_visits": ArgumentConfig(
+                type=int,
+                help="Number of visits to generate (default varies by scenario)",
+            ),
+            "days": ArgumentConfig(
+                type=int,
+                help="Number of days to span (for comprehensive, integrated scenarios)",
+            ),
+            "months": ArgumentConfig(
+                type=int,
+                help="Number of months (for temporal, local_regular scenarios)",
+            ),
+            "trip_days": ArgumentConfig(
+                type=int,
+                help="Trip duration in days (for tourist scenario)",
+            ),
+            "visits_per_day": ArgumentConfig(
+                type=int,
+                help="Visits per day (for tourist scenario)",
+            ),
+            "hr_coverage": ArgumentConfig(
+                type=float,
+                help="Heart rate coverage 0.0-1.0 (for integrated scenario)",
+            ),
+            "quiet": ArgumentConfig(
+                action="store_true",
+                help="Suppress detailed output",
+            ),
+        },
+    ),
+    "database-list-profiles": CommandConfig(
+        func=lazy_command("src.cli.commands.database.generate_realistic_data", "list_user_profiles"),
+        help="List available user profiles for mock data generation.",
+        args={},
+    ),
+    "database-scenario-info": CommandConfig(
+        func=lazy_command("src.cli.commands.database.generate_realistic_data", "show_scenario_info"),
+        help="Show detailed information about a data generation scenario.",
+        args={
+            "scenario": ArgumentConfig(
+                type=str,
+                required=True,
+                positional=True,
+                help="Scenario name to show info for",
+            ),
+        },
+    ),
     "calculate-milestones": CommandConfig(
         func=lazy_command("src.cli.commands.system.calculate_milestones", "calculate_milestones"),
         help="Calculate distance milestones for a location based on onsen distribution.",
