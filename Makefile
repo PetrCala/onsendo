@@ -288,9 +288,6 @@ run-cli: ## Run onsendo CLI with arguments (Usage: make run-cli ARGS="visit list
 
 ##@ Convenience Shortcuts
 
-onsen-list: ## List all onsens
-	poetry run onsendo onsen list
-
 onsen-recommend: ## Get onsen recommendations (interactive)
 	poetry run onsendo onsen recommend
 
