@@ -253,23 +253,12 @@ class AnalysisScenario(StrEnum):
 
     # Basic scenarios
     OVERVIEW = "overview"  # General overview of all data
-    QUALITY_ANALYSIS = "quality_analysis"  # Focus on ratings and quality
-    PRICING_ANALYSIS = "pricing_analysis"  # Focus on pricing and value
     SPATIAL_ANALYSIS = "spatial_analysis"  # Geographic distribution and patterns
     TEMPORAL_ANALYSIS = "temporal_analysis"  # Time-based patterns and trends
 
-    # Advanced scenarios
-    EXPERIENCE_OPTIMIZATION = "experience_optimization"  # What makes a great experience
-    SEASONAL_PATTERNS = "seasonal_patterns"  # Seasonal variations
-    TRAVEL_ANALYSIS = "travel_analysis"  # Travel patterns and efficiency
-    HEALTH_IMPACT = "health_impact"  # Health and wellness impact
-    COMPETITIVE_ANALYSIS = "competitive_analysis"  # Compare onsens
-
     # Professional econometric scenarios
     ENJOYMENT_DRIVERS = "enjoyment_drivers"  # What drives personal_rating?
-    HEART_RATE_IMPACT = "heart_rate_impact"  # Physiological factors and ratings
     PRICING_OPTIMIZATION = "pricing_optimization"  # Fee vs quality tradeoffs
-    TEMPORAL_PATTERNS_ADVANCED = "temporal_patterns_advanced"  # Deep temporal analysis
 
     # Custom scenarios
     CUSTOM = "custom"  # User-defined analysis
@@ -329,41 +318,6 @@ ANALYSIS_SCENARIOS: dict[AnalysisScenario, AnalysisScenarioConfig] = {
             "executive_summary",
             "data_overview",
             "key_findings",
-            "recommendations",
-        ],
-    ),
-    AnalysisScenario.QUALITY_ANALYSIS: AnalysisScenarioConfig(
-        name=AnalysisScenario.QUALITY_ANALYSIS,
-        description="Deep dive into onsen quality metrics and ratings",
-        analysis_types=[
-            AnalysisType.DESCRIPTIVE,
-            AnalysisType.CORRELATIONAL,
-            AnalysisType.COMPARATIVE,
-        ],
-        data_categories=[
-            DataCategory.VISIT_RATINGS,
-            DataCategory.ONSEN_FEATURES,
-            DataCategory.VISIT_EXPERIENCE,
-        ],
-        metrics=[
-            MetricType.MEAN,
-            MetricType.MEDIAN,
-            MetricType.STD,
-            MetricType.PERCENTILE_25,
-            MetricType.PERCENTILE_75,
-        ],
-        visualizations=[
-            VisualizationType.BOX,
-            VisualizationType.VIOLIN,
-            VisualizationType.CORRELATION_MATRIX,
-            VisualizationType.HEATMAP,
-        ],
-        models=[ModelType.LINEAR_REGRESSION],
-        insights_focus=["rating_patterns", "quality_factors", "improvement_areas"],
-        report_sections=[
-            "executive_summary",
-            "quality_metrics",
-            "correlation_analysis",
             "recommendations",
         ],
     ),
@@ -470,44 +424,6 @@ ANALYSIS_SCENARIOS: dict[AnalysisScenario, AnalysisScenarioConfig] = {
             "recommendations",
         ],
     ),
-    AnalysisScenario.HEART_RATE_IMPACT: AnalysisScenarioConfig(
-        name=AnalysisScenario.HEART_RATE_IMPACT,
-        description="Econometric analysis of physiological factors and their impact on ratings",
-        analysis_types=[AnalysisType.ECONOMETRIC, AnalysisType.CORRELATIONAL],
-        data_categories=[
-            DataCategory.HEART_RATE,
-            DataCategory.VISIT_RATINGS,
-            DataCategory.VISIT_PHYSICAL,
-            DataCategory.VISIT_EXPERIENCE,
-            DataCategory.EXERCISE,
-        ],
-        metrics=[
-            MetricType.MEAN,
-            MetricType.STD,
-            MetricType.PERCENTILE_25,
-            MetricType.PERCENTILE_75,
-        ],
-        visualizations=[
-            VisualizationType.SCATTER,
-            VisualizationType.LINE,
-            VisualizationType.CORRELATION_MATRIX,
-            VisualizationType.DISTRIBUTION,
-        ],
-        models=[ModelType.LINEAR_REGRESSION],
-        insights_focus=[
-            "heart_rate_effects",
-            "relaxation_indicators",
-            "physiological_thresholds",
-            "health_correlations",
-        ],
-        report_sections=[
-            "executive_summary",
-            "heart_rate_analysis",
-            "regression_results",
-            "health_insights",
-            "recommendations",
-        ],
-    ),
     AnalysisScenario.PRICING_OPTIMIZATION: AnalysisScenarioConfig(
         name=AnalysisScenario.PRICING_OPTIMIZATION,
         description="Econometric analysis of price-quality tradeoffs and value optimization",
@@ -544,43 +460,6 @@ ANALYSIS_SCENARIOS: dict[AnalysisScenario, AnalysisScenarioConfig] = {
             "value_optimization",
             "market_positioning",
             "recommendations",
-        ],
-    ),
-    AnalysisScenario.TEMPORAL_PATTERNS_ADVANCED: AnalysisScenarioConfig(
-        name=AnalysisScenario.TEMPORAL_PATTERNS_ADVANCED,
-        description="Advanced econometric analysis of temporal patterns and seasonal effects",
-        analysis_types=[AnalysisType.ECONOMETRIC, AnalysisType.TEMPORAL, AnalysisType.TREND],
-        data_categories=[
-            DataCategory.TEMPORAL,
-            DataCategory.VISIT_RATINGS,
-            DataCategory.WEATHER,
-            DataCategory.VISIT_EXPERIENCE,
-            DataCategory.VISIT_PHYSICAL,
-        ],
-        metrics=[
-            MetricType.MEAN,
-            MetricType.STD,
-            MetricType.TREND,
-            MetricType.COUNT,
-        ],
-        visualizations=[
-            VisualizationType.LINE,
-            VisualizationType.SEASONAL,
-            VisualizationType.HEATMAP,
-            VisualizationType.BOX,
-        ],
-        models=[ModelType.LINEAR_REGRESSION],
-        insights_focus=[
-            "seasonal_effects",
-            "day_of_week_patterns",
-            "time_of_day_effects",
-            "weather_interactions",
-        ],
-        report_sections=[
-            "executive_summary",
-            "temporal_regression",
-            "seasonal_decomposition",
-            "timing_recommendations",
         ],
     ),
 }

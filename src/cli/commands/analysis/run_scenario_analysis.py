@@ -48,9 +48,7 @@ def run_scenario_analysis(args: argparse.Namespace) -> None:
             # Econometric scenarios use the new econometric analysis engine
             econometric_scenarios = [
                 AnalysisScenario.ENJOYMENT_DRIVERS,
-                AnalysisScenario.HEART_RATE_IMPACT,
                 AnalysisScenario.PRICING_OPTIMIZATION,
-                AnalysisScenario.TEMPORAL_PATTERNS_ADVANCED,
             ]
 
             if scenario in econometric_scenarios:

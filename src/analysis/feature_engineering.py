@@ -92,36 +92,50 @@ class FeatureEngineer:
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
 
         # Columns to transform (exclude IDs, binary, and already-transformed vars)
-        transform_candidates = [
-            col for col in numeric_cols
-            if col not in ['id', 'onsen_id', 'visit_id', 'ban_number']
-            and not col.startswith('log_')
-            and not col.startswith('sqrt_')
-            and not col.endswith('_squared')
-            and df[col].nunique() > 10  # Exclude binary/categorical
-        ]
+        transform_candidates = []
+        for col in numeric_cols:
+            if col in ['id', 'onsen_id', 'visit_id', 'ban_number']:
+                continue
+            if col.startswith('log_') or col.startswith('sqrt_') or col.endswith('_squared'):
+                continue
+            try:
+                if df[col].nunique() > 10:  # Exclude binary/categorical
+                    transform_candidates.append(col)
+            except (TypeError, ValueError):
+                continue
 
         for col in transform_candidates:
-            # Log transformation (for positive, skewed variables)
-            if (df[col] > 0).all() and df[col].std() / df[col].mean() > 0.5:
-                df[f'log_{col}'] = np.log(df[col] + 1)  # +1 to handle zeros
-                self.transformations_applied.append(f'log_{col}')
+            try:
+                # Skip if column has NaN or non-numeric data
+                if not pd.api.types.is_numeric_dtype(df[col]) or df[col].isna().all():
+                    continue
 
-            # Square root (for positive variables)
-            if (df[col] >= 0).all():
-                df[f'sqrt_{col}'] = np.sqrt(df[col])
-                self.transformations_applied.append(f'sqrt_{col}')
+                # Log transformation (for positive, skewed variables)
+                if (df[col].dropna() > 0).all():
+                    col_mean = df[col].mean()
+                    col_std = df[col].std()
+                    if col_mean > 0 and col_std / col_mean > 0.5:
+                        df[f'log_{col}'] = np.log(df[col] + 1)  # +1 to handle zeros
+                        self.transformations_applied.append(f'log_{col}')
 
-            # Square (for capturing quadratic relationships)
-            if col in ['entry_fee_yen', 'stay_length_minutes', 'travel_time_minutes',
-                       'main_bath_temperature', 'temperature_outside_celsius']:
-                df[f'{col}_squared'] = df[col] ** 2
-                self.transformations_applied.append(f'{col}_squared')
+                # Square root (for positive variables)
+                if (df[col].dropna() >= 0).all():
+                    df[f'sqrt_{col}'] = np.sqrt(df[col])
+                    self.transformations_applied.append(f'sqrt_{col}')
 
-            # Inverse (for diminishing returns effects)
-            if (df[col] > 0).all() and col in ['travel_time_minutes', 'stay_length_minutes']:
-                df[f'inv_{col}'] = 1 / (df[col] + 1)
-                self.transformations_applied.append(f'inv_{col}')
+                # Square (for capturing quadratic relationships)
+                if col in ['entry_fee_yen', 'stay_length_minutes', 'travel_time_minutes',
+                           'main_bath_temperature', 'temperature_outside_celsius']:
+                    df[f'{col}_squared'] = df[col] ** 2
+                    self.transformations_applied.append(f'{col}_squared')
+
+                # Inverse (for diminishing returns effects)
+                if (df[col].dropna() > 0).all() and col in ['travel_time_minutes', 'stay_length_minutes']:
+                    df[f'inv_{col}'] = 1 / (df[col] + 1)
+                    self.transformations_applied.append(f'inv_{col}')
+            except (TypeError, ValueError) as e:
+                logger.warning(f"Skipping transformation for {col}: {e}")
+                continue
 
         logger.info(f"Applied {len(self.transformations_applied)} transformations")
         return df
