@@ -38,10 +38,10 @@ class MetricsCalculator:
         summary = {
             "shape": data.shape,
             "columns": list(data.columns),
-            "dtypes": {k: str(v) for k, v in data.dtypes.to_dict().items()},
-            "memory_usage": data.memory_usage(deep=True).to_dict(),
-            "missing_values": data.isnull().sum().to_dict(),
-            "missing_percentage": (data.isnull().sum() / len(data) * 100).to_dict(),
+            "dtypes": {str(k): str(v) for k, v in data.dtypes.to_dict().items()},
+            "memory_usage": {str(k): int(v) for k, v in data.memory_usage(deep=True).to_dict().items()},
+            "missing_values": {str(k): int(v) for k, v in data.isnull().sum().to_dict().items()},
+            "missing_percentage": {str(k): float(v) for k, v in (data.isnull().sum() / len(data) * 100).to_dict().items()},
             "duplicate_rows": int(data.duplicated().sum()),
             "duplicate_percentage": float(data.duplicated().sum() / len(data) * 100),
         }
@@ -49,15 +49,20 @@ class MetricsCalculator:
         # Numeric summary
         numeric_data = data.select_dtypes(include=[np.number])
         if not numeric_data.empty:
-            summary["numeric_summary"] = numeric_data.describe().to_dict()
+            # Convert to dict with string keys
+            summary["numeric_summary"] = {
+                str(k): {str(k2): float(v2) if not pd.isna(v2) else None for k2, v2 in v.items()}
+                for k, v in numeric_data.describe().to_dict().items()
+            }
 
             # Additional numeric statistics
             summary["numeric_stats"] = {
-                "skewness": numeric_data.skew().to_dict(),
-                "kurtosis": numeric_data.kurtosis().to_dict(),
-                "iqr": (
-                    numeric_data.quantile(0.75) - numeric_data.quantile(0.25)
-                ).to_dict(),
+                "skewness": {str(k): float(v) if not pd.isna(v) else None for k, v in numeric_data.skew().to_dict().items()},
+                "kurtosis": {str(k): float(v) if not pd.isna(v) else None for k, v in numeric_data.kurtosis().to_dict().items()},
+                "iqr": {
+                    str(k): float(v) if not pd.isna(v) else None
+                    for k, v in (numeric_data.quantile(0.75) - numeric_data.quantile(0.25)).to_dict().items()
+                },
             }
 
         # Categorical summary
@@ -66,11 +71,11 @@ class MetricsCalculator:
             summary["categorical_summary"] = {}
             for col in categorical_data.columns:
                 value_counts = data[col].value_counts()
-                summary["categorical_summary"][col] = {
+                summary["categorical_summary"][str(col)] = {
                     "unique_count": int(value_counts.nunique()),
-                    "top_values": value_counts.head(10).to_dict(),
+                    "top_values": {str(k): int(v) for k, v in value_counts.head(10).to_dict().items()},
                     "most_frequent": (
-                        value_counts.index[0] if not value_counts.empty else None
+                        str(value_counts.index[0]) if not value_counts.empty else None
                     ),
                 }
 

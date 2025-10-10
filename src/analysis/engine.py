@@ -631,21 +631,21 @@ class AnalysisEngine:
                 "shape": result.data.shape,
                 "columns": list(result.data.columns),
                 "missing_values": result.data.isnull().sum().to_dict(),
-                "dtypes": result.data.dtypes.to_dict(),
+                "dtypes": {k: str(v) for k, v in result.data.dtypes.to_dict().items()},
             }
 
             summary_path = self.output_dir / "analysis_summary.json"
-            with open(summary_path, "w") as f:
+            with open(summary_path, "w", encoding="utf-8") as f:
                 json.dump(data_summary, f, indent=2, default=str)
 
             # Save metrics
             metrics_path = self.output_dir / "metrics.json"
-            with open(metrics_path, "w") as f:
+            with open(metrics_path, "w", encoding="utf-8") as f:
                 json.dump(result.metrics, f, indent=2, default=str)
 
             # Save insights
             insights_path = self.output_dir / "insights.txt"
-            with open(insights_path, "w") as f:
+            with open(insights_path, "w", encoding="utf-8") as f:
                 f.write("Analysis Insights\n")
                 f.write("=" * 50 + "\n\n")
                 for i, insight in enumerate(result.insights, 1):
@@ -653,7 +653,7 @@ class AnalysisEngine:
 
             # Save metadata
             metadata_path = self.output_dir / "metadata.json"
-            with open(metadata_path, "w") as f:
+            with open(metadata_path, "w", encoding="utf-8") as f:
                 json.dump(result.metadata, f, indent=2, default=str)
 
             logger.info(f"Analysis results saved to {self.output_dir}")
@@ -808,7 +808,7 @@ class AnalysisEngine:
                     "execution_time": result.execution_time,
                 }
 
-                with open(export_path, "w") as f:
+                with open(export_path, "w", encoding="utf-8") as f:
                     json.dump(export_data, f, indent=2, default=str)
 
                 return str(export_path)
