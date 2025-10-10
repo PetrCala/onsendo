@@ -22,6 +22,7 @@ class ArgumentConfig:
     action: Optional[str] = None
     positional: bool = False
     short: Optional[str] = None
+    nargs: Optional[str] = None
 
 
 @dataclass
@@ -611,11 +612,17 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.analysis.run_analysis", "run_analysis"),
         help="Run a custom analysis",
         args={
+            "no_interactive": ArgumentConfig(
+                action="store_true",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
+            ),
             "analysis_type": ArgumentConfig(
                 type=str,
-                required=True,
+                required=False,
                 help="Type of analysis to perform",
                 positional=True,
+                nargs="?",
             ),
             "data_categories": ArgumentConfig(
                 type=str,
@@ -699,11 +706,17 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.analysis.run_scenario_analysis", "run_scenario_analysis"),
         help="Run a predefined analysis scenario",
         args={
+            "no_interactive": ArgumentConfig(
+                action="store_true",
+                short="ni",
+                help="Run in non-interactive mode (default: False)",
+            ),
             "scenario": ArgumentConfig(
                 type=str,
-                required=True,
+                required=False,
                 help="Analysis scenario to run",
                 positional=True,
+                nargs="?",
             ),
             "custom_config": ArgumentConfig(
                 type=str,
@@ -819,5 +832,7 @@ def get_argument_kwargs(arg_config: ArgumentConfig) -> Dict[str, Any]:
         kwargs["help"] = arg_config.help
     if arg_config.action is not None:
         kwargs["action"] = arg_config.action
+    if arg_config.nargs is not None:
+        kwargs["nargs"] = arg_config.nargs
 
     return kwargs

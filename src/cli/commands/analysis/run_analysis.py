@@ -29,6 +29,18 @@ logger = logging.getLogger(__name__)
 
 def run_analysis(args: argparse.Namespace) -> None:
     """Run a custom analysis."""
+    # Check if we should run in interactive mode
+    if not hasattr(args, "no_interactive") or not args.no_interactive:
+        if not args.analysis_type:
+            run_analysis_interactive(args)
+            return
+
+    # Validate required arguments in non-interactive mode
+    if not args.analysis_type:
+        logger.error("analysis_type is required in non-interactive mode")
+        print("Error: analysis_type is required. Use --help for more information.")
+        return
+
     try:
         with get_db(url=CONST.DATABASE_URL) as session:
             # Initialize analysis engine
@@ -163,3 +175,44 @@ def run_analysis(args: argparse.Namespace) -> None:
     except Exception as e:
         logger.error(f"Analysis failed: {e}")
         raise
+
+
+def run_analysis_interactive(args: argparse.Namespace) -> None:
+    """Run analysis with interactive prompts for missing parameters."""
+    print("=== Run Custom Analysis ===\n")
+
+    # Display available analysis types
+    print("Available Analysis Types:")
+    analysis_types = list(AnalysisType)
+    for i, analysis_type in enumerate(analysis_types, 1):
+        print(f"  {i}. {analysis_type.value}")
+
+    # Prompt for analysis type
+    while True:
+        selection = input("\nSelect analysis type (number or name): ").strip()
+
+        # Try to parse as number
+        if selection.isdigit():
+            idx = int(selection) - 1
+            if 0 <= idx < len(analysis_types):
+                selected_type = analysis_types[idx].value
+                break
+            else:
+                print(f"Invalid selection. Please enter a number between 1 and {len(analysis_types)}.")
+                continue
+
+        # Try to match by name
+        try:
+            AnalysisType(selection)
+            selected_type = selection
+            break
+        except ValueError:
+            print(f"Invalid analysis type: {selection}")
+            print("Please enter a valid analysis type name or number.")
+
+    # Update args and call main function
+    args.analysis_type = selected_type
+    args.no_interactive = True
+
+    print(f"\nRunning {selected_type} analysis...")
+    run_analysis(args)

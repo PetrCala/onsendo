@@ -2,8 +2,8 @@
 Analysis types and enums for the onsen analysis system.
 """
 
-from enum import StrEnum, IntEnum
-from typing import List, Dict, Any, Optional, Union, Literal
+from enum import StrEnum
+from typing import Any, Optional
 from dataclasses import dataclass, field
 from datetime import datetime, date
 import pandas as pd
@@ -144,20 +144,25 @@ class ReportFormat(StrEnum):
 
 @dataclass
 class AnalysisRequest:
-    """Request for an analysis to be performed."""
+    """Request for an analysis to be performed.
+
+    This class contains many attributes to provide comprehensive
+    configuration options for analysis requests.
+    """
+    # pylint: disable=too-many-instance-attributes
 
     analysis_type: AnalysisType
-    data_categories: List[DataCategory]
-    metrics: List[MetricType]
-    visualizations: List[VisualizationType]
-    models: Optional[List[ModelType]] = None
-    filters: Optional[Dict[str, Any]] = None
-    grouping: Optional[List[str]] = None
+    data_categories: list[DataCategory]
+    metrics: list[MetricType]
+    visualizations: list[VisualizationType]
+    models: Optional[list[ModelType]] = None
+    filters: Optional[dict[str, Any]] = None
+    grouping: Optional[list[str]] = None
     time_range: Optional[tuple[datetime, datetime]] = None
     spatial_bounds: Optional[tuple[float, float, float, float]] = (
         None  # min_lat, max_lat, min_lon, max_lon
     )
-    custom_metrics: Optional[Dict[str, str]] = None  # name: expression
+    custom_metrics: Optional[dict[str, str]] = None  # name: expression
     output_format: ReportFormat = ReportFormat.HTML
     include_raw_data: bool = False
     include_statistical_tests: bool = True
@@ -166,19 +171,24 @@ class AnalysisRequest:
 
 @dataclass
 class AnalysisResult:
-    """Result of an analysis operation."""
+    """Result of an analysis operation.
+
+    This class contains many attributes to provide comprehensive
+    analysis results and metadata.
+    """
+    # pylint: disable=too-many-instance-attributes
 
     request: AnalysisRequest
     data: pd.DataFrame
-    metrics: Dict[str, Dict[str, float]]
-    visualizations: Dict[str, Any]
-    models: Optional[Dict[str, Any]] = None
-    insights: List[str] = field(default_factory=list)
-    statistical_tests: Optional[Dict[str, Any]] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metrics: dict[str, dict[str, float]]
+    visualizations: dict[str, Any]
+    models: Optional[dict[str, Any]] = None
+    insights: list[str] = field(default_factory=list)
+    statistical_tests: Optional[dict[str, Any]] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
     execution_time: Optional[float] = None
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -192,7 +202,7 @@ class VisualizationConfig:
     color_column: Optional[str] = None
     size_column: Optional[str] = None
     facet_column: Optional[str] = None
-    custom_config: Optional[Dict[str, Any]] = None
+    custom_config: Optional[dict[str, Any]] = None
     interactive: bool = True
     save_path: Optional[str] = None
 
@@ -203,17 +213,22 @@ class ModelConfig:
 
     type: ModelType
     target_column: str
-    feature_columns: List[str]
-    hyperparameters: Optional[Dict[str, Any]] = None
+    feature_columns: list[str]
+    hyperparameters: Optional[dict[str, Any]] = None
     validation_split: float = 0.2
     cross_validation_folds: int = 5
     random_state: Optional[int] = 42
-    custom_config: Optional[Dict[str, Any]] = None
+    custom_config: Optional[dict[str, Any]] = None
 
 
 @dataclass
 class ReportConfig:
-    """Configuration for report generation."""
+    """Configuration for report generation.
+
+    This class contains many attributes to provide comprehensive
+    report configuration options.
+    """
+    # pylint: disable=too-many-instance-attributes
 
     title: str
     subtitle: Optional[str] = None
@@ -224,8 +239,8 @@ class ReportConfig:
     include_methodology: bool = True
     include_conclusions: bool = True
     include_recommendations: bool = True
-    custom_sections: Optional[List[str]] = None
-    styling: Optional[Dict[str, Any]] = None
+    custom_sections: Optional[list[str]] = None
+    styling: Optional[dict[str, Any]] = None
     output_path: Optional[str] = None
 
 
@@ -252,24 +267,29 @@ class AnalysisScenario(StrEnum):
 
 @dataclass
 class AnalysisScenarioConfig:
-    """Configuration for a predefined analysis scenario."""
+    """Configuration for a predefined analysis scenario.
+
+    This class contains many attributes to provide comprehensive
+    scenario configuration options.
+    """
+    # pylint: disable=too-many-instance-attributes
 
     name: AnalysisScenario
     description: str
-    analysis_types: List[AnalysisType]
-    data_categories: List[DataCategory]
-    metrics: List[MetricType]
-    visualizations: List[VisualizationType]
-    models: Optional[List[ModelType]] = None
-    filters: Optional[Dict[str, Any]] = None
-    grouping: Optional[List[str]] = None
-    custom_metrics: Optional[Dict[str, str]] = None
-    insights_focus: List[str] = field(default_factory=list)
-    report_sections: List[str] = field(default_factory=list)
+    analysis_types: list[AnalysisType]
+    data_categories: list[DataCategory]
+    metrics: list[MetricType]
+    visualizations: list[VisualizationType]
+    models: Optional[list[ModelType]] = None
+    filters: Optional[dict[str, Any]] = None
+    grouping: Optional[list[str]] = None
+    custom_metrics: Optional[dict[str, str]] = None
+    insights_focus: list[str] = field(default_factory=list)
+    report_sections: list[str] = field(default_factory=list)
 
 
 # Predefined analysis scenarios
-ANALYSIS_SCENARIOS: Dict[AnalysisScenario, AnalysisScenarioConfig] = {
+ANALYSIS_SCENARIOS: dict[AnalysisScenario, AnalysisScenarioConfig] = {
     AnalysisScenario.OVERVIEW: AnalysisScenarioConfig(
         name=AnalysisScenario.OVERVIEW,
         description="Comprehensive overview of all onsen data",
