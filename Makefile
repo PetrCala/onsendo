@@ -291,12 +291,8 @@ run-cli: ## Run onsendo CLI with arguments (Usage: make run-cli ARGS="visit list
 onsen-list: ## List all onsens
 	poetry run onsendo onsen list
 
-onsen-recommend: ## Get onsen recommendations (Usage: make onsen-recommend LOCATION="Home" DISTANCE="close")
-	@if [ -z "$(LOCATION)" ]; then \
-		echo "$(RED)[ERROR]$(NC) LOCATION not specified. Usage: make onsen-recommend LOCATION='Home' DISTANCE='close'"; \
-		exit 1; \
-	fi
-	poetry run onsendo onsen recommend --location "$(LOCATION)" $(if $(DISTANCE),--distance $(DISTANCE),) --exclude-visited
+onsen-recommend: ## Get onsen recommendations (interactive)
+	poetry run onsendo onsen recommend
 
 visit-add: ## Add a new visit (interactive)
 	poetry run onsendo visit add
