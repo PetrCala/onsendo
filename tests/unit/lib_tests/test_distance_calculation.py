@@ -268,3 +268,22 @@ class TestFilterOnsensByDistance:
         # Check that results are sorted by distance (closest first)
         if len(result) >= 2:
             assert result[0][1] <= result[1][1]
+
+    def test_filter_onsens_by_distance_with_limit(self):
+        """The filter should honor the provided limit and keep closest results."""
+        location = Mock(spec=Location)
+        location.latitude = 35.6762
+        location.longitude = 139.6503
+
+        onsens = []
+        for i in range(5):
+            onsen = Mock(spec=Onsen)
+            onsen.latitude = 35.6762 + (i * 0.01)
+            onsen.longitude = 139.6503
+            onsens.append(onsen)
+
+        result = filter_onsens_by_distance(onsens, location, "very_close", limit=2)
+
+        assert len(result) <= 2
+        distances = [distance for _, distance in result]
+        assert distances == sorted(distances)
