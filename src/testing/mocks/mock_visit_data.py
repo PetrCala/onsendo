@@ -1,8 +1,20 @@
 """
 Mock data for onsen visits using the faker library.
 
-This module provides functions to generate realistic mock data for onsen visits,
+This module provides functions to generate basic mock data for onsen visits,
 ensuring data consistency and following the logic chains defined in interactive.py.
+
+NOTE: This module generates simple mock data with random ratings.
+For analysis-ready data with realistic econometric relationships, user profiles,
+and correlations, use the advanced generators in:
+- scenario_builder.py (profile-based data generation)
+- user_profiles.py (behavioral personas)
+- integrated_scenario.py (heart rate data integration)
+
+This module is best suited for:
+- Quick unit tests requiring simple visit data
+- Basic testing scenarios without econometric requirements
+- Foundation dataclass (MockOnsenVisit) used by all mock systems
 """
 
 from dataclasses import dataclass, field

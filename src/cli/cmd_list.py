@@ -367,7 +367,7 @@ CLI_COMMANDS = {
     ),
     "database-insert-mock-visits": CommandConfig(
         func=lazy_command("src.cli.commands.database.mock_data", "insert_mock_visits"),
-        help="Insert mock onsen visit data into the database for testing purposes.",
+        help="[DEPRECATED] Insert simple mock data for testing. Use 'database generate-realistic-data' for analysis-ready data.",
         args={
             "scenario": ArgumentConfig(
                 type=str,

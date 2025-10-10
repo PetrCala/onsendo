@@ -2,6 +2,12 @@
 mock_data.py
 
 Mass insert mock onsen visit data into the database for testing purposes.
+
+DEPRECATED: This command generates simple mock data with random ratings.
+For realistic data with econometric relationships, user profiles, and correlations,
+use 'database generate-realistic-data' instead.
+
+This command is maintained for backward compatibility and simple unit testing only.
 """
 
 import argparse
@@ -20,7 +26,15 @@ from src.const import CONST
 def insert_mock_visits(args: argparse.Namespace) -> None:
     """
     Insert mock onsen visit data into the database.
+
+    DEPRECATED: For realistic data with econometric relationships, use:
+    'onsendo database generate-realistic-data' instead.
     """
+    logger.warning(
+        "DEPRECATED: 'insert-mock-visits' generates simple random data. "
+        "For realistic data with correlations, use 'database generate-realistic-data'"
+    )
+
     with get_db(url=CONST.DATABASE_URL) as db:
         # Check if there are any onsens in the database
         onsen_count = db.query(Onsen).count()
