@@ -466,6 +466,17 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    "system-clear-cache": CommandConfig(
+        func=lazy_command("src.cli.commands.system.clear_cache", "clear_cache"),
+        help="Clear cached recommendation data.",
+        args={
+            "namespace": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Cache namespace to clear (distance, milestones, or all).",
+            ),
+        },
+    ),
     "update-artifacts": CommandConfig(
         func=lazy_command("src.cli.commands.system.update_artifacts", "update_artifacts"),
         help="Update database artifacts in the artifacts/db folder for presentation purposes.",

@@ -7,6 +7,11 @@ from statistics import mean, median, stdev
 from sqlalchemy.orm import Session
 
 from src.db.models import Onsen, Location
+from src.lib.cache import (
+    CacheNamespace,
+    encode_cache_key,
+    get_recommendation_cache,
+)
 from src.lib.distance import calculate_distance_to_onsen, DistanceMilestones
 
 
@@ -33,6 +38,18 @@ def calculate_location_milestones(
     Raises:
         ValueError: If no onsens found or no valid distances calculated
     """
+    cache = get_recommendation_cache()
+    cache_key = encode_cache_key(
+        "milestones",
+        getattr(location, "id", None) or getattr(location, "name", "custom"),
+        f"{location.latitude:.6f}",
+        f"{location.longitude:.6f}",
+    )
+
+    cached_value = cache.get(CacheNamespace.MILESTONES, cache_key)
+    if cached_value is not None:
+        return DistanceMilestones(**cached_value)
+
     # Get all onsens
     onsens = db_session.query(Onsen).all()
     if not onsens:
@@ -70,12 +87,26 @@ def calculate_location_milestones(
     close_max = quantile(sorted_distances, 0.50)  # 50th percentile (median)
     medium_max = quantile(sorted_distances, 0.80)  # 80th percentile
 
-    return DistanceMilestones(
+    milestones = DistanceMilestones(
         very_close_max=very_close_max,
         close_max=close_max,
         medium_max=medium_max,
         far_min=medium_max,
     )
+
+    cache.set(
+        CacheNamespace.MILESTONES,
+        cache_key,
+        {
+            "very_close_max": milestones.very_close_max,
+            "close_max": milestones.close_max,
+            "medium_max": milestones.medium_max,
+            "far_min": milestones.far_min,
+        },
+        ttl_seconds=12 * 60 * 60,
+    )
+
+    return milestones
 
 
 def analyze_location_distances(location: Location, db_session: Session) -> dict:

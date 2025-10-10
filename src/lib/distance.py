@@ -6,7 +6,13 @@ import math
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
 from statistics import mean, median, stdev
+
 from src.db.models import Onsen, Location
+from src.lib.cache import (
+    CacheNamespace,
+    encode_cache_key,
+    get_recommendation_cache,
+)
 
 
 @dataclass
@@ -172,9 +178,27 @@ def calculate_distance_to_onsen(location: Location, onsen: Onsen) -> Optional[fl
     ):
         return None
 
-    return haversine_distance(
+    cache = get_recommendation_cache()
+    cache_key = encode_cache_key(
+        "distance",
+        getattr(location, "id", None) or getattr(location, "name", "custom"),
+        f"{location.latitude:.6f}",
+        f"{location.longitude:.6f}",
+        getattr(onsen, "id", None),
+        f"{onsen.latitude:.6f}",
+        f"{onsen.longitude:.6f}",
+    )
+
+    cached_value = cache.get(CacheNamespace.DISTANCE, cache_key)
+    if cached_value is not None:
+        return cached_value
+
+    distance = haversine_distance(
         location.latitude, location.longitude, onsen.latitude, onsen.longitude
     )
+
+    cache.set(CacheNamespace.DISTANCE, cache_key, distance, ttl_seconds=24 * 60 * 60)
+    return distance
 
 
 def filter_onsens_by_distance(

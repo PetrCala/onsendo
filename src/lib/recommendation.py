@@ -3,9 +3,8 @@ Onsen recommendation engine.
 """
 
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 
 from src.db.models import Onsen, Location, OnsenVisit
 from src.lib.parsers.usage_time import parse_usage_time
@@ -27,13 +26,21 @@ class OnsenRecommendationEngine:
         self.db_session = db_session
         self.location = location
         self._distance_milestones: Optional[DistanceMilestones] = None
+        self._usage_time_cache: Dict[int, Tuple[Optional[str], Any]] = {}
+        self._closed_days_cache: Dict[int, Tuple[Optional[str], Any]] = {}
+        self._stay_restriction_cache: Dict[int, Tuple[Optional[str], Any]] = {}
+        self._visited_onsen_ids: Optional[Set[int]] = None
+        self._visit_cache_supported: bool = True
 
         # Calculate distance milestones if location is provided
         if location:
             self._calculate_and_update_milestones(location)
 
     def get_available_onsens(
-        self, target_time: datetime, min_hours_after: Optional[int] = None
+        self,
+        target_time: datetime,
+        min_hours_after: Optional[int] = None,
+        onsens: Optional[List[Onsen]] = None,
     ) -> List[Onsen]:
         """
         Get onsens that are open at the specified time.
@@ -45,8 +52,8 @@ class OnsenRecommendationEngine:
         Returns:
             List of available onsens
         """
-        # Get all onsens
-        onsens = self.db_session.query(Onsen).all()
+        # Get all onsens if not provided
+        onsens = onsens if onsens is not None else self.db_session.query(Onsen).all()
         available_onsens = []
 
         for onsen in onsens:
@@ -70,8 +77,8 @@ class OnsenRecommendationEngine:
             True if the onsen is available, False otherwise
         """
         # Check usage time
-        if onsen.usage_time:
-            usage_parsed = parse_usage_time(onsen.usage_time)
+        usage_parsed = self._get_usage_time_parsed(onsen)
+        if usage_parsed is not None:
             if not usage_parsed.is_open(target_time, assume_unknown_closed=True):
                 return False
 
@@ -83,10 +90,9 @@ class OnsenRecommendationEngine:
                     return False
 
         # Check closed days
-        if onsen.closed_days:
-            closed_parsed = parse_closed_days(onsen.closed_days)
-            if closed_parsed.is_closed_on(target_time):
-                return False
+        closed_parsed = self._get_closed_days_parsed(onsen)
+        if closed_parsed is not None and closed_parsed.is_closed_on(target_time):
+            return False
 
         return True
 
@@ -104,10 +110,9 @@ class OnsenRecommendationEngine:
         Returns:
             True if the onsen is open for at least min_hours after target_time
         """
-        if not onsen.usage_time:
+        usage_parsed = self._get_usage_time_parsed(onsen)
+        if usage_parsed is None:
             return False
-
-        usage_parsed = parse_usage_time(onsen.usage_time)
 
         # Check each time window
         for window in usage_parsed.windows:
@@ -143,10 +148,7 @@ class OnsenRecommendationEngine:
             List of unvisited onsens
         """
         # Get all onsen IDs that have been visited
-        visited_onsen_ids = set(
-            self.db_session.query(OnsenVisit.onsen_id).distinct().all()
-        )
-        visited_onsen_ids = {id_tuple[0] for id_tuple in visited_onsen_ids}
+        visited_onsen_ids = self._get_visited_onsen_ids()
 
         # Filter out visited onsens
         unvisited_onsens = [
@@ -168,8 +170,8 @@ class OnsenRecommendationEngine:
         non_stay_restricted = []
 
         for onsen in onsens:
-            stay_restriction = parse_stay_restriction(onsen.remarks)
-            if not stay_restriction.is_stay_restricted:
+            stay_restriction = self._get_stay_restriction(onsen)
+            if stay_restriction is None or not stay_restriction.is_stay_restricted:
                 non_stay_restricted.append(onsen)
 
         return non_stay_restricted
@@ -204,12 +206,17 @@ class OnsenRecommendationEngine:
         if target_time is None:
             target_time = datetime.now()
 
+        # Refresh visit cache for each recommendation request to keep data accurate
+        self._visited_onsen_ids = None
+
         # Start with all onsens
         onsens = self.db_session.query(Onsen).all()
 
         # Filter by availability if requested
         if exclude_closed:
-            onsens = self.get_available_onsens(target_time, min_hours_after)
+            onsens = self.get_available_onsens(
+                target_time, min_hours_after, onsens=onsens
+            )
 
         # Filter by visit history if requested
         if exclude_visited:
@@ -228,7 +235,7 @@ class OnsenRecommendationEngine:
         recommendations = []
         for onsen, distance in distance_filtered:
             # Parse stay restriction for metadata
-            stay_restriction = parse_stay_restriction(onsen.remarks)
+            stay_restriction = self._get_stay_restriction(onsen)
 
             metadata = {
                 "distance_category": self._get_distance_category_name(distance),
@@ -239,8 +246,12 @@ class OnsenRecommendationEngine:
                 ),
                 "has_been_visited": self._has_been_visited(onsen),
                 "google_maps_link": self._generate_google_maps_link(onsen),
-                "stay_restricted": stay_restriction.is_stay_restricted,
-                "stay_restriction_notes": stay_restriction.notes,
+                "stay_restricted": (
+                    stay_restriction.is_stay_restricted if stay_restriction else False
+                ),
+                "stay_restriction_notes": (
+                    stay_restriction.notes if stay_restriction else None
+                ),
             }
             recommendations.append((onsen, distance, metadata))
 
@@ -302,12 +313,15 @@ class OnsenRecommendationEngine:
 
     def _has_been_visited(self, onsen: Onsen) -> bool:
         """Check if an onsen has been visited."""
-        return (
-            self.db_session.query(OnsenVisit)
-            .filter(OnsenVisit.onsen_id == onsen.id)
-            .first()
-            is not None
-        )
+        visited_ids = self._get_visited_onsen_ids()
+        if not self._visit_cache_supported:
+            return (
+                self.db_session.query(OnsenVisit)
+                .filter(OnsenVisit.onsen_id == onsen.id)
+                .first()
+                is not None
+            )
+        return onsen.id in visited_ids
 
     def _generate_google_maps_link(self, onsen: Onsen) -> str:
         """Generate a Google Maps link for an onsen."""
@@ -342,3 +356,63 @@ class OnsenRecommendationEngine:
     def list_locations(self) -> List[Location]:
         """Get all locations."""
         return self.db_session.query(Location).order_by(Location.name).all()
+
+    def _get_usage_time_parsed(self, onsen: Onsen):
+        if not onsen.usage_time:
+            return None
+
+        cached = self._usage_time_cache.get(onsen.id)
+        if cached and cached[0] == onsen.usage_time:
+            return cached[1]
+
+        parsed = parse_usage_time(onsen.usage_time)
+        self._usage_time_cache[onsen.id] = (onsen.usage_time, parsed)
+        return parsed
+
+    def _get_closed_days_parsed(self, onsen: Onsen):
+        if not onsen.closed_days:
+            return None
+
+        cached = self._closed_days_cache.get(onsen.id)
+        if cached and cached[0] == onsen.closed_days:
+            return cached[1]
+
+        parsed = parse_closed_days(onsen.closed_days)
+        self._closed_days_cache[onsen.id] = (onsen.closed_days, parsed)
+        return parsed
+
+    def _get_stay_restriction(self, onsen: Onsen):
+        remarks = onsen.remarks or ""
+        cached = self._stay_restriction_cache.get(onsen.id)
+        if cached and cached[0] == remarks:
+            return cached[1]
+
+        parsed = parse_stay_restriction(remarks)
+        self._stay_restriction_cache[onsen.id] = (remarks, parsed)
+        return parsed
+
+    def _get_visited_onsen_ids(self) -> Set[int]:
+        if self._visited_onsen_ids is None:
+            try:
+                visited_rows = (
+                    self.db_session.query(OnsenVisit.onsen_id).distinct().all()
+                )
+                ids: Set[int] = set()
+                for row in visited_rows:
+                    if isinstance(row, (tuple, list)):
+                        ids.add(row[0])
+                    else:
+                        onsen_id = getattr(row, "onsen_id", None)
+                        if onsen_id is not None:
+                            ids.add(onsen_id)
+                self._visited_onsen_ids = ids
+            except TypeError:
+                # Some mocked sessions return non-iterable placeholders; disable caching
+                self._visit_cache_supported = False
+                self._visited_onsen_ids = set()
+            except Exception:
+                self._visit_cache_supported = False
+                self._visited_onsen_ids = set()
+            else:
+                self._visit_cache_supported = True
+        return self._visited_onsen_ids

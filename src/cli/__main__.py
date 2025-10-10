@@ -39,6 +39,7 @@ def get_command_group_mapping() -> Dict[str, str]:
         "location-": "location",
         "visit-": "visit",
         "onsen-": "onsen",
+        "system-": "system",
         "database-": "database",
         "heart-rate-": "heart-rate",
         "analysis-": "analysis",
