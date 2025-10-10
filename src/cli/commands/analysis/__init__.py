@@ -4,7 +4,6 @@ from .list_scenarios import list_scenarios
 from .list_analysis_options import list_analysis_options
 from .show_analysis_summary import show_analysis_summary
 from .clear_analysis_cache import clear_analysis_cache
-from .create_sample_analysis import create_sample_analysis
 from .export_analysis_results import export_analysis_results
 
 __all__ = [
@@ -14,6 +13,5 @@ __all__ = [
     "list_analysis_options",
     "show_analysis_summary",
     "clear_analysis_cache",
-    "create_sample_analysis",
     "export_analysis_results",
 ]

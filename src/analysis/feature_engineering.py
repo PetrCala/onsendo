@@ -297,15 +297,33 @@ class FeatureEngineer:
             logger.warning("No onsen_id column found, skipping aggregations")
             return df
 
+        # Build aggregation dict dynamically based on available columns
+        agg_dict = {}
+
+        if 'personal_rating' in df.columns:
+            agg_dict['personal_rating'] = ['mean', 'std', 'count']
+
+        if 'entry_fee_yen' in df.columns:
+            agg_dict['entry_fee_yen'] = ['mean', 'min', 'max']
+
+        if 'stay_length_minutes' in df.columns:
+            agg_dict['stay_length_minutes'] = ['mean', 'median']
+
+        if 'cleanliness_rating' in df.columns:
+            agg_dict['cleanliness_rating'] = 'mean'
+
+        if 'atmosphere_rating' in df.columns:
+            agg_dict['atmosphere_rating'] = 'mean'
+
+        if 'view_rating' in df.columns:
+            agg_dict['view_rating'] = 'mean'
+
+        if not agg_dict:
+            logger.warning("No suitable columns for aggregation found")
+            return df
+
         # Onsen-level aggregations
-        onsen_aggs = df.groupby('onsen_id').agg({
-            'personal_rating': ['mean', 'std', 'count'],
-            'entry_fee_yen': ['mean', 'min', 'max'],
-            'stay_length_minutes': ['mean', 'median'],
-            'cleanliness_rating': 'mean',
-            'atmosphere_rating': 'mean',
-            'view_rating': 'mean',
-        }).reset_index()
+        onsen_aggs = df.groupby('onsen_id').agg(agg_dict).reset_index()
 
         # Flatten column names
         onsen_aggs.columns = ['_'.join(col).strip() if col[1] else col[0]

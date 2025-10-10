@@ -803,17 +803,6 @@ CLI_COMMANDS = {
             ),
         },
     ),
-    "analysis-sample": CommandConfig(
-        func=lazy_command("src.cli.commands.analysis.create_sample_analysis", "create_sample_analysis"),
-        help="Create a sample analysis to demonstrate the system",
-        args={
-            "output_dir": ArgumentConfig(
-                type=str,
-                required=False,
-                help="Output directory for analysis results",
-            ),
-        },
-    ),
 }
 
 

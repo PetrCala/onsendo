@@ -5,7 +5,6 @@ from .analysis import (
     list_analysis_options,
     show_analysis_summary,
     clear_analysis_cache,
-    create_sample_analysis,
     export_analysis_results,
 )
 from .location import add_location, list_locations, delete_location, modify_location
@@ -53,6 +52,5 @@ __all__ = [
     "list_analysis_options",
     "show_analysis_summary",
     "clear_analysis_cache",
-    "create_sample_analysis",
     "export_analysis_results",
 ]
