@@ -29,6 +29,14 @@ from src.analysis.metrics import MetricsCalculator
 from src.analysis.visualizations import VisualizationEngine
 from src.analysis.models import ModelEngine
 
+# Import new professional analysis modules
+from src.analysis.feature_engineering import FeatureEngineer
+from src.analysis.econometrics import EconometricAnalyzer
+from src.analysis.insight_discovery import InsightDiscovery
+from src.analysis.report_generator import ReportGenerator
+from src.analysis.interactive_maps import InteractiveMapGenerator
+from src.analysis.model_search import ModelSearchEngine
+
 logger = logging.getLogger(__name__)
 
 
@@ -852,3 +860,200 @@ class AnalysisEngine:
         except Exception as e:
             logger.error(f"Failed to export results: {e}")
             return None
+
+    def run_econometric_analysis(
+        self,
+        dependent_var: str = 'personal_rating',
+        data_categories: Optional[List[DataCategory]] = None,
+        max_models: int = 20,
+        analysis_name: str = "Econometric Analysis",
+    ) -> Dict[str, Any]:
+        """
+        Run comprehensive econometric analysis with automated insights.
+
+        This is the main entry point for professional econometric analysis.
+        Integrates feature engineering, model search, diagnostics, insights,
+        and report generation.
+
+        Args:
+            dependent_var: Dependent variable (default: 'personal_rating')
+            data_categories: Data categories to include (default: all relevant)
+            max_models: Maximum number of model specifications to test
+            analysis_name: Name for the analysis
+
+        Returns:
+            Dict with paths to generated outputs and key results
+        """
+        start_time = time.time()
+        logger.info(f"Starting comprehensive econometric analysis: {analysis_name}")
+
+        # Set up output directory
+        self.analysis_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        analysis_dir_name = f"econometric_{self.analysis_timestamp}"
+        self.output_dir = self.base_output_dir / analysis_dir_name
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+        try:
+            # Step 1: Get data
+            if data_categories is None:
+                data_categories = [
+                    DataCategory.VISIT_RATINGS,
+                    DataCategory.VISIT_EXPERIENCE,
+                    DataCategory.VISIT_PHYSICAL,
+                    DataCategory.VISIT_LOGISTICS,
+                    DataCategory.ONSEN_FEATURES,
+                    DataCategory.WEATHER,
+                    DataCategory.TEMPORAL,
+                    DataCategory.HEART_RATE,
+                ]
+
+            logger.info("Fetching data...")
+            data = self.data_pipeline.get_data_for_categories(data_categories)
+
+            if data.empty:
+                raise ValueError("No data available for analysis")
+
+            logger.info(f"Data loaded: {data.shape[0]} observations, {data.shape[1]} variables")
+
+            # Step 2: Feature Engineering
+            logger.info("Applying feature engineering...")
+            engineer = FeatureEngineer()
+            enhanced_data = engineer.engineer_features(
+                data=data,
+                include_transformations=True,
+                include_interactions=True,
+                include_polynomials=True,
+                include_temporal=True,
+                include_aggregations=True,
+                include_heart_rate=True,
+            )
+
+            logger.info(f"Feature engineering complete: {len(enhanced_data.columns)} total features")
+
+            # Save enhanced data
+            enhanced_data.to_csv(self.output_dir / "transformed_features.csv", index=False)
+
+            # Step 3: Model Search
+            logger.info("Running automated model search...")
+            analyzer = EconometricAnalyzer()
+            search_engine = ModelSearchEngine(analyzer)
+
+            regression_results = search_engine.search_models(
+                data=enhanced_data,
+                dependent_var=dependent_var,
+                max_models=max_models,
+                include_polynomials=True,
+                include_interactions=True,
+            )
+
+            logger.info(f"Estimated {len(regression_results)} models")
+
+            # Get best models
+            best_models = search_engine.get_best_models(top_n=5)
+
+            # Step 4: Insight Discovery
+            logger.info("Discovering insights...")
+            discovery = InsightDiscovery()
+            insights = discovery.discover_insights(
+                regression_results=best_models,
+                data=enhanced_data,
+                dependent_var=dependent_var,
+            )
+
+            logger.info(f"Discovered {len(insights)} insights")
+
+            # Step 5: Create Interactive Maps
+            logger.info("Creating interactive maps...")
+            map_generator = InteractiveMapGenerator(self.output_dir / "maps")
+
+            map_files = {}
+            if 'latitude' in enhanced_data.columns and 'longitude' in enhanced_data.columns:
+                # Main overview map
+                overview_map = map_generator.create_comprehensive_onsen_map(
+                    data=enhanced_data,
+                    map_name="onsen_overview.html",
+                )
+                if overview_map:
+                    map_files['overview'] = str(overview_map)
+
+                # Rating heatmap
+                rating_map = map_generator.create_rating_heatmap(
+                    data=enhanced_data,
+                    map_name="rating_heatmap.html",
+                )
+                if rating_map:
+                    map_files['rating_heatmap'] = str(rating_map)
+
+            # Step 6: Generate Report
+            logger.info("Generating HTML report...")
+            report_generator = ReportGenerator(self.output_dir)
+
+            # Prepare data summary
+            data_summary = {
+                'n_observations': len(enhanced_data),
+                'n_variables': len(enhanced_data.columns),
+                'date_range': f"{enhanced_data['visit_time'].min()} to {enhanced_data['visit_time'].max()}"
+                if 'visit_time' in enhanced_data.columns else 'N/A',
+            }
+
+            # Generate HTML report
+            report_path = report_generator.generate_html_report(
+                regression_results=best_models,
+                insights=insights,
+                visualizations={},  # Maps are saved separately
+                data_summary=data_summary,
+                analysis_name=analysis_name,
+            )
+
+            # Generate markdown summary
+            md_summary = report_generator.generate_markdown_summary(
+                regression_results=best_models,
+                insights=insights,
+            )
+
+            # Step 7: Save model comparison
+            model_comparison = search_engine.compare_specifications()
+            model_comparison.to_csv(self.output_dir / "model_comparison.csv", index=False)
+
+            # Save regression tables
+            for i, result in enumerate(best_models, 1):
+                # Save coefficients
+                result.coefficients.to_csv(
+                    self.output_dir / f"model_{i}_coefficients.csv",
+                    index=False
+                )
+
+            # Calculate execution time
+            execution_time = time.time() - start_time
+
+            # Prepare return value
+            output = {
+                'status': 'success',
+                'execution_time': execution_time,
+                'output_directory': str(self.output_dir),
+                'report_path': str(report_path),
+                'markdown_summary': str(md_summary),
+                'n_models_estimated': len(regression_results),
+                'n_insights_discovered': len(insights),
+                'best_model': {
+                    'name': best_models[0].model_name if best_models else None,
+                    'adj_r2': best_models[0].adj_r_squared if best_models else None,
+                    'quality': best_models[0].overall_quality if best_models else None,
+                },
+                'map_files': map_files,
+                'feature_summary': engineer.get_feature_summary(),
+            }
+
+            logger.info(f"Econometric analysis complete in {execution_time:.2f}s")
+            logger.info(f"Report saved to: {report_path}")
+            logger.info(f"Open report in browser: file://{report_path}")
+
+            return output
+
+        except Exception as e:
+            logger.error(f"Econometric analysis failed: {e}", exc_info=True)
+            return {
+                'status': 'error',
+                'error': str(e),
+                'output_directory': str(self.output_dir) if self.output_dir else None,
+            }
