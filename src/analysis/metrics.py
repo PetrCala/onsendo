@@ -6,12 +6,13 @@ For detailed statistical analysis, use:
 - InsightDiscovery from src.analysis.insight_discovery for pattern detection
 """
 
-import pandas as pd
+import logging
+from typing import Any
+
 import numpy as np
-from typing import Dict, Any
+import pandas as pd
 from scipy import stats
 from scipy.stats import skew, kurtosis
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class MetricsCalculator:
     Calculator for summary statistics and correlations.
     """
 
-    def calculate_summary_statistics(self, data: pd.DataFrame) -> Dict[str, Any]:
+    def calculate_summary_statistics(self, data: pd.DataFrame) -> dict[str, Any]:
         """
         Calculate comprehensive summary statistics for the dataset.
 
@@ -113,7 +114,7 @@ class MetricsCalculator:
 
     def calculate_distribution_metrics(
         self, data: pd.DataFrame, column: str, bins: int = 10
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calculate distribution metrics for a specific column.
 
@@ -173,12 +174,12 @@ class MetricsCalculator:
                     "shapiro_p": float(shapiro_p),
                     "is_normal": bool(shapiro_p > 0.05),
                 }
-            except Exception as e:
+            except (ValueError, RuntimeWarning) as e:
                 logger.warning(f"Could not perform normality test on {column}: {e}")
 
         return distribution
 
-    def get_numeric_summary(self, data: pd.DataFrame) -> Dict[str, Dict[str, float]]:
+    def get_numeric_summary(self, data: pd.DataFrame) -> dict[str, dict[str, float]]:
         """
         Get quick numeric summary for all numeric columns.
 

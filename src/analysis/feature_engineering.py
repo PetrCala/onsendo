@@ -5,11 +5,11 @@ This module provides comprehensive feature transformation, interaction creation,
 and aggregation capabilities for sophisticated econometric analysis.
 """
 
-import pandas as pd
-import numpy as np
-from typing import Dict, List, Optional, Tuple, Any, Set
 import logging
-from datetime import datetime
+from typing import Any, Optional
+
+import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +23,10 @@ class FeatureEngineer:
     """
 
     def __init__(self):
-        self.transformations_applied: List[str] = []
-        self.interactions_created: List[Tuple[str, str]] = []
-        self.polynomials_created: List[Tuple[str, int]] = []
-        self.aggregations_created: List[str] = []
+        self.transformations_applied: list[str] = []
+        self.interactions_created: list[tuple[str, str]] = []
+        self.polynomials_created: list[tuple[str, int]] = []
+        self.aggregations_created: list[str] = []
 
     def engineer_features(
         self,
@@ -37,7 +37,7 @@ class FeatureEngineer:
         include_temporal: bool = True,
         include_aggregations: bool = True,
         include_heart_rate: bool = True,
-        custom_interactions: Optional[List[Tuple[str, str]]] = None,
+        custom_interactions: Optional[list[tuple[str, str]]] = None,
     ) -> pd.DataFrame:
         """
         Apply comprehensive feature engineering pipeline.
@@ -92,9 +92,10 @@ class FeatureEngineer:
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
 
         # Columns to transform (exclude IDs, binary, and already-transformed vars)
+        id_columns = {'id', 'onsen_id', 'visit_id', 'ban_number'}
         transform_candidates = []
         for col in numeric_cols:
-            if col in ['id', 'onsen_id', 'visit_id', 'ban_number']:
+            if col in id_columns:
                 continue
             if col.startswith('log_') or col.startswith('sqrt_') or col.endswith('_squared'):
                 continue
@@ -124,13 +125,15 @@ class FeatureEngineer:
                     self.transformations_applied.append(f'sqrt_{col}')
 
                 # Square (for capturing quadratic relationships)
-                if col in ['entry_fee_yen', 'stay_length_minutes', 'travel_time_minutes',
-                           'main_bath_temperature', 'temperature_outside_celsius']:
+                square_candidates = {'entry_fee_yen', 'stay_length_minutes', 'travel_time_minutes',
+                                     'main_bath_temperature', 'temperature_outside_celsius'}
+                if col in square_candidates:
                     df[f'{col}_squared'] = df[col] ** 2
                     self.transformations_applied.append(f'{col}_squared')
 
                 # Inverse (for diminishing returns effects)
-                if (df[col].dropna() > 0).all() and col in ['travel_time_minutes', 'stay_length_minutes']:
+                inverse_candidates = {'travel_time_minutes', 'stay_length_minutes'}
+                if (df[col].dropna() > 0).all() and col in inverse_candidates:
                     df[f'inv_{col}'] = 1 / (df[col] + 1)
                     self.transformations_applied.append(f'inv_{col}')
             except (TypeError, ValueError) as e:
@@ -143,7 +146,7 @@ class FeatureEngineer:
     def add_interactions(
         self,
         data: pd.DataFrame,
-        custom_pairs: Optional[List[Tuple[str, str]]] = None,
+        custom_pairs: Optional[list[tuple[str, str]]] = None,
     ) -> pd.DataFrame:
         """
         Create interaction terms between key variables.
@@ -210,7 +213,7 @@ class FeatureEngineer:
         self,
         data: pd.DataFrame,
         degree: int = 2,
-        key_vars: Optional[List[str]] = None,
+        key_vars: Optional[list[str]] = None,
     ) -> pd.DataFrame:
         """
         Add polynomial terms for capturing non-linear relationships.
@@ -374,7 +377,7 @@ class FeatureEngineer:
         if 'entry_fee_yen' in df.columns and 'onsen_avg_fee' in df.columns:
             df['fee_vs_onsen_avg'] = df['entry_fee_yen'] - df['onsen_avg_fee']
 
-        logger.info(f"Added aggregated features at onsen level")
+        logger.info("Added aggregated features at onsen level")
         return df
 
     def add_heart_rate_features(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -444,7 +447,7 @@ class FeatureEngineer:
 
         return df
 
-    def get_feature_summary(self) -> Dict[str, Any]:
+    def get_feature_summary(self) -> dict[str, Any]:
         """
         Get summary of all features created.
 

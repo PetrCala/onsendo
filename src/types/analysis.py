@@ -180,7 +180,6 @@ class AnalysisResult:
     This class contains many attributes to provide comprehensive
     analysis results and metadata.
     """
-    # pylint: disable=too-many-instance-attributes
 
     request: AnalysisRequest
     data: pd.DataFrame
