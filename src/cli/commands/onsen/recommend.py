@@ -141,19 +141,21 @@ def recommend_onsen_interactive() -> None:
             print(f"  2: Close (≤ {distance_milestones.close_max:.1f} km)")
             print(f"  3: Medium (≤ {distance_milestones.medium_max:.1f} km)")
             print(f"  4: Far (> {distance_milestones.medium_max:.1f} km)")
+            print(f"  5: Any distance")
         else:
             print("  1: Very close (≤ 5.0 km)")
             print("  2: Close (≤ 15.0 km)")
             print("  3: Medium (≤ 50.0 km)")
             print("  4: Far (> 50.0 km)")
+            print(f"  5: Any distance")
 
         while True:
-            distance_choice = input("Choose distance category (1-4): ").strip()
-            distance_map = {"1": "very_close", "2": "close", "3": "medium", "4": "far"}
+            distance_choice = input("Choose distance category (1-5): ").strip()
+            distance_map = {"1": "very_close", "2": "close", "3": "medium", "4": "far", "5": "any"}
             if distance_choice in distance_map:
                 distance_category = distance_map[distance_choice]
                 break
-            print("Please enter a number between 1 and 4.")
+            print("Please enter a number between 1 and 5.")
 
         # Get filters
         exclude_closed = (

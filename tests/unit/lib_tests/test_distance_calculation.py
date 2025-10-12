@@ -123,11 +123,13 @@ class TestDistanceCategories:
         assert "close" in categories
         assert "medium" in categories
         assert "far" in categories
+        assert "any" in categories
 
         assert categories["very_close"].max_distance_km == 1.0
         assert categories["close"].max_distance_km == 5.0
         assert categories["medium"].max_distance_km == 15.0
         assert categories["far"].max_distance_km == float("inf")
+        assert categories["any"].max_distance_km == float("inf")
 
 
 class TestDistanceCategoryFiltering:
@@ -158,6 +160,14 @@ class TestDistanceCategoryFiltering:
         # Test with default categories
         assert _is_distance_in_category(30.0, "far") == False  # Too close
         assert _is_distance_in_category(60.0, "far") == True  # In range
+
+    def test_is_distance_in_category_any(self):
+        """Test any category filtering."""
+        # Test with any category - should accept all distances
+        assert _is_distance_in_category(0.5, "any") == True
+        assert _is_distance_in_category(10.0, "any") == True
+        assert _is_distance_in_category(100.0, "any") == True
+        assert _is_distance_in_category(1000.0, "any") == True
 
 
 class TestGetDistanceCategoryName:
@@ -200,6 +210,23 @@ class TestDistanceCategoryManagement:
             assert DISTANCE_CATEGORIES["very_close"].max_distance_km == 5.0
             assert DISTANCE_CATEGORIES["close"].max_distance_km == 15.0
             assert DISTANCE_CATEGORIES["medium"].max_distance_km == 50.0
+        finally:
+            # Restore original categories
+            globals()["DISTANCE_CATEGORIES"] = original_categories
+
+    def test_update_distance_categories_preserves_any(self):
+        """Test that 'any' category is preserved after dynamic milestone updates."""
+        original_categories = DISTANCE_CATEGORIES.copy()
+
+        try:
+            # Update with custom milestones
+            milestones = DistanceMilestones(2.0, 8.0, 20.0, 20.0)
+            update_distance_categories(milestones)
+
+            # Verify 'any' category still exists
+            assert "any" in DISTANCE_CATEGORIES
+            assert DISTANCE_CATEGORIES["any"].max_distance_km == float("inf")
+            assert DISTANCE_CATEGORIES["any"].description == "Any distance"
         finally:
             # Restore original categories
             globals()["DISTANCE_CATEGORIES"] = original_categories
@@ -285,5 +312,29 @@ class TestFilterOnsensByDistance:
         result = filter_onsens_by_distance(onsens, location, "very_close", limit=2)
 
         assert len(result) <= 2
+        distances = [distance for _, distance in result]
+        assert distances == sorted(distances)
+
+    def test_filter_onsens_by_distance_any_category(self):
+        """Test filtering with 'any' distance category."""
+        location = Mock(spec=Location)
+        location.latitude = 35.6762
+        location.longitude = 139.6503
+
+        onsens = []
+        # Create onsens at various distances including very far ones
+        distances_degrees = [0.01, 0.1, 0.5, 1.0, 2.0]  # From close to very far
+        for i, degree_offset in enumerate(distances_degrees):
+            onsen = Mock(spec=Onsen)
+            onsen.latitude = 35.6762 + degree_offset
+            onsen.longitude = 139.6503
+            onsens.append(onsen)
+
+        result = filter_onsens_by_distance(onsens, location, "any")
+
+        # Should return all onsens regardless of distance
+        assert len(result) == len(onsens)
+
+        # Results should still be sorted by distance (closest first)
         distances = [distance for _, distance in result]
         assert distances == sorted(distances)

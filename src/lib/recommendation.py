@@ -192,7 +192,7 @@ class OnsenRecommendationEngine:
         Args:
             location: User's location
             target_time: Time to check availability for (defaults to now)
-            distance_category: Distance category (very_close, close, medium, far)
+            distance_category: Distance category (very_close, close, medium, far, any)
             exclude_closed: Whether to exclude closed onsens
             exclude_visited: Whether to exclude visited onsens
             min_hours_after: Minimum hours the onsen should be open after target_time (None to disable)
@@ -324,7 +324,7 @@ class OnsenRecommendationEngine:
         if distance_category == "medium":
             return (milestones.medium_max if milestones else 50.0)
 
-        # For "far" we intentionally avoid clamping results so that callers can
+        # For "far" and "any" we intentionally avoid clamping results so that callers can
         # still explore the full catalogue.
         return None
 

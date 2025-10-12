@@ -281,7 +281,7 @@ CLI_COMMANDS = {
             "distance": ArgumentConfig(
                 type=str,
                 default="medium",
-                help="Distance category (very_close, close, medium, far)",
+                help="Distance category (very_close, close, medium, far, any)",
             ),
             "exclude_closed": ArgumentConfig(
                 action="store_true", default=True, help="Exclude closed onsens"

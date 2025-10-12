@@ -51,6 +51,9 @@ class DistanceMilestones:
             "far": DistanceCategory(
                 "far", float("inf"), f"Far (beyond {self.medium_max:.1f}km)"
             ),
+            "any": DistanceCategory(
+                "any", float("inf"), "Any distance"
+            ),
         }
 
 
@@ -111,6 +114,7 @@ DEFAULT_DISTANCE_CATEGORIES = {
     "close": DistanceCategory("close", 15.0, "Close (within 15km)"),
     "medium": DistanceCategory("medium", 50.0, "Medium distance (within 50km)"),
     "far": DistanceCategory("far", float("inf"), "Far (any distance)"),
+    "any": DistanceCategory("any", float("inf"), "Any distance"),
 }
 
 # Global variable to hold dynamic categories
@@ -264,12 +268,14 @@ def _is_distance_in_category(distance_km: float, category: str) -> bool:
 
     Args:
         distance_km: Distance in kilometers
-        category: Distance category (very_close, close, medium, far)
+        category: Distance category (very_close, close, medium, far, any)
 
     Returns:
         True if distance is within the category, False otherwise
     """
-    if category == "very_close":
+    if category == "any":
+        return True
+    elif category == "very_close":
         return distance_km <= DISTANCE_CATEGORIES["very_close"].max_distance_km
     elif category == "close":
         return (
