@@ -2,17 +2,17 @@
 Data pipeline for transforming raw database data into analysis-ready formats.
 """
 
+from typing import Optional, Any
+from datetime import datetime, timedelta
+import logging
+
 import pandas as pd
 import numpy as np
-from typing import Optional, Any, Union
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-import logging
-from datetime import datetime, timedelta
-import warnings
 
-from src.db.models import Onsen, OnsenVisit, Location, HeartRateData
-from src.types.analysis import DataCategory, AnalysisRequest
+from src.db.models import Onsen, OnsenVisit, HeartRateData
+from src.types.analysis import DataCategory
 
 
 logger = logging.getLogger(__name__)
@@ -247,6 +247,8 @@ class DataPipeline:
         time_range: Optional[tuple[datetime, datetime]] = None,
         spatial_bounds: Optional[tuple[float, float, float, float]] = None,
     ) -> pd.DataFrame:
+        # pylint: disable=too-complex,too-many-locals,too-many-branches
+        # Complexity justified: handles multiple data categories with joins and filtering
         """
         Get data for specified categories with optional filtering.
 
@@ -293,10 +295,9 @@ class DataPipeline:
                 if join_table not in join_tables:
                     if join_table == "onsens":
                         continue
-                    else:
-                        alias = join_table[0]
-                        query += f"\nLEFT JOIN {join_table} {alias} ON {alias}.{join_col} = o.{ref_col}"
-                        table_aliases[join_table] = alias
+                    alias = join_table[0]
+                    query += f"\nLEFT JOIN {join_table} {alias} ON {alias}.{join_col} = o.{ref_col}"
+                    table_aliases[join_table] = alias
                     join_tables.add(join_table)
 
         # Add columns from all categories
@@ -319,7 +320,7 @@ class DataPipeline:
                         table_alias = "o"
                     elif config["table"] == "onsen_visits":
                         if "onsen_visits" not in table_aliases:
-                            query += f"\nLEFT JOIN onsen_visits v ON v.onsen_id = o.id"
+                            query += "\nLEFT JOIN onsen_visits v ON v.onsen_id = o.id"
                             table_aliases["onsen_visits"] = "v"
                         table_alias = "v"
                     else:
@@ -367,11 +368,10 @@ class DataPipeline:
                         where_conditions.append(f"{field} >= {value}")
                     elif operator == "lte":
                         where_conditions.append(f"{field} <= {value}")
+                elif isinstance(value, str):
+                    where_conditions.append(f"{key} = '{value}'")
                 else:
-                    if isinstance(value, str):
-                        where_conditions.append(f"{key} = '{value}'")
-                    else:
-                        where_conditions.append(f"{key} = {value}")
+                    where_conditions.append(f"{key} = {value}")
 
         # Apply time range filter
         if time_range:
@@ -398,7 +398,8 @@ class DataPipeline:
 
             return df
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            # Broad exception justified: fallback to ORM on any query error
             logger.error(f"Error executing query: {e}")
             # Fallback to ORM approach
             return self._get_data_orm(categories, filters, time_range, spatial_bounds)
@@ -406,10 +407,12 @@ class DataPipeline:
     def _get_data_orm(
         self,
         categories: list[DataCategory],
-        filters: Optional[dict[str, Any]] = None,
+        filters: Optional[dict[str, Any]] = None,  # pylint: disable=unused-argument
         time_range: Optional[tuple[datetime, datetime]] = None,
         spatial_bounds: Optional[tuple[float, float, float, float]] = None,
     ) -> pd.DataFrame:
+        # pylint: disable=too-complex
+        # Complexity justified: ORM fallback handles multiple data category types
         """Fallback method using ORM queries."""
         dfs = []
 
@@ -586,7 +589,7 @@ class DataPipeline:
             df["rating_count"] = df[rating_columns].notna().sum(axis=1)
 
         # Distance calculations (if we have location data)
-        if all(col in df.columns for col in ["latitude", "longitude"]):
+        if all(col in df.columns for col in ("latitude", "longitude")):
             # This would need to be enhanced with actual location data
             pass
 
@@ -627,7 +630,8 @@ class DataPipeline:
             result = self.session.execute(text(query))
             df = pd.DataFrame(result.fetchall(), columns=result.keys())
             return self._clean_dataframe(df)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            # Broad exception justified: any query error should return empty DataFrame
             logger.error(f"Error getting onsen summary data: {e}")
             return pd.DataFrame()
 
@@ -657,7 +661,8 @@ class DataPipeline:
             df = pd.DataFrame(result.fetchall(), columns=result.keys())
             df["visit_date"] = pd.to_datetime(df["visit_date"])
             return df
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            # Broad exception justified: any query error should return empty DataFrame
             logger.error(f"Error getting visit trends data: {e}")
             return pd.DataFrame()
 
@@ -682,7 +687,8 @@ class DataPipeline:
             result = self.session.execute(text(query))
             df = pd.DataFrame(result.fetchall(), columns=result.keys())
             return self._clean_dataframe(df)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            # Broad exception justified: any query error should return empty DataFrame
             logger.error(f"Error getting spatial analysis data: {e}")
             return pd.DataFrame()
 

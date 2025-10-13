@@ -5,8 +5,8 @@ This module provides comprehensive feature transformation, interaction creation,
 and aggregation capabilities for sophisticated econometric analysis.
 """
 
-import logging
 from typing import Any, Optional
+import logging
 
 import numpy as np
 import pandas as pd
@@ -80,6 +80,8 @@ class FeatureEngineer:
         return df
 
     def add_transformations(self, data: pd.DataFrame) -> pd.DataFrame:
+        # pylint: disable=too-complex
+        # Complexity justified: handles multiple transformation types with validation
         """
         Add mathematical transformations of numeric variables.
 
@@ -303,6 +305,8 @@ class FeatureEngineer:
         return df
 
     def add_aggregated_features(self, data: pd.DataFrame) -> pd.DataFrame:
+        # pylint: disable=too-complex
+        # Complexity justified: builds dynamic aggregation dict based on available columns
         """
         Add onsen-level and location-level aggregated statistics.
 

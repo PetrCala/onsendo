@@ -5,11 +5,12 @@ Creates rich Folium maps with detailed popups, multiple layers,
 and comprehensive onsen statistics.
 """
 
-import pandas as pd
-import numpy as np
-from typing import Optional, Any
+from typing import Optional
 from pathlib import Path
 import logging
+
+import pandas as pd
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,10 @@ class InteractiveMapGenerator:
         center: Optional[tuple[float, float]] = None,
         zoom_start: int = 12,
     ) -> Path:
+        # pylint: disable=too-complex,too-many-locals
+        # Complexity justified: creates multiple map layers with detailed popups
+        # pylint: disable=import-outside-toplevel
+        # Lazy import for optional heavy dependency - improves startup time
         """
         Create comprehensive interactive map with all onsen data.
 
@@ -190,6 +195,8 @@ class InteractiveMapGenerator:
         return map_path
 
     def _create_rich_popup(self, row: pd.Series) -> str:
+        # pylint: disable=too-complex
+        # Complexity justified: builds comprehensive HTML popup with multiple optional sections
         """Create detailed HTML popup for an onsen marker."""
         html = ['<div style="font-family: Arial, sans-serif; width: 350px;">']
 
@@ -297,8 +304,7 @@ class InteractiveMapGenerator:
 
         if pd.notna(rating):
             return f"{name} - ⭐ {rating:.1f}/10"
-        else:
-            return name
+        return name
 
     def _create_legend(self) -> str:
         """Create legend for map."""
@@ -322,6 +328,8 @@ class InteractiveMapGenerator:
         data: pd.DataFrame,
         map_name: str = "rating_heatmap.html",
     ) -> Path:
+        # pylint: disable=import-outside-toplevel
+        # Lazy import for optional heavy dependency - improves startup time
         """
         Create heat map specifically for ratings.
 
@@ -339,7 +347,7 @@ class InteractiveMapGenerator:
 
         # Determine rating column
         rating_col = None
-        for col in ['personal_rating', 'avg_rating', 'onsen_avg_rating']:
+        for col in ('personal_rating', 'avg_rating', 'onsen_avg_rating'):
             if col in map_data.columns:
                 rating_col = col
                 break
@@ -389,6 +397,8 @@ class InteractiveMapGenerator:
         cluster_labels: np.ndarray,
         map_name: str = "cluster_analysis.html",
     ) -> Path:
+        # pylint: disable=import-outside-toplevel
+        # Lazy import for optional heavy dependency - improves startup time
         """
         Create map visualizing cluster assignments.
 

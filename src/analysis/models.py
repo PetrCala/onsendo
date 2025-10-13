@@ -4,13 +4,14 @@ Modeling system for onsen analysis - clustering and dimensionality reduction onl
 Note: Regression analysis is handled by src/analysis/econometrics.py
 """
 
-import pandas as pd
-import numpy as np
 from typing import Optional, Any
-import logging
-import warnings
 from datetime import datetime
 from pathlib import Path
+import logging
+import warnings
+
+import pandas as pd
+import numpy as np
 
 from src.types.analysis import ModelType, ModelConfig
 
@@ -38,6 +39,8 @@ class ModelEngine:
         if config.type not in [ModelType.KMEANS, ModelType.DBSCAN]:
             raise ValueError(f"Model type {config.type} is not a clustering model")
 
+        # pylint: disable=import-outside-toplevel
+        # Lazy import for optional heavy dependency - improves startup time
         from sklearn.preprocessing import StandardScaler
         from sklearn.metrics import silhouette_score
 
@@ -74,7 +77,8 @@ class ModelEngine:
         metrics = {}
         try:
             metrics["silhouette_score"] = silhouette_score(X_scaled, cluster_labels)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            # Broad exception justified: silhouette score calculation may fail for various reasons
             logger.warning(f"Could not calculate silhouette score: {e}")
 
         # Store the model
@@ -111,6 +115,8 @@ class ModelEngine:
                 f"Model type {config.type} is not a dimensionality reduction model"
             )
 
+        # pylint: disable=import-outside-toplevel
+        # Lazy import for optional heavy dependency - improves startup time
         from sklearn.preprocessing import StandardScaler
 
         # Prepare data
@@ -169,27 +175,30 @@ class ModelEngine:
         return results
 
     def _create_model_instance(self, config: ModelConfig) -> Any:
+        # pylint: disable=import-outside-toplevel
+        # Lazy import for optional heavy dependency - improves startup time
         """Create a model instance based on the configuration."""
         if config.type == ModelType.KMEANS:
             from sklearn.cluster import KMeans
 
             return KMeans(**config.hyperparameters or {})
-        elif config.type == ModelType.DBSCAN:
+        if config.type == ModelType.DBSCAN:
             from sklearn.cluster import DBSCAN
 
             return DBSCAN(**config.hyperparameters or {})
-        elif config.type == ModelType.PCA:
+        if config.type == ModelType.PCA:
             from sklearn.decomposition import PCA
 
             return PCA(**config.hyperparameters or {})
-        elif config.type == ModelType.TSNE:
+        if config.type == ModelType.TSNE:
             from sklearn.manifold import TSNE
 
             return TSNE(**config.hyperparameters or {})
-        else:
-            raise ValueError(f"Unsupported model type: {config.type}")
+        raise ValueError(f"Unsupported model type: {config.type}")
 
     def _find_optimal_clusters(self, X: np.ndarray, max_clusters: int = 10) -> int:
+        # pylint: disable=import-outside-toplevel
+        # Lazy import for optional heavy dependency - improves startup time
         """Find optimal number of clusters using elbow method."""
         from sklearn.cluster import KMeans
         from sklearn.metrics import silhouette_score
@@ -204,14 +213,14 @@ class ModelEngine:
             try:
                 score = silhouette_score(X, kmeans.labels_)
                 silhouette_scores.append(score)
-            except:
+            except Exception:  # pylint: disable=broad-exception-caught
+                # Broad exception justified: silhouette score calculation may fail
                 silhouette_scores.append(0)
 
         # Return k with highest silhouette score
         if silhouette_scores:
             return K_range[np.argmax(silhouette_scores)]
-        else:
-            return 3  # Default fallback
+        return 3  # Default fallback
 
     def get_model_summary(self, model_key: str) -> Optional[dict[str, Any]]:
         """Get a summary of a trained model."""
@@ -249,9 +258,8 @@ class ModelEngine:
 
             logger.info(f"Model {model_key} deleted")
             return True
-        else:
-            logger.warning(f"Model {model_key} not found")
-            return False
+        logger.warning(f"Model {model_key} not found")
+        return False
 
     def clear_all_models(self) -> None:
         """Clear all models and associated data."""
