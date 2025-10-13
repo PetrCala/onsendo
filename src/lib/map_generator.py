@@ -118,7 +118,7 @@ def generate_recommendation_map(
 
         # Determine marker color based on visit status and availability
         if metadata["has_been_visited"]:
-            color = "gray"
+            color = "green"
             icon = "check"
         elif not metadata["is_available"]:
             color = "orange"
@@ -163,7 +163,7 @@ def generate_recommendation_map(
             <i class="fa fa-tint" style="color: blue;"></i> Available Onsen
         </p>
         <p style="margin: 5px 0;">
-            <i class="fa fa-check" style="color: gray;"></i> Visited Onsen
+            <i class="fa fa-check" style="color: green;"></i> Visited Onsen
         </p>
         <p style="margin: 5px 0;">
             <i class="fa fa-clock" style="color: orange;"></i> Currently Closed
@@ -211,7 +211,9 @@ def generate_all_onsens_map(
     visited_onsen_ids = set()
     try:
         visited_rows = db_session.query(OnsenVisit.onsen_id).distinct().all()
-        visited_onsen_ids = {row[0] if isinstance(row, tuple) else row.onsen_id for row in visited_rows}
+        visited_onsen_ids = {
+            row[0] if isinstance(row, tuple) else row.onsen_id for row in visited_rows
+        }
     except Exception:
         # If there's an error querying visits, just continue without visit info
         pass
@@ -291,7 +293,7 @@ def generate_all_onsens_map(
 
         # Color code based on visit status
         if onsen.id in visited_onsen_ids:
-            color = "gray"
+            color = "green"
             icon = "check"
         else:
             color = "blue"
@@ -330,7 +332,7 @@ def generate_all_onsens_map(
             <i class="fa fa-tint" style="color: blue;"></i> Unvisited ({unvisited_count})
         </p>
         <p style="margin: 5px 0;">
-            <i class="fa fa-check" style="color: gray;"></i> Visited ({visited_count})
+            <i class="fa fa-check" style="color: green;"></i> Visited ({visited_count})
         </p>
         <p style="margin: 5px 0; font-size: 12px;">
             Total: {len(onsens_with_coords)} onsens
