@@ -267,9 +267,9 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.onsen.map", "map_onsens"),
         help="Generate interactive map of all onsens in the database.",
         args={
-            "open_map": ArgumentConfig(
+            "no_open_map": ArgumentConfig(
                 action="store_true",
-                help="Automatically open map in browser after generation",
+                help="Do not automatically open map in browser (default: auto-open)",
             ),
         },
     ),

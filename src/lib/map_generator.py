@@ -5,7 +5,8 @@ from datetime import datetime
 import folium
 from folium import IFrame
 
-from src.db.models import Onsen, Location
+from sqlalchemy.orm import Session
+from src.db.models import Onsen, Location, OnsenVisit
 from src.paths import PATHS
 from src.lib.utils import generate_google_maps_link
 
@@ -182,6 +183,7 @@ def generate_recommendation_map(
 
 def generate_all_onsens_map(
     onsens: list[Onsen],
+    db_session: Session,
     output_filename: str | None = None,
 ) -> str:
     """
@@ -189,6 +191,7 @@ def generate_all_onsens_map(
 
     Args:
         onsens: List of all onsens to display
+        db_session: Database session to query visit status
         output_filename: Optional filename for the map (default: timestamped)
 
     Returns:
@@ -203,6 +206,15 @@ def generate_all_onsens_map(
         output_filename = f"all_onsens_map_{timestamp}.html"
 
     output_path = os.path.join(PATHS.MAPS_DIR, output_filename)
+
+    # Get visited onsen IDs
+    visited_onsen_ids = set()
+    try:
+        visited_rows = db_session.query(OnsenVisit.onsen_id).distinct().all()
+        visited_onsen_ids = {row[0] if isinstance(row, tuple) else row.onsen_id for row in visited_rows}
+    except Exception:
+        # If there's an error querying visits, just continue without visit info
+        pass
 
     # Calculate center point from all onsens with coordinates
     onsens_with_coords = [o for o in onsens if o.latitude and o.longitude]
@@ -263,6 +275,10 @@ def generate_all_onsens_map(
 
             {f'<p style="margin: 5px 0;"><b>Remarks:</b> {onsen.remarks}</p>' if onsen.remarks else ''}
 
+            <p style="margin: 5px 0;">
+                <b>Visited:</b> {'Yes' if onsen.id in visited_onsen_ids else 'No'}
+            </p>
+
             <hr style="margin: 10px 0;">
 
             <p style="margin: 5px 0;">
@@ -273,9 +289,13 @@ def generate_all_onsens_map(
         </div>
         """
 
-        # All onsens get blue color since we're not filtering by status
-        color = "blue"
-        icon = "tint"
+        # Color code based on visit status
+        if onsen.id in visited_onsen_ids:
+            color = "gray"
+            icon = "check"
+        else:
+            color = "blue"
+            icon = "tint"
 
         # Create popup with iframe for proper rendering
         iframe = IFrame(html=popup_html, width=320, height=450)
@@ -289,7 +309,10 @@ def generate_all_onsens_map(
             icon=folium.Icon(color=color, icon=icon, prefix="fa"),
         ).add_to(m)
 
-    # Add simple legend
+    # Add legend with visit status
+    visited_count = len([o for o in onsens_with_coords if o.id in visited_onsen_ids])
+    unvisited_count = len(onsens_with_coords) - visited_count
+
     legend_html = f"""
     <div style="position: fixed;
                 bottom: 50px;
@@ -304,10 +327,13 @@ def generate_all_onsens_map(
                 box-shadow: 2px 2px 6px rgba(0,0,0,0.3);">
         <h4 style="margin-top: 0;">All Onsens Map</h4>
         <p style="margin: 5px 0;">
-            <i class="fa fa-tint" style="color: blue;"></i> Onsen Location
+            <i class="fa fa-tint" style="color: blue;"></i> Unvisited ({unvisited_count})
+        </p>
+        <p style="margin: 5px 0;">
+            <i class="fa fa-check" style="color: gray;"></i> Visited ({visited_count})
         </p>
         <p style="margin: 5px 0; font-size: 12px;">
-            Total: {len(onsens_with_coords)} onsens displayed
+            Total: {len(onsens_with_coords)} onsens
         </p>
         <p style="margin: 5px 0; font-size: 11px; color: #666;">
             Click markers for details<br>

@@ -24,15 +24,15 @@ def map_onsens(args: argparse.Namespace) -> None:
         print(f"Generating map with {len(onsens)} onsen(s)...")
 
         try:
-            # Generate the map
-            map_path = generate_all_onsens_map(onsens)
+            # Generate the map with visit status
+            map_path = generate_all_onsens_map(onsens, db)
 
             print("=" * 60)
             print("Interactive Onsen Map Generated!")
             print(f"\nMap saved to: {map_path}")
 
-            # Check if auto-open is requested
-            auto_open = getattr(args, "open_map", False)
+            # Default to auto-open unless explicitly disabled with --no_open_map
+            auto_open = not getattr(args, "no_open_map", False)
             if auto_open:
                 print("\nOpening map in browser...")
                 webbrowser.open(Path(map_path).as_uri())
@@ -40,7 +40,6 @@ def map_onsens(args: argparse.Namespace) -> None:
                 print("\nTo open in browser, click the link below:")
                 print(f"{Path(map_path).as_uri()}")
                 print(f"\nOr run: open '{map_path}'")
-                print("Tip: Use --open_map flag to automatically open in browser")
             print("=" * 60)
 
         except (OSError, ValueError) as e:
