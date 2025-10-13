@@ -113,7 +113,7 @@ def recommend_onsen(args: argparse.Namespace) -> None:
                     print(f"\nOr run: open '{map_path}'")
                     print("Tip: Use --open_map flag to automatically open in browser")
                 print("=" * 60)
-            except (OSError, IOError, ValueError) as e:
+            except (OSError, ValueError) as e:
                 print(f"Error generating map: {e}")
 
 

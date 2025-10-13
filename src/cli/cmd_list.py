@@ -263,6 +263,16 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    "onsen-map": CommandConfig(
+        func=lazy_command("src.cli.commands.onsen.map", "map_onsens"),
+        help="Generate interactive map of all onsens in the database.",
+        args={
+            "open_map": ArgumentConfig(
+                action="store_true",
+                help="Automatically open map in browser after generation",
+            ),
+        },
+    ),
     "onsen-recommend": CommandConfig(
         func=lazy_command("src.cli.commands.onsen.recommend", "recommend_onsen"),
         help="Get onsen recommendations based on location and criteria.",
