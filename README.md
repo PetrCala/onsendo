@@ -67,6 +67,7 @@ See [rules/onsendo-rules.md](rules/onsendo-rules.md) for the complete challenge 
       - [Personalization](#personalization)
       - [Smart Defaults](#smart-defaults)
     - [System Management](#system-management)
+    - [Rules Management](#rules-management)
     - [Database Management and Testing](#database-management-and-testing)
     - [Tips for Effective Use](#tips-for-effective-use)
     - [Example Workflows](#example-workflows)
@@ -479,12 +480,247 @@ poetry run onsendo system init-db              # Create a new database
 poetry run onsendo system fill-db data.json   # Import onsen data
 ```
 
+**Database Migrations**:
+
+The project uses Alembic for database schema migrations. This allows you to update your database schema (add new tables, columns, etc.) without losing existing data or recreating the database from scratch.
+
+```bash
+# Apply migrations to update your database schema
+poetry run onsendo database migrate-upgrade
+
+# Check current migration status
+poetry run onsendo database migrate-current
+
+# View migration history
+poetry run onsendo database migrate-history
+poetry run onsendo database migrate-history --verbose
+
+# Generate new migration when models are modified
+poetry run onsendo database migrate-generate "Add new field description"
+
+# Downgrade to previous migration (if needed)
+poetry run onsendo database migrate-downgrade -1
+poetry run onsendo database migrate-downgrade <revision_id>
+
+# Mark existing database as up-to-date (for databases created before migrations)
+poetry run onsendo database migrate-stamp head
+```
+
+**When to Use Migrations**:
+
+- **After pulling new code**: If new features add database tables or columns, run `migrate-upgrade`
+- **For existing databases**: If you have a database created before the migration system, run `migrate-stamp head` once to mark it as current
+- **When developing**: After modifying models in `src/db/models.py`, generate a new migration with `migrate-generate`
+- **Before major changes**: Always backup your database before running migrations
+
+**Migration Workflow Example**:
+
+```bash
+# 1. Someone adds a new column to a model (e.g., OnsenVisit)
+# 2. They generate a migration: database migrate-generate "Add notes to visits"
+# 3. You pull the code including the new migration file
+# 4. Apply the migration: database migrate-upgrade
+# 5. Your database now has the new column without losing any data!
+```
+
 **Non-Interactive Mode**:
 Most commands support a `--no-interactive` flag for scripting and automation:
 
 ```bash
 poetry run onsendo location add --no-interactive --name "Home" --latitude 33.2794 --longitude 131.5006
 ```
+
+#### Rules Management
+
+The rules management system helps you track and revise the [Onsendo Challenge ruleset](rules/onsendo-rules.md) following the **Rule Review Sunday** template. This system integrates weekly reviews, health tracking, and rule adjustments into a comprehensive revision tracking workflow.
+
+**Why Rules Management Matters**:
+
+The 88 Onsen Challenge follows strict guidelines for visits, exercise, and health. The rules management system allows you to:
+
+- Track your weekly progress against challenge targets
+- Document health and wellbeing metrics
+- Revise rules when needed (fatigue, injury, schedule changes)
+- Maintain a complete history of rule changes and their reasons
+- Generate human and LLM-readable revision files
+
+**Core Commands**:
+
+```bash
+# View current rules
+poetry run onsendo rules print                    # Print all rules
+poetry run onsendo rules print --section 3        # Print specific section only
+
+# Create a weekly rule revision (interactive)
+poetry run onsendo rules revision-create
+
+# List all revisions
+poetry run onsendo rules revision-list
+poetry run onsendo rules revision-list --verbose --limit 10
+
+# Show specific revision details
+poetry run onsendo rules revision-show
+poetry run onsendo rules revision-show --version 2
+poetry run onsendo rules revision-show --format json
+
+# Compare two revisions
+poetry run onsendo rules revision-compare
+poetry run onsendo rules revision-compare --version-a 1 --version-b 2
+
+# View revision history
+poetry run onsendo rules history
+poetry run onsendo rules history --visual           # With ASCII timeline
+```
+
+**The Rule Review Sunday Workflow**:
+
+Every Sunday, complete a comprehensive weekly review:
+
+```bash
+poetry run onsendo rules revision-create
+```
+
+This interactive workflow guides you through 5 phases:
+
+**Phase 1: Weekly Review Data**
+
+- Summary metrics (onsen visits, sauna sessions, running distance, gym sessions, hike)
+- Health check (energy level 1-10, sleep hours/quality, soreness, mood)
+- Reflections (what went well, patterns noticed, warning signs, standout onsens)
+- Plans for next week (focus, goals, sauna limit, run volume, hike destination)
+
+**Phase 2: Rule Adjustment Context**
+
+- Reason for adjustment (fatigue, injury, schedule, etc.)
+- Description of modifications needed
+- Expected duration (temporary or permanent)
+- Health safeguards applied
+
+**Phase 3: Rule Modifications**
+
+- Select which rule sections to modify (1-10)
+- For each section: view current rules, enter new text, provide rationale
+- Supports multiple section modifications in one revision
+
+**Phase 4: Preview & Confirmation**
+
+- Review all collected data
+- See summary of changes
+- Confirm or cancel the revision
+
+**Phase 5: Automatic Execution**
+
+- Creates database record with all review data
+- Generates markdown file: `rules/revisions/v{N}_YYYY-MM-DD.md`
+- Updates main rules file: `rules/onsendo-rules.md`
+- Appends version history to rules file
+
+**Example Weekly Review**:
+
+```bash
+# Sunday evening after completing your week
+poetry run onsendo rules revision-create
+
+# Follow the prompts:
+# - Enter 12 onsen visits, 6.5 hours soaking, 3 sauna sessions
+# - Energy level: 8/10, Sleep: 7.5 hours, Mood: positive
+# - Reflection: "Maintained good balance this week"
+# - Next week focus: "Recovery, reduce intensity slightly"
+# - Adjustment reason: "fatigue"
+# - Modify Section 2 (Visit Frequency): Reduce from 2 to 1-2 visits per day
+# - Preview and confirm
+
+# Result: v2 revision created with full weekly data and rule changes
+```
+
+**Viewing and Comparing Revisions**:
+
+```bash
+# List all your revisions
+poetry run onsendo rules revision-list
+# Output shows: version, date, week period, sections modified, summary
+
+# Compare two weeks
+poetry run onsendo rules revision-compare --version-a 1 --version-b 2
+# Shows: metrics comparison, rule changes side-by-side, unified diff
+
+# View detailed revision
+poetry run onsendo rules revision-show --version 2
+# Shows: complete weekly review data, health metrics, rule changes
+
+# View history timeline
+poetry run onsendo rules history --visual
+# Shows: ASCII timeline of all revisions with dates and changes
+```
+
+**Export and Analysis**:
+
+```bash
+# Export for analysis
+poetry run onsendo rules revision-export --format json --include-weekly-reviews
+poetry run onsendo rules revision-export --format csv
+poetry run onsendo rules revision-export --version 2 --format markdown
+
+# Modify revision metadata (not rules)
+poetry run onsendo rules revision-modify --version 2
+# Can update: weekly metrics, health data, reflections, adjustment context
+# Cannot update: version number, dates, actual rule changes
+```
+
+**Revision Files**:
+
+Each revision creates a detailed markdown file stored in `rules/revisions/` with format `v{N}_YYYY-MM-DD.md`:
+
+```markdown
+# Rule Revision v2
+
+**Revision Date:** 2025-11-17
+**Week Period:** 2025-11-11 → 2025-11-17
+
+## Weekly Review Summary
+[Full metrics table]
+
+## Health and Wellbeing
+[Energy, sleep, soreness, mood details]
+
+## Reflections
+[5 reflection questions with your answers]
+
+## Rule Adjustment Context
+[Reason, description, duration, safeguards]
+
+## Modified Sections
+[Before/after for each modified section with rationale]
+```
+
+**Integration with Challenge**:
+
+The rules system integrates seamlessly with your onsen tracking:
+
+```bash
+# 1. Track visits all week
+poetry run onsendo visit add  # After each onsen visit
+
+# 2. Sunday: Review your week's data
+poetry run onsendo visit list  # See all visits this week
+# Count: 12 visits, calculate total soaking time manually
+
+# 3. Create rule revision with the data
+poetry run onsendo rules revision-create
+# Enter the counts and metrics from your visits
+
+# 4. Next week: Compare progress
+poetry run onsendo rules revision-compare --version-a 1 --version-b 2
+# See how your metrics changed week-over-week
+```
+
+**Use Cases**:
+
+- **Weekly Reviews**: Systematic tracking of challenge progress
+- **Rule Adjustments**: Document when and why rules need modification
+- **Health Tracking**: Monitor energy, sleep, and wellbeing trends
+- **Historical Analysis**: Compare different weeks and identify patterns
+- **Integrity Verification**: Signature section ensures honest self-assessment
 
 #### Database Management and Testing
 
