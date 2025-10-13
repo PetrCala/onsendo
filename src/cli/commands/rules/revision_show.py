@@ -1,6 +1,7 @@
 """
 Show detailed information about a specific rule revision.
 """
+# pylint: disable=bad-builtin  # input() is appropriate for CLI interaction
 
 import argparse
 import json

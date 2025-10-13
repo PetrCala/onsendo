@@ -1,6 +1,7 @@
 """
 Modify an existing rule revision record (metadata only, not rules themselves).
 """
+# pylint: disable=bad-builtin  # input() is appropriate for CLI interaction
 
 import argparse
 from typing import Optional

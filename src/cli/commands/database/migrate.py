@@ -5,7 +5,6 @@ Database migration commands using Alembic.
 import argparse
 import subprocess
 import sys
-from pathlib import Path
 
 
 def migrate_upgrade(args: argparse.Namespace) -> None:
@@ -62,7 +61,10 @@ def migrate_downgrade(args: argparse.Namespace) -> None:
 
     # Confirm if not forcing
     if not (hasattr(args, "force") and args.force):
-        confirm = input(f"Are you sure you want to downgrade to {revision}? (yes/no): ").strip().lower()
+        # Using input() is acceptable here for user confirmation
+        confirm = input(  # pylint: disable=bad-builtin
+            f"Are you sure you want to downgrade to {revision}? (yes/no): "
+        ).strip().lower()
         if confirm not in ["yes", "y"]:
             print("Downgrade cancelled.")
             return
@@ -88,7 +90,7 @@ def migrate_downgrade(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
-def migrate_current(args: argparse.Namespace) -> None:
+def migrate_current(args: argparse.Namespace) -> None:  # pylint: disable=unused-argument
     """
     Show current database migration revision.
 

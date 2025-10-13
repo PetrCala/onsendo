@@ -1,11 +1,12 @@
 """
 Compare two rule revisions.
 """
+# pylint: disable=bad-builtin  # input() is appropriate for CLI interaction
 
 import argparse
 import json
 import os
-from typing import Optional, Tuple
+from typing import Optional
 from src.db.conn import get_db
 from src.db.models import RuleRevision
 from src.const import CONST
@@ -77,7 +78,7 @@ def compare_revisions(args: argparse.Namespace) -> None:
         compare_rules(revision_a, revision_b, args)
 
 
-def select_revisions_interactively() -> Optional[Tuple[int, int]]:
+def select_revisions_interactively() -> Optional[tuple[int, int]]:
     """Interactively select two revisions to compare."""
     with get_db(url=CONST.DATABASE_URL) as db:
         revisions = db.query(RuleRevision).order_by(RuleRevision.version_number.desc()).all()

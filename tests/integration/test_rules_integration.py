@@ -2,11 +2,13 @@
 Integration tests for rules management system.
 """
 
+from datetime import datetime
+
 import pytest
+
 from src.db.conn import get_db
 from src.db.models import RuleRevision
 from src.const import CONST
-from datetime import datetime
 
 
 @pytest.mark.integration

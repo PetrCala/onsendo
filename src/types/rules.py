@@ -4,7 +4,7 @@ Type definitions and enums for the rules management system.
 
 from enum import StrEnum
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
+from typing import Optional
 from datetime import datetime
 
 
@@ -108,7 +108,7 @@ class RuleSection:
     section_number: str
     section_title: str
     content: str
-    rules: List[str] = field(default_factory=list)
+    rules: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -124,7 +124,11 @@ class RuleModification:
 
 @dataclass
 class RuleRevisionData:
-    """Complete data for a rule revision."""
+    """Complete data for a rule revision.
+
+    This class has many attributes to capture all aspects of a weekly rule review.
+    """
+    # pylint: disable=too-many-instance-attributes
 
     version_number: int
     revision_date: datetime
@@ -142,7 +146,7 @@ class RuleRevisionData:
     adjustment: RuleAdjustmentContext
 
     # Rule modifications
-    modifications: List[RuleModification]
+    modifications: list[RuleModification]
 
     # Metadata
     revision_summary: str
@@ -155,8 +159,8 @@ class RulesDiff:
 
     version_a: int
     version_b: int
-    sections_modified: List[str]
-    modifications: List[RuleModification]
+    sections_modified: list[str]
+    modifications: list[RuleModification]
 
 
 @dataclass
@@ -167,6 +171,6 @@ class RuleRevisionSummary:
     version_number: int
     revision_date: datetime
     week_period: str
-    sections_modified: List[str]
+    sections_modified: list[str]
     revision_summary: str
     adjustment_reason: str

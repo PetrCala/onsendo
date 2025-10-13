@@ -8,7 +8,7 @@ markdown files for rule revisions.
 import os
 import re
 import json
-from typing import List, Dict, Optional, Tuple
+from typing import Optional
 from datetime import datetime
 from difflib import unified_diff
 
@@ -28,7 +28,7 @@ class RuleParser:
         """Initialize the parser with the rules file path."""
         self.rules_file_path = rules_file_path
 
-    def parse(self) -> List[RuleSection]:
+    def parse(self) -> list[RuleSection]:
         """
         Parse the rules file and extract sections.
 
@@ -81,7 +81,7 @@ class RuleParser:
 
         return sections
 
-    def _extract_rules(self, section_content: str) -> List[str]:
+    def _extract_rules(self, section_content: str) -> list[str]:
         """Extract individual numbered rules from section content."""
         # Pattern for numbered list items (1., 2., etc.)
         rule_pattern = re.compile(r"^\d+\.\s+(.+?)(?=^\d+\.\s+|\Z)", re.MULTILINE | re.DOTALL)
@@ -553,7 +553,11 @@ class RuleFileUpdater:
             f.write(updated_content)
 
     def apply_modifications(
-        self, modifications: List[RuleModification], version_number: int, revision_date: datetime, summary: str
+        self,
+        modifications: list[RuleModification],
+        version_number: int,
+        revision_date: datetime,
+        summary: str
     ) -> None:
         """
         Apply multiple modifications to the rules file.

@@ -1,12 +1,13 @@
 """
 Create a new rule revision with interactive workflow.
 """
+# pylint: disable=bad-builtin  # input() is appropriate for CLI interaction
 
 import argparse
 import json
 import os
 from datetime import datetime
-from typing import Optional, List, Tuple
+from typing import Optional
 
 from src.db.conn import get_db
 from src.db.models import RuleRevision
@@ -116,7 +117,7 @@ def create_revision(args: argparse.Namespace) -> None:
         traceback.print_exc()
 
 
-def collect_week_dates() -> Optional[Tuple[str, str, datetime, datetime]]:
+def collect_week_dates() -> Optional[tuple[str, str, datetime, datetime]]:
     """
     Collect week start/end dates and revision/effective dates.
 
@@ -376,7 +377,7 @@ def collect_adjustment_context() -> Optional[RuleAdjustmentContext]:
     )
 
 
-def collect_rule_modifications() -> List[RuleModification]:
+def collect_rule_modifications() -> list[RuleModification]:
     """Collect rule modifications for specific sections."""
     print("Rule Modifications")
     print()
@@ -449,13 +450,13 @@ def collect_rule_modifications() -> List[RuleModification]:
 
 
 def show_preview_and_confirm(
-    week_dates: Tuple[str, str, datetime, datetime],
+    week_dates: tuple[str, str, datetime, datetime],
     metrics: WeeklyReviewMetrics,
     health: HealthWellbeingData,
     reflections: ReflectionData,
     next_week: NextWeekPlan,
     adjustment: RuleAdjustmentContext,
-    modifications: List[RuleModification],
+    modifications: list[RuleModification],
 ) -> bool:
     """
     Show preview of the revision and ask for confirmation.
@@ -506,13 +507,13 @@ def show_preview_and_confirm(
 
 
 def create_and_save_revision(
-    week_dates: Tuple[str, str, datetime, datetime],
+    week_dates: tuple[str, str, datetime, datetime],
     metrics: WeeklyReviewMetrics,
     health: HealthWellbeingData,
     reflections: ReflectionData,
     next_week: NextWeekPlan,
     adjustment: RuleAdjustmentContext,
-    modifications: List[RuleModification],
+    modifications: list[RuleModification],
 ) -> None:
     """
     Create and save the revision to database and files.

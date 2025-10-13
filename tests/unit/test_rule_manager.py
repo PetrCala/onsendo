@@ -2,8 +2,16 @@
 Unit tests for rule_manager module.
 """
 
+from datetime import datetime
+
 import pytest
-from src.lib.rule_manager import RuleParser, RuleDiffer, RuleMarkdownGenerator, RuleFileUpdater
+
+from src.lib.rule_manager import (
+    RuleParser,
+    RuleDiffer,
+    RuleMarkdownGenerator,
+    RuleFileUpdater,
+)
 from src.paths import PATHS
 from src.types.rules import (
     WeeklyReviewMetrics,
@@ -14,7 +22,6 @@ from src.types.rules import (
     RuleModification,
     RuleRevisionData,
 )
-from datetime import datetime
 
 
 class TestRuleParser:

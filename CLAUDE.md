@@ -28,6 +28,7 @@ make clean             # Clean temporary files
 ```
 
 ### Environment Setup
+
 ```bash
 # Create and activate virtual environment
 python -m venv .venv
@@ -43,6 +44,7 @@ poetry run onsendo --help
 ```
 
 ### Database Operations
+
 ```bash
 # Initialize database
 make db-init
@@ -81,6 +83,7 @@ poetry run onsendo database migrate-stamp head
 ```
 
 **Important Notes:**
+
 - Always run `migrate-upgrade` after pulling new code that includes model changes
 - If you have an existing database created before the migration system was added, run `migrate-stamp head` to mark it as current
 - Review auto-generated migrations before applying them
@@ -216,6 +219,7 @@ poetry run onsendo rules-history --date-range 2025-11-01,2025-12-31
 6. **Automatic Updates**: System updates database, generates markdown, and modifies rules file
 
 **Revision Files:**
+
 - Revisions stored in: `rules/revisions/v{N}_YYYY-MM-DD.md`
 - Main rules file: `rules/onsendo-rules.md`
 - Version history appended to main rules file automatically
@@ -238,6 +242,7 @@ The codebase follows a layered architecture with clear separation of concerns:
 ### Key Architectural Patterns
 
 **Database Models** (`src/db/models.py`):
+
 - `Location` - User-defined locations for distance calculations
 - `Onsen` - Hot spring facilities with detailed metadata (ban_number, coordinates, facilities, hours)
 - `OnsenVisit` - Visit records with ratings, health metrics, logistics, weather
@@ -245,16 +250,19 @@ The codebase follows a layered architecture with clear separation of concerns:
 - `RuleRevision` - Rule revision tracking with weekly review data and rule modifications
 
 **Path Management** (`src/paths.py`):
+
 - All file paths are centralized in the `PATHS` enum
 - Never use ad-hoc path joins - always reference `PATHS` constants
 - Key paths: `DB_DIR`, `OUTPUT_DIR`, `ARTIFACTS_DIR`, `TMP_DATA_DIR`
 
 **CLI Command Groups** (`src/cli/commands/`):
+
 - Each group has its own subdirectory (location/, visit/, onsen/, etc.)
 - Commands are registered in `cmd_list.py` and organized by prefix
 - Interactive mode is preferred for complex data entry (visits, locations)
 
 **Analysis System** (`src/analysis/`):
+
 - `engine.py` - Main orchestrator for analysis workflows
 - `data_pipeline.py` - Transforms raw database data to analysis-ready formats
 - `metrics.py` - Statistical calculations and summary metrics
@@ -262,18 +270,21 @@ The codebase follows a layered architecture with clear separation of concerns:
 - `models.py` - Machine learning models (regression, classification, clustering)
 
 **Heart Rate System** (`src/lib/heart_rate_manager.py`):
+
 - Supports multiple formats: CSV, JSON, Apple Health, plain text
 - Comprehensive validation: duration, data points, physiological ranges, gaps
 - File integrity via SHA-256 hashing
 - Batch import with parallel processing
 
 **Recommendation Engine** (`src/lib/recommendation.py`):
+
 - Distance-based filtering using Haversine formula
 - Availability checking against operating hours and closed days
 - Personalization based on visit history
 - Distance categories: very_close (20%), close (50%), medium (80%), far (>80%)
 
 **Parsers** (`src/lib/parsers/`):
+
 - `usage_time.py` - Parse operating hours with complex time ranges
 - `closed_days.py` - Parse closure information (holidays, weekdays, irregular)
 - `stay_restriction.py` - Parse time-based restrictions
@@ -295,6 +306,7 @@ The codebase follows a layered architecture with clear separation of concerns:
 ## CLI Usage Patterns
 
 ### Location Management
+
 ```bash
 # Add location (interactive)
 poetry run onsendo location add
@@ -307,6 +319,7 @@ poetry run onsendo system calculate-milestones "Beppu Station" --update-engine
 ```
 
 ### Onsen Discovery
+
 ```bash
 # Get recommendations
 poetry run onsendo onsen recommend --location "Beppu Station" --distance "close" --exclude-visited
@@ -319,6 +332,7 @@ poetry run onsendo onsen print-summary --ban-number "123"
 ```
 
 ### Visit Recording
+
 ```bash
 # Add visit (interactive - preferred)
 poetry run onsendo visit add
@@ -332,6 +346,7 @@ poetry run onsendo visit delete
 ```
 
 ### Heart Rate Data
+
 ```bash
 # Import single file
 poetry run onsendo heart-rate import path/to/data.csv --format apple_health
@@ -345,6 +360,7 @@ poetry run onsendo heart-rate list link <hr_id> <visit_id>
 ```
 
 ### Analysis & Visualization
+
 ```bash
 # Run predefined scenario
 poetry run onsendo analysis scenario overview
@@ -362,6 +378,7 @@ poetry run onsendo analysis clear-cache --cleanup-old-analyses --keep-recent 5
 ```
 
 ### Database Management
+
 ```bash
 # Insert mock data for testing
 poetry run onsendo database insert-mock-visits --scenario weekend_warrior
@@ -375,16 +392,19 @@ poetry run onsendo database drop-visits-by-criteria --rating-below 7 --force
 ## Testing Conventions
 
 ### Test Organization
+
 - **Unit tests** (`tests/unit/`): Fast, isolated, no database
 - **Integration tests** (`tests/integration/`): Database fixtures, boundary tests
 - Mark integration tests with `@pytest.mark.integration`
 - Use `-m "not integration"` for quick feedback during development
 
 ### Test File Naming
+
 - Must match pattern `test_*.py` (enforced by `pytest.ini`)
 - Mirror source structure: `tests/unit/test_distance.py` tests `src/lib/distance.py`
 
 ### Fixtures
+
 - Shared fixtures in `tests/conftest.py`
 - Use mock builders from `src/testing/mocks/` instead of hard-coding test data
 - Add regression tests for every bug fix
@@ -392,31 +412,115 @@ poetry run onsendo database drop-visits-by-criteria --rating-below 7 --force
 ## Code Style & Conventions
 
 ### General Style
+
 - 4-space indentation (no tabs)
 - Comprehensive type hints on all functions
 - snake_case for functions/variables, PascalCase for classes, UPPER_SNAKE_CASE for constants
 - Use `loguru` for logging (not print statements)
 
+### Type Hints
+
+**CRITICAL: Use Modern Python 3.12+ Type Syntax**
+
+- ✅ Use `list[str]`, `dict[str, int]`, `tuple[int, str]` (built-in generics)
+- ❌ Do NOT use `List[str]`, `Dict[str, int]`, `Tuple[int, str]` (typing module - deprecated)
+- ✅ Use `Optional[str]` from typing module for optional types
+- ✅ Use `from typing import Optional` - only import what you actually use
+- ❌ Remove unused imports like `List`, `Dict`, `Tuple`, `Any` from typing
+
+**Examples:**
+
+```python
+# CORRECT (Python 3.12+)
+from typing import Optional
+
+def process_items(items: list[str], config: dict[str, int]) -> Optional[tuple[str, int]]:
+    pass
+
+# INCORRECT (deprecated)
+from typing import List, Dict, Tuple, Optional
+
+def process_items(items: List[str], config: Dict[str, int]) -> Optional[Tuple[str, int]]:
+    pass
+```
+
 ### Imports
-- Standard library first, then third-party, then local imports
+
+**Import Order (Enforced by pylint):**
+
+1. Standard library imports (datetime, os, sys, etc.)
+2. Third-party imports (pytest, pandas, sqlalchemy, etc.)
+3. Local/first-party imports (src.*, from src.*)
+
+**Examples:**
+
+```python
+# CORRECT
+from datetime import datetime
+import os
+
+import pytest
+import pandas as pd
+
+from src.db.conn import get_db
+from src.db.models import Onsen
+
+# INCORRECT - will fail pylint
+import pytest
+from src.db.conn import get_db
+from datetime import datetime  # Standard library must come first
+```
+
 - For analysis code: use lazy imports inside functions to avoid loading heavy ML libraries at startup
 - Import from `src.paths.PATHS` for all file paths
+- Remove unused imports - pylint will catch these
+
+### CLI Interactive Functions
+
+- Using `input()` in CLI commands is acceptable and expected
+- Add module-level pylint disable: `# pylint: disable=bad-builtin` at top of CLI command files
+- Inline disable is also acceptable: `user_input = input("Prompt: ")  # pylint: disable=bad-builtin`
+
+### Complexity Management
+
+- Keep function complexity under McCabe rating of 10
+- For functions with many `if/elif` checks (like data collection), add:
+  - `# pylint: disable=too-complex` if refactoring would harm readability
+  - Otherwise, extract helper functions
+- For classes with many attributes (like dataclasses representing complex forms):
+  - Add `# pylint: disable=too-many-instance-attributes` with justification in docstring
+  - Example: Rule revision data classes with 13+ fields for weekly review data
+
+### Pylint Directives - When to Use
+
+**Use sparingly and only when justified:**
+
+- `# pylint: disable=bad-builtin` - For `input()` in CLI interactive commands
+- `# pylint: disable=unused-argument` - For required function signatures (e.g., argparse handlers)
+- `# pylint: disable=too-many-instance-attributes` - For dataclasses with inherently complex data
+- `# pylint: disable=too-complex` - For unavoidably complex orchestration functions
+- Always add a comment explaining WHY the disable is necessary
 
 ### File Operations
+
 - Always use `PATHS` enum from `src/paths.py` for file paths
 - Clean up temporary files created in `output/` after use
 - Store persistent data in appropriate subdirectories: `data/`, `output/`, `artifacts/`
 
 ### Function Design
+
 - Prefer pure functions for calculations
 - Extract shared logic to `src/lib` or `src/analysis`
 - Keep CLI commands thin - delegate to library functions
 - Validate inputs early and fail fast with clear error messages
+- Add comprehensive docstrings with Args, Returns, Raises sections
 
 ## Commit & Pull Request Guidelines
 
 ### Commit Messages
+
 Use Conventional Commits format:
+
 - `feat:` - New features
 - `fix:` - Bug fixes
 - `refactor:` - Code refactoring
@@ -427,6 +531,7 @@ Use Conventional Commits format:
 Format: Present tense, under 72 characters, reference issues in body when relevant.
 
 Example:
+
 ```
 feat: add batch import for heart rate data
 
@@ -437,6 +542,7 @@ Closes #123
 ```
 
 ### Pull Requests
+
 - Include local verification: `pytest`, `pylint`, optional `coverage`
 - Add CLI screenshots or transcripts for UX changes
 - Keep branches rebased on `main`
@@ -446,20 +552,24 @@ Closes #123
 ## Data & Environment Notes
 
 ### Database
+
 - SQLite databases stored in `data/db/`
 - Never commit databases with personal data
 - Use `scripts/init_db.py` or `onsendo system init-db` to create new databases
 - Mock data scenarios available for testing (see Database Management commands)
 
 ### Python Version
+
 - Requires Python 3.12+
 - Verify with `poetry env info`
 
 ### External Dependencies
+
 - Selenium tasks require ChromeDriver (document requirements in relevant script)
 - Heart rate batch import uses shell scripts in `scripts/` for automation
 
 ### Secrets & Privacy
+
 - Never commit secrets, API keys, or personal health data
 - Heart rate files should have permissions `chmod 600`
 - `.gitignore` covers `data/`, `local/`, `output/` directories
@@ -478,18 +588,21 @@ Closes #123
 ## Common Development Tasks
 
 ### Adding a New CLI Command
+
 1. Define command in appropriate `src/cli/commands/{group}/` file
 2. Register in `src/cli/cmd_list.py` with proper group prefix
 3. Add business logic to `src/lib/` or relevant module
 4. Add tests in `tests/unit/` or `tests/integration/`
 
 ### Adding a Database Column
+
 1. Update model in `src/db/models.py`
 2. Create database migration or use `init_db.py` for fresh database
 3. Update mock data generators in `src/testing/mocks/`
 4. Update analysis data categories if relevant (`src/types/analysis.py`)
 
 ### Adding a New Analysis Type
+
 1. Extend `AnalysisType` enum in `src/types/analysis.py`
 2. Implement analysis logic in `src/analysis/engine.py`
 3. Add visualizations in `src/analysis/visualizations.py` if needed
@@ -497,6 +610,7 @@ Closes #123
 5. Update documentation
 
 ### Adding a New Data Format for Heart Rate
+
 1. Implement parser in `src/lib/heart_rate_manager.py`
 2. Add format to `HeartRateDataFormat` enum
 3. Update validation logic
