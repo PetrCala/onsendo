@@ -42,7 +42,7 @@ class DatabaseConnection:
             del self.session_factories[url]
 
     @contextmanager
-    def get_session(self, url: str) -> Generator[Session, None, None]:
+    def get_session(self, url: str) -> Generator[Session]:
         """
         Get a database session for the specified URL.
 
@@ -69,15 +69,15 @@ db_manager = DatabaseConnection()
 
 
 @contextmanager
-def get_db(url: str) -> Generator[Session, None, None]:
+def get_db(url: str) -> Generator[Session]:
     """
     A function to yield a SQLAlchemy session.
 
     Args:
         url: The URL of the database to connect to.
 
-    Returns:
-        A generator that yields a SQLAlchemy session.
+    Yields:
+        A SQLAlchemy session.
 
     Usage:
     ```python

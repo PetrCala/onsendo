@@ -5,7 +5,6 @@ Basic functionality tests for the analysis system.
 import pytest
 import pandas as pd
 import numpy as np
-from unittest.mock import Mock, MagicMock
 
 from src.types.analysis import (
     AnalysisType,
@@ -13,7 +12,9 @@ from src.types.analysis import (
     MetricType,
     VisualizationType,
     AnalysisRequest,
-    AnalysisResult,
+    VisualizationConfig,
+    ModelConfig,
+    ModelType,
 )
 from src.analysis.metrics import MetricsCalculator
 from src.analysis.visualizations import VisualizationEngine
@@ -109,8 +110,6 @@ class TestVisualizationEngine:
 
     def test_create_bar_chart(self):
         """Test bar chart creation."""
-        from src.types.analysis import VisualizationConfig
-
         config = VisualizationConfig(
             type=VisualizationType.BAR,
             title="Test Bar Chart",
@@ -123,8 +122,6 @@ class TestVisualizationEngine:
 
     def test_create_histogram(self):
         """Test histogram creation."""
-        from src.types.analysis import VisualizationConfig
-
         config = VisualizationConfig(
             type=VisualizationType.HISTOGRAM, title="Test Histogram", x_column="rating"
         )
@@ -134,8 +131,6 @@ class TestVisualizationEngine:
 
     def test_create_correlation_matrix(self):
         """Test correlation matrix creation."""
-        from src.types.analysis import VisualizationConfig
-
         config = VisualizationConfig(
             type=VisualizationType.CORRELATION_MATRIX, title="Test Correlation Matrix"
         )
@@ -163,17 +158,10 @@ class TestModelEngine:
 
     def test_create_linear_regression(self):
         """Test that linear regression is not handled by ModelEngine."""
-        from src.types.analysis import ModelConfig, ModelType
-
-        # Linear regression should raise an error - it's now handled by EconometricAnalyzer
-        config = ModelConfig(
-            type=ModelType.LINEAR_REGRESSION,
-            target_column="target",
-            feature_columns=["feature1", "feature2"],
-        )
+        # Linear regression is now handled by EconometricAnalyzer, not ModelEngine
+        # This test verifies that ModelEngine only handles clustering and dimensionality reduction
 
         # ModelEngine only handles clustering and dimensionality reduction
-        # This test now checks that it doesn't support regression
         # (Regression is handled by src.analysis.econometrics.EconometricAnalyzer)
         assert not hasattr(self.engine, "create_model")
         assert hasattr(self.engine, "create_clustering_model")
@@ -181,8 +169,6 @@ class TestModelEngine:
 
     def test_create_clustering_model(self):
         """Test clustering model creation."""
-        from src.types.analysis import ModelConfig, ModelType
-
         config = ModelConfig(
             type=ModelType.KMEANS,
             target_column="dummy",

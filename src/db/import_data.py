@@ -6,9 +6,12 @@ from sqlalchemy.orm import Session
 from src.db.models import Onsen
 
 
-def import_onsen_data(db: Session, json_path: str) -> dict[str, int]:
+def import_onsen_data(db: Session, json_path: str) -> dict[str, int]:  # pylint: disable=too-complex
     """
     Import onsens from a scraped JSON file and upsert into the database.
+
+    Note: This function has intentional complexity due to multiple validation checks,
+    error handling paths, and data transformation logic for importing onsen data.
 
     The JSON is produced by the individual onsen scraping pipeline and has the form:
     ```json
@@ -28,7 +31,8 @@ def import_onsen_data(db: Session, json_path: str) -> dict[str, int]:
     try:
         with open(json_path, "r", encoding="utf-8") as f:
             data: dict[str, Any] = json.load(f)
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        # Broad exception needed for file I/O and JSON parsing errors
         logger.error(f"Failed to read JSON from {json_path}: {exc}")
         return {"inserted": 0, "updated": 0, "skipped": 0}
 
@@ -61,7 +65,8 @@ def import_onsen_data(db: Session, json_path: str) -> dict[str, int]:
     for onsen_id_str, payload in data.items():
         try:
             onsen_id = int(onsen_id_str)
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
+            # Broad exception needed for type conversion errors
             logger.warning(f"Skipping entry with non-integer key: {onsen_id_str}")
             skipped += 1
             continue
@@ -100,7 +105,8 @@ def import_onsen_data(db: Session, json_path: str) -> dict[str, int]:
                 try:
                     existing_by_ban.id = onsen_id
                     updated += 1
-                except Exception as exc:
+                except Exception as exc:  # pylint: disable=broad-exception-caught
+                    # Broad exception needed for database constraint errors
                     logger.warning(
                         f"Could not update primary key for ban={values['ban_number']} to id={onsen_id}: {exc}"
                     )

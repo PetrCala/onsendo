@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, time, date
 import re
-import requests
 from typing import Optional
-from abc import ABC, abstractmethod
+
+import requests
 
 from src.const import CONST
 
@@ -46,7 +47,8 @@ class JapanHolidayService(HolidayService):
                 holidays.add(holiday_date)
 
             return holidays
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            # Broad exception handling is appropriate here - network/API errors are unpredictable
             # Log error and return empty set as fallback
             print(f"Warning: Failed to fetch holidays for {year}: {e}")
             return set()
@@ -69,7 +71,7 @@ _holiday_service: Optional[HolidayService] = None
 
 def get_holiday_service() -> HolidayService:
     """Get the global holiday service instance."""
-    global _holiday_service
+    global _holiday_service  # pylint: disable=global-statement
     if _holiday_service is None:
         _holiday_service = JapanHolidayService()
     return _holiday_service
@@ -77,7 +79,7 @@ def get_holiday_service() -> HolidayService:
 
 def set_holiday_service(service: HolidayService) -> None:
     """Set the global holiday service instance (useful for testing)."""
-    global _holiday_service
+    global _holiday_service  # pylint: disable=global-statement
     _holiday_service = service
 
 
@@ -405,11 +407,14 @@ def extract_last_admission(segment: str) -> Optional[time]:
     return None
 
 
-def parse_usage_time(value: Optional[str]) -> UsageTimeParsed:
+def parse_usage_time(value: Optional[str]) -> UsageTimeParsed:  # pylint: disable=too-many-locals,too-many-nested-blocks
     """
     Parse a Japanese usage time string into a structured UsageTimeParsed object.
 
     This function interprets a wide variety of Japanese time expressions for business hours,
+
+    Note: This function has intentional complexity due to the nature of Japanese text parsing
+    with many edge cases and conditional paths. Refactoring would harm readability.
     including regular hours, seasonal hours, weekday/weekend/holiday variations, hotel check-in/out,
     and special flags such as "closed", "inquiry required", or "reservation required".
 

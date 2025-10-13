@@ -2,11 +2,7 @@
 Tests for the stay restriction parser.
 """
 
-import pytest
-from src.lib.parsers.stay_restriction import (
-    parse_stay_restriction,
-    StayRestrictionParsed,
-)
+from src.lib.parsers.stay_restriction import parse_stay_restriction
 
 
 class TestStayRestrictionParser:

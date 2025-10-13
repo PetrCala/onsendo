@@ -1,7 +1,8 @@
 import sys
 from typing import Optional
+
 from loguru import logger
-from sqlalchemy_utils import database_exists, create_database, drop_database
+
 from src.db.conn import db_manager
 from src.db.models import Base
 from src.const import CONST

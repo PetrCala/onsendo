@@ -27,7 +27,7 @@ def test_weekly_multiple_and_exclude_holiday():
     p = parse_closed_days("月・火・水曜 (祝日の場合は営業)")
     # Assume 2025-01-06 is a Monday and a holiday per usage_time tests setup may vary.
     # We cannot rely on external holiday service here; behavior should not error.
-    assert p.is_closed_on(dt(2025, 1, 6)) in (False, True)
+    assert p.is_closed_on(dt(2025, 1, 6)) in {False, True}
 
 
 def test_ordinal_weekday():
@@ -65,4 +65,4 @@ def test_irregular_marks_unknown():
     p = parse_closed_days("不定休(家族湯は水曜）")
     assert p.irregular_or_unknown
     # Without deterministic rules, result may be None (unknown)
-    assert p.is_closed_on(dt(2025, 1, 2)) in (None, False)
+    assert p.is_closed_on(dt(2025, 1, 2)) in {None, False}

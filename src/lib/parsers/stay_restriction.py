@@ -107,11 +107,7 @@ def _detect_stay_restriction(normalized_text: str) -> bool:
     # Remove spaces from normalized text for exact pattern matching
     text_for_matching = normalized_text.replace(" ", "")
 
-    for pattern in stay_restriction_patterns:
-        if pattern in text_for_matching:
-            return True
-
-    return False
+    return any(pattern in text_for_matching for pattern in stay_restriction_patterns)
 
 
 def _requires_inquiry(normalized_text: str) -> bool:
@@ -130,11 +126,7 @@ def _requires_inquiry(normalized_text: str) -> bool:
         "事前相談",
     ]
 
-    for pattern in ambiguous_patterns:
-        if pattern in normalized_text:
-            return True
-
-    return False
+    return any(pattern in normalized_text for pattern in ambiguous_patterns)
 
 
 def _extract_notes(normalized_text: str, is_stay_restricted: bool) -> list[str]:

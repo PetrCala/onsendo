@@ -1,6 +1,5 @@
 """Unit tests for onsen identification functionality."""
 
-import pytest
 from unittest.mock import MagicMock
 
 from src.lib.onsen_identifier import (
@@ -10,7 +9,6 @@ from src.lib.onsen_identifier import (
     identify_by_address,
     identify_by_region,
     identify_onsen,
-    OnsenMatch,
 )
 from src.db.models import Onsen
 

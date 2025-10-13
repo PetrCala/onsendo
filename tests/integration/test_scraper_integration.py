@@ -38,7 +38,7 @@ class TestScraperIntegration:
     """Integration tests for the scraper functionality."""
 
     @pytest.fixture(autouse=True)
-    def setup_class_mocks(self, tmp_path, shared_mocks):
+    def setup_class_mocks(self, tmp_path, shared_mocks):  # pylint: disable=redefined-outer-name
         """Set up shared mocks for all tests to avoid repeated patching."""
         self.temp_dir = tmp_path
         self.mocks = shared_mocks
