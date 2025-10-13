@@ -8,7 +8,7 @@ import logging
 
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
+import seaborn as sns
 
 from src.types.analysis import VisualizationType, VisualizationConfig
 from src.analysis.metrics import MetricsCalculator
@@ -279,9 +279,7 @@ class VisualizationEngine:
         ax.set_ylabel(config.y_column.replace("_", " ").title())
 
         if config.color_column:
-            _plt.colorbar(
-                scatter, label=config.color_column.replace("_", " ").title()
-            )
+            _plt.colorbar(scatter, label=config.color_column.replace("_", " ").title())
 
         _plt.tight_layout()
 
@@ -542,9 +540,7 @@ class VisualizationEngine:
             return fig
         _plt, _sns = self._get_matplotlib()
         fig, ax = _plt.subplots(figsize=(12, 10))
-        sns.heatmap(
-            corr_matrix, annot=True, cmap="RdBu", center=0, square=True, ax=ax
-        )
+        sns.heatmap(corr_matrix, annot=True, cmap="RdBu", center=0, square=True, ax=ax)
         ax.set_title(config.title)
         _plt.tight_layout()
 
@@ -998,12 +994,12 @@ class VisualizationEngine:
 
         # This is a simplified version - you'd want to add actual visualizations here
         axes[0, 0].text(
-                0.5,
-                0.5,
-                "Distribution",
-                ha="center",
-                va="center",
-                transform=axes[0, 0].transAxes,
+            0.5,
+            0.5,
+            "Distribution",
+            ha="center",
+            va="center",
+            transform=axes[0, 0].transAxes,
         )
         axes[0, 1].text(
             0.5,
