@@ -5,8 +5,6 @@ Run an analysis.
 """
 
 import argparse
-from typing import Any, Optional
-from pathlib import Path
 import json
 
 from loguru import logger
@@ -21,8 +19,6 @@ from src.types.analysis import (
     VisualizationType,
     ModelType,
     AnalysisRequest,
-    AnalysisScenario,
-    ANALYSIS_SCENARIOS,
 )
 
 

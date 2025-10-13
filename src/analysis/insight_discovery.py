@@ -7,7 +7,7 @@ and actionable insights from regression results and exploratory analysis.
 
 import pandas as pd
 import numpy as np
-from typing import Optional, Any
+from typing import Any
 from dataclasses import dataclass, field
 
 from loguru import logger

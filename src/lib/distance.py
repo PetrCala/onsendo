@@ -4,7 +4,6 @@ import heapq
 import math
 from typing import Optional
 from dataclasses import dataclass
-from statistics import mean, median, stdev
 
 from src.db.models import Onsen, Location
 from src.lib.cache import (

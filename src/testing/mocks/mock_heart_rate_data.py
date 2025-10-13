@@ -7,13 +7,11 @@ for testing and development purposes.
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Optional, Any
+from typing import Optional
 from faker import Faker
 import random
 import csv
 import json
-import os
-from pathlib import Path
 
 fake = Faker(["en_US"])
 

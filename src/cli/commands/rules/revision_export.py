@@ -6,7 +6,6 @@ import argparse
 import json
 import csv
 import os
-from typing import Optional
 from src.db.conn import get_db
 from src.db.models import RuleRevision
 from src.const import CONST

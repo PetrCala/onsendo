@@ -17,7 +17,6 @@ from src.db.models import OnsenVisit, Onsen
 from src.testing.mocks.mock_visit_data import (
     MockVisitDataGenerator,
     create_realistic_visit_scenario,
-    create_visit_series,
     create_seasonal_visits,
 )
 from src.const import CONST

@@ -6,7 +6,6 @@ Fill the database with onsen data from JSON files.
 
 import argparse
 import os
-import glob
 from pathlib import Path
 from loguru import logger
 from src.db.conn import get_db

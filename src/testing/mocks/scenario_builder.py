@@ -12,24 +12,15 @@ This module creates sophisticated mock datasets with:
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional, Any
+from typing import Optional
 import random
 import numpy as np
 from faker import Faker
 
 from src.testing.mocks.user_profiles import (
     UserProfile,
-    get_profile,
     get_random_profile,
     ALL_PROFILES,
-    QUALITY_SEEKER,
-    BUDGET_TRAVELER,
-    HEALTH_ENTHUSIAST,
-    RELAXATION_SEEKER,
-    EXPLORER,
-    SOCIAL_VISITOR,
-    LOCAL_REGULAR,
-    TOURIST,
 )
 from src.testing.mocks.mock_visit_data import MockOnsenVisit
 

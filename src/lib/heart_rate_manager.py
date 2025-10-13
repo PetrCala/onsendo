@@ -11,13 +11,11 @@ import os
 import csv
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
 from loguru import logger
 
-from src.db.conn import get_db
-from src.const import CONST
 from src.db.models import HeartRateData, OnsenVisit
 
 

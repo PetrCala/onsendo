@@ -10,7 +10,6 @@ This command creates analysis-ready datasets with:
 """
 
 import argparse
-from datetime import datetime, timedelta
 from loguru import logger
 
 from src.db.conn import get_db
@@ -23,7 +22,6 @@ from src.testing.mocks.integrated_scenario import (
     create_pricing_analysis_dataset,
     create_spatial_analysis_dataset,
     create_temporal_analysis_dataset,
-    IntegratedVisitData,
 )
 from src.testing.mocks.scenario_builder import (
     create_analysis_ready_dataset,
@@ -31,7 +29,7 @@ from src.testing.mocks.scenario_builder import (
     create_tourist_scenario,
     create_local_regular_scenario,
 )
-from src.testing.mocks.user_profiles import ALL_PROFILES, PROFILE_MAP
+from src.testing.mocks.user_profiles import ALL_PROFILES
 
 
 def generate_realistic_data(args: argparse.Namespace) -> None:

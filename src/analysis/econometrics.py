@@ -92,10 +92,7 @@ class EconometricAnalyzer:
         """
         # Lazy import statsmodels
         import statsmodels.api as sm
-        from statsmodels.stats.diagnostic import het_breuschpagan, het_white
-        from statsmodels.stats.outliers_influence import variance_inflation_factor
         from statsmodels.stats.stattools import durbin_watson
-        import scipy.stats as stats
 
         logger.info(f"Estimating {model_name}: {dependent_var} ~ {len(independent_vars)} vars")
 

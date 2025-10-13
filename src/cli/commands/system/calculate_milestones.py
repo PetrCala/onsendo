@@ -2,7 +2,6 @@
 CLI command to calculate distance milestones for a location.
 """
 
-import argparse
 from sqlalchemy.orm import Session
 
 from src.db.models import Location

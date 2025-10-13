@@ -6,11 +6,8 @@ preferences, and visiting patterns. Each profile generates data with realistic
 correlations and econometric relationships suitable for analysis.
 """
 
-from collections.abc import Callable
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
 import random
-from typing import Optional, Any
 
 import numpy as np
 

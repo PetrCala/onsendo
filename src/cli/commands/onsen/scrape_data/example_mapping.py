@@ -2,7 +2,6 @@
 Example script demonstrating the data mapping functionality.
 """
 
-import json
 import sys
 import os
 

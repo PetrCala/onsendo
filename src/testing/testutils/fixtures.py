@@ -5,11 +5,9 @@ Fixtures for the project.
 import json
 import os
 import tempfile
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 

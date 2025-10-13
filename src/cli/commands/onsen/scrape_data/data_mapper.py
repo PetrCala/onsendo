@@ -2,7 +2,7 @@
 Data mapper for converting scraped onsen data to database model format.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 
 def map_scraped_data_to_onsen_model(scraped_data: dict[str, Any]) -> dict[str, Any]:

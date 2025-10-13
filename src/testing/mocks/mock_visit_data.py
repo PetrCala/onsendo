@@ -17,9 +17,9 @@ This module is best suited for:
 - Foundation dataclass (MockOnsenVisit) used by all mock systems
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional, Any
+from typing import Optional
 from faker import Faker
 import random
 

@@ -13,7 +13,6 @@ Provides robust, incremental backup functionality to Google Drive with:
 import os
 import json
 import hashlib
-from pathlib import Path
 from typing import Optional, Any
 from datetime import datetime
 from loguru import logger
@@ -29,8 +28,6 @@ try:
 except ImportError:
     GOOGLE_AVAILABLE = False
     logger.warning("Google Drive dependencies not available. Install with: poetry install")
-
-from src.paths import PATHS
 
 
 # Google Drive API scopes
