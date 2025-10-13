@@ -17,6 +17,23 @@
   </p>
 </div>
 
+## The Onsendo Challenge
+
+This application supports the **[88 Onsen Challenge](rules/onsendo-rules.md)** - a three-month journey (October-December 2025) to visit all 88 onsens in Beppu while maintaining a sustainable, healthy daily routine that integrates physical exercise, recovery, and work-life balance.
+
+The challenge ruleset defines:
+
+- Visit frequency and timing guidelines (2 visits per day on active days)
+- Sauna usage policy (3-4 times per week maximum)
+- Exercise integration (running, gym, hiking schedule)
+- Health and safety protocols
+- Data logging requirements
+
+See [rules/onsendo-rules.md](rules/onsendo-rules.md) for the complete challenge framework and guidelines.
+
+---
+
+- [The Onsendo Challenge](#the-onsendo-challenge)
 - [Set up the project](#set-up-the-project)
 - [How to use](#how-to-use)
   - [Quick Start](#quick-start)
