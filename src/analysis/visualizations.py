@@ -4,10 +4,10 @@ Visualization system for onsen analysis.
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Any, Union, Tuple
+from typing import List, Optional, Any
 import logging
-import warnings
 from pathlib import Path
+from matplotlib import pyplot as plt
 
 from src.types.analysis import VisualizationType, VisualizationConfig
 from src.analysis.metrics import MetricsCalculator

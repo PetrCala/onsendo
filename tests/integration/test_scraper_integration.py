@@ -6,21 +6,17 @@ Optimized for speed: < 2 seconds total runtime.
 
 import json
 import os
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock
 
 import pytest
 
 from src.cli.commands.onsen.scrape_data import (
     scrape_onsen_data,
-    setup_logging,
-    ensure_output_directory,
-    load_existing_data,
     save_data,
     process_scraped_onsen_data,
     print_summary_statistics,
 )
 from src.testing.mocks.mock_onsen_data import (
-    get_mock_onsen_mapping,
     get_mock_complete_entry,
     get_mock_error_entry,
     get_mock_extracted_data,
@@ -94,16 +90,27 @@ class TestScraperIntegration:
 
     def test_scrape_onsen_data_flows(self):
         """Test scraping flows: full, incremental, and error handling (consolidated for speed)."""
-        with patch("src.cli.commands.onsen.scrape_data.setup_logging") as mock_setup, \
-             patch("src.cli.commands.onsen.scrape_data.ensure_output_directory") as mock_ensure, \
-             patch("src.cli.commands.onsen.scrape_data.load_existing_data") as mock_load, \
-             patch("src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping") as mock_extract, \
-             patch("src.cli.commands.onsen.scrape_data.save_data") as mock_save, \
-             patch("src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium") as mock_scrape, \
-             patch("src.cli.commands.onsen.scrape_data.process_scraped_onsen_data") as mock_process, \
-             patch("src.cli.commands.onsen.scrape_data.print_summary_statistics") as mock_print, \
-             patch("src.cli.commands.onsen.scrape_data.setup_selenium_driver") as mock_driver, \
-             patch("time.sleep") as mock_sleep:
+        with patch(
+            "src.cli.commands.onsen.scrape_data.setup_logging"
+        ) as mock_setup, patch(
+            "src.cli.commands.onsen.scrape_data.ensure_output_directory"
+        ) as mock_ensure, patch(
+            "src.cli.commands.onsen.scrape_data.load_existing_data"
+        ) as mock_load, patch(
+            "src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping"
+        ) as mock_extract, patch(
+            "src.cli.commands.onsen.scrape_data.save_data"
+        ) as mock_save, patch(
+            "src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium"
+        ) as mock_scrape, patch(
+            "src.cli.commands.onsen.scrape_data.process_scraped_onsen_data"
+        ) as mock_process, patch(
+            "src.cli.commands.onsen.scrape_data.print_summary_statistics"
+        ) as mock_print, patch(
+            "src.cli.commands.onsen.scrape_data.setup_selenium_driver"
+        ) as mock_driver, patch(
+            "time.sleep"
+        ) as mock_sleep:  # pylint: disable=unused-variable
 
             # Configure driver mock to return a mock driver with quit method
             mock_driver_instance = Mock()
@@ -154,7 +161,9 @@ class TestScraperIntegration:
             "住所": "大分県別府市鉄輪559-1",
         }
 
-        result = process_scraped_onsen_data({"onsen_id": "123", "extracted_data": test_data})
+        result = process_scraped_onsen_data(
+            {"onsen_id": "123", "extracted_data": test_data}
+        )
         mapped = result["mapped_data"]
 
         # Check coordinates
@@ -166,17 +175,29 @@ class TestScraperIntegration:
 
     def test_scrape_onsen_data_flag_modes(self):
         """Test different flag modes: fetch_mapping_only, scrape_individual_only, conflicting flags."""
-        with patch("src.cli.commands.onsen.scrape_data.setup_logging") as mock_setup, \
-             patch("src.cli.commands.onsen.scrape_data.ensure_output_directory") as mock_ensure, \
-             patch("src.cli.commands.onsen.scrape_data.load_existing_data") as mock_load, \
-             patch("src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping") as mock_extract, \
-             patch("src.cli.commands.onsen.scrape_data.save_data") as mock_save, \
-             patch("src.cli.commands.onsen.scrape_data.print_summary_statistics") as mock_print, \
-             patch("src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium") as mock_scrape, \
-             patch("src.cli.commands.onsen.scrape_data.process_scraped_onsen_data") as mock_process, \
-             patch("os.path.exists") as mock_exists, \
-             patch("builtins.open", create=True) as mock_file, \
-             patch("time.sleep") as mock_sleep:
+        with patch(
+            "src.cli.commands.onsen.scrape_data.setup_logging"
+        ) as mock_setup, patch(  # pylint: disable=unused-variable
+            "src.cli.commands.onsen.scrape_data.ensure_output_directory"
+        ) as mock_ensure, patch(  # pylint: disable=unused-variable
+            "src.cli.commands.onsen.scrape_data.load_existing_data"
+        ) as mock_load, patch(
+            "src.cli.commands.onsen.scrape_data.extract_all_onsen_mapping"
+        ) as mock_extract, patch(
+            "src.cli.commands.onsen.scrape_data.save_data"
+        ) as mock_save, patch(
+            "src.cli.commands.onsen.scrape_data.print_summary_statistics"
+        ) as mock_print, patch(
+            "src.cli.commands.onsen.scrape_data.scrape_onsen_page_with_selenium"
+        ) as mock_scrape, patch(
+            "src.cli.commands.onsen.scrape_data.process_scraped_onsen_data"
+        ) as mock_process, patch(
+            "os.path.exists"
+        ) as mock_exists, patch(
+            "builtins.open", create=True
+        ) as mock_file, patch(
+            "time.sleep"
+        ) as mock_sleep:  # pylint: disable=unused-variable
 
             # Scenario 1: fetch_mapping_only
             mock_load.return_value = {}
@@ -188,7 +209,9 @@ class TestScraperIntegration:
 
             # Scenario 2: scrape_individual_only (with mapping file)
             mock_exists.return_value = True
-            mock_file.return_value.__enter__.return_value.read.return_value = '{"123": "001"}'
+            mock_file.return_value.__enter__.return_value.read.return_value = (
+                '{"123": "001"}'
+            )
             mock_scrape.return_value = self.mocks["complete_entry"]
             mock_process.return_value = self.mocks["complete_entry"]
             args = Mock(fetch_mapping_only=False, scrape_individual_only=True)
