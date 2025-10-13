@@ -8,7 +8,7 @@ from src.db.models import OnsenVisit, Onsen
 from src.const import CONST
 
 
-def list_visits(args: argparse.Namespace) -> None:
+def list_visits(args: argparse.Namespace) -> None:  # pylint: disable=unused-argument
     """List all visits in the database."""
     with get_db(url=CONST.DATABASE_URL) as db:
         # Get visits with onsen information

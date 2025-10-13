@@ -1,8 +1,10 @@
 """
 Delete visit command with interactive support.
 """
+# pylint: disable=bad-builtin  # input() is appropriate for CLI interaction
 
 import argparse
+
 from src.db.conn import get_db
 from src.db.models import OnsenVisit, Onsen
 from src.const import CONST
