@@ -239,10 +239,10 @@ poetry run onsendo visit delete
 poetry run onsendo heart-rate import path/to/data.csv --format apple_health
 
 # Batch import
-poetry run onsendo heart-rate batch-import /path/to/files/ --recursive --max_workers 8
+poetry run onsendo heart-rate batch-import /path/to/files/ --recursive --max-workers 8
 
 # Manage records
-poetry run onsendo heart-rate list list --unlinked_only
+poetry run onsendo heart-rate list list --unlinked-only
 poetry run onsendo heart-rate list link <hr_id> <visit_id>
 ```
 
@@ -260,18 +260,18 @@ poetry run onsendo analysis run descriptive \
   --models "linear_regression"
 
 # Cleanup old analyses
-poetry run onsendo analysis clear-cache --cleanup_old_analyses --keep_recent 5
+poetry run onsendo analysis clear-cache --cleanup-old-analyses --keep-recent 5
 ```
 
 ### Database Management
 ```bash
 # Insert mock data for testing
 poetry run onsendo database insert-mock-visits --scenario weekend_warrior
-poetry run onsendo database insert-mock-visits --scenario custom --num_days 14 --visits_per_day 2
+poetry run onsendo database insert-mock-visits --scenario custom --num-days 14 --visits-per-day 2
 
 # Clean up test data
 poetry run onsendo database drop-visits --force
-poetry run onsendo database drop-visits-by-criteria --rating_below 7 --force
+poetry run onsendo database drop-visits-by-criteria --rating-below 7 --force
 ```
 
 ## Testing Conventions

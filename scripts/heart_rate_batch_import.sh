@@ -148,11 +148,11 @@ if [ -n "$NOTES" ]; then
 fi
 
 if [ "$DRY_RUN" = true ]; then
-    CMD="$CMD --dry_run"
-    print_status "Running in dry_run mode (no data will be stored)"
+    CMD="$CMD --dry-run"
+    print_status "Running in dry-run mode (no data will be stored)"
 fi
 
-CMD="$CMD --max_workers $WORKERS"
+CMD="$CMD --max-workers $WORKERS"
 print_status "Using $WORKERS parallel workers"
 
 # Show what will be imported

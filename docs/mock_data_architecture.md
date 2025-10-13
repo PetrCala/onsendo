@@ -135,7 +135,7 @@ poetry run onsendo database insert-mock-visits --scenario weekend_warrior
 **CLI Commands:**
 ```bash
 # Generate econometric test data
-poetry run onsendo database generate-realistic-data --scenario econometric --num_visits 200
+poetry run onsendo database generate-realistic-data --scenario econometric --num-visits 200
 
 # View available profiles
 poetry run onsendo database list-profiles
@@ -332,7 +332,7 @@ Generate econometric data and verify it's suitable for analysis:
 
 ```bash
 # Generate econometric dataset
-poetry run onsendo database generate-realistic-data --scenario econometric --num_visits 200
+poetry run onsendo database generate-realistic-data --scenario econometric --num-visits 200
 
 # Run enjoyment drivers analysis
 poetry run onsendo analysis scenario enjoyment_drivers

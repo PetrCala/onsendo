@@ -97,7 +97,7 @@ fi
 
 # First, validate the data
 print_status "Validating data before import..."
-VALIDATE_CMD="$CMD --validate_only"
+VALIDATE_CMD="$CMD --validate-only"
 
 if eval "$VALIDATE_CMD"; then
     print_success "Data validation passed!"
@@ -113,13 +113,13 @@ echo ""
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     print_status "Importing heart rate data..."
-    
+
     if eval "$CMD"; then
         print_success "Heart rate data imported successfully!"
-        
+
         # Show the imported record
         print_status "Fetching imported record details..."
-        poetry run onsendo heart-rate list --unlinked_only
+        poetry run onsendo heart-rate list --unlinked-only
         
     else
         print_error "Import failed. Please check the error messages above."

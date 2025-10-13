@@ -261,7 +261,7 @@ poetry run onsendo heart-rate import path/to/data.csv --format csv
 poetry run onsendo heart-rate import path/to/data.csv --notes "Morning workout session"
 
 # Validate only (don't store)
-poetry run onsendo heart-rate import path/to/data.csv --validate_only
+poetry run onsendo heart-rate import path/to/data.csv --validate-only
 
 # Batch import from directory
 poetry run onsendo heart-rate batch-import /path/to/heart_rate_files/ --recursive
@@ -283,7 +283,7 @@ When adding a visit interactively, you can link heart rate data:
 poetry run onsendo heart-rate list list
 
 # Show only unlinked records
-poetry run onsendo heart-rate list list --unlinked_only
+poetry run onsendo heart-rate list list --unlinked-only
 
 # Show details including file integrity
 poetry run onsendo heart-rate list list --details
@@ -368,7 +368,7 @@ mv data/heart_rate/raw/apple_health/2025_08/ data/heart_rate/archived/2025_08/
 
 - **File Permissions**: `chmod 600 data/heart_rate/raw/**/*.csv` for privacy
 - **Regular Backups**: Use `rsync` or git for version control
-- **Validation**: Use `--validate_only` to check files before importing
+- **Validation**: Use `--validate-only` to check files before importing
 
 #### Getting Smart Recommendations
 
@@ -488,9 +488,9 @@ poetry run onsendo database insert-mock-visits --scenario seasonal_explorer
 poetry run onsendo database insert-mock-visits --scenario multi_onsen_enthusiast
 
 # Custom scenarios with parameters
-poetry run onsendo database insert-mock-visits --scenario custom --num_days 14 --visits_per_day 2
-poetry run onsendo database insert-mock-visits --scenario seasonal --season winter --num_visits 20
-poetry run onsendo database insert-mock-visits --scenario custom --start_date 2024-01-01 --num_days 30
+poetry run onsendo database insert-mock-visits --scenario custom --num-days 14 --visits-per-day 2
+poetry run onsendo database insert-mock-visits --scenario seasonal --season winter --num-visits 20
+poetry run onsendo database insert-mock-visits --scenario custom --start-date 2024-01-01 --num-days 30
 ```
 
 **Available Scenarios**:
@@ -523,19 +523,19 @@ poetry run onsendo database drop-visits
 poetry run onsendo database drop-visits --force
 
 # Drop visits based on specific criteria
-poetry run onsendo database drop-visits-by-criteria --rating_below 7 --force
-poetry run onsendo database drop-visits-by-criteria --before_date 2024-01-01 --force
-poetry run onsendo database drop-visits-by-criteria --onsen_id 5 --force
-poetry run onsendo database drop-visits-by-criteria --rating_above 9 --force
+poetry run onsendo database drop-visits-by-criteria --rating-below 7 --force
+poetry run onsendo database drop-visits-by-criteria --before-date 2024-01-01 --force
+poetry run onsendo database drop-visits-by-criteria --onsen-id 5 --force
+poetry run onsendo database drop-visits-by-criteria --rating-above 9 --force
 ```
 
 **Filtering Options for Selective Deletion**:
 
-- **`--onsen_id`**: Filter by specific onsen
-- **`--before_date`** / **`--after_date`**: Date ranges (YYYY-MM-DD format)
-- **`--rating_below`** / **`--rating_above`**: Rating-based filtering (1-10 scale)
+- **`--onsen-id`**: Filter by specific onsen
+- **`--before-date`** / **`--after-date`**: Date ranges (YYYY-MM-DD format)
+- **`--rating-below`** / **`--rating-above`**: Rating-based filtering (1-10 scale)
 - **`--force`**: Skip confirmation prompts
-- **`--no_interactive`**: Run in non-interactive mode
+- **`--no-interactive`**: Run in non-interactive mode
 
 **Safety Features**:
 

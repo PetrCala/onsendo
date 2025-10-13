@@ -74,11 +74,11 @@ show_status() {
     
     # Show unlinked records
     print_status "Unlinked records:"
-    poetry run onsendo heart-rate list --unlinked_only
-    
+    poetry run onsendo heart-rate list --unlinked-only
+
     # Show linked records
     print_status "Linked records:"
-    poetry run onsendo heart-rate list --linked_only
+    poetry run onsendo heart-rate list --linked-only
 }
 
 # Function to cleanup old records
@@ -105,12 +105,12 @@ cleanup_records() {
     
     # Show unlinked records first
     print_status "Unlinked records that can be safely removed:"
-    poetry run onsendo heart-rate list --unlinked_only
-    
+    poetry run onsendo heart-rate list --unlinked-only
+
     echo ""
     read -p "Do you want to remove unlinked records? (y/N): " -n 1 -r
     echo ""
-    
+
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_status "Removing unlinked records..."
         # This would need to be implemented in the CLI or done manually

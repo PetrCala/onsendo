@@ -70,7 +70,7 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.location.add", "add_location"),
         help="Add a new location for distance calculations.",
         args={
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
@@ -96,7 +96,7 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.location.delete", "delete_location"),
         help="Delete a location from the database.",
         args={
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
@@ -113,7 +113,7 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.location.modify", "modify_location"),
         help="Modify an existing location.",
         args={
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
@@ -136,63 +136,63 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.visit.add", "add_visit"),
         help="Add a new onsen visit.",
         args={
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
             ),
-            "onsen_id": ArgumentConfig(type=int, required=False),
-            "entry_fee_yen": ArgumentConfig(type=int, default=0),
-            "stay_length_minutes": ArgumentConfig(type=int, default=0),
-            "travel_time_minutes": ArgumentConfig(type=int, default=0),
-            "accessibility_rating": ArgumentConfig(type=int, default=0),
-            "exercise_length_minutes": ArgumentConfig(type=int, default=0),
-            "cleanliness_rating": ArgumentConfig(type=int, default=0),
-            "navigability_rating": ArgumentConfig(type=int, default=0),
-            "view_rating": ArgumentConfig(type=int, default=0),
-            "main_bath_temperature": ArgumentConfig(type=float, default=0),
-            "smell_intensity_rating": ArgumentConfig(type=int, default=0),
-            "changing_room_cleanliness_rating": ArgumentConfig(type=int, default=0),
-            "locker_availability_rating": ArgumentConfig(type=int, default=0),
-            "rest_area_rating": ArgumentConfig(type=int, default=0),
-            "food_quality_rating": ArgumentConfig(type=int, default=0),
-            "sauna_temperature": ArgumentConfig(type=float, default=0),
-            "sauna_duration_minutes": ArgumentConfig(type=int, default=0),
-            "sauna_rating": ArgumentConfig(type=int, default=0),
-            "outdoor_bath_temperature": ArgumentConfig(type=float, default=0),
-            "outdoor_bath_rating": ArgumentConfig(type=int, default=0),
-            "energy_level_change": ArgumentConfig(type=int, default=0),
-            "hydration_level": ArgumentConfig(type=int, default=0),
-            "previous_location": ArgumentConfig(type=int, default=0),
-            "next_location": ArgumentConfig(type=int, default=0),
-            "visit_order": ArgumentConfig(type=int, default=0),
-            "atmosphere_rating": ArgumentConfig(type=int, default=0),
-            "personal_rating": ArgumentConfig(type=int, default=0),
-            "temperature_outside_celsius": ArgumentConfig(type=float, default=0),
-            "payment_method": ArgumentConfig(type=str, default=""),
+            "onsen-id": ArgumentConfig(type=int, required=False),
+            "entry-fee-yen": ArgumentConfig(type=int, default=0),
+            "stay-length-minutes": ArgumentConfig(type=int, default=0),
+            "travel-time-minutes": ArgumentConfig(type=int, default=0),
+            "accessibility-rating": ArgumentConfig(type=int, default=0),
+            "exercise-length-minutes": ArgumentConfig(type=int, default=0),
+            "cleanliness-rating": ArgumentConfig(type=int, default=0),
+            "navigability-rating": ArgumentConfig(type=int, default=0),
+            "view-rating": ArgumentConfig(type=int, default=0),
+            "main-bath-temperature": ArgumentConfig(type=float, default=0),
+            "smell-intensity-rating": ArgumentConfig(type=int, default=0),
+            "changing-room-cleanliness-rating": ArgumentConfig(type=int, default=0),
+            "locker-availability-rating": ArgumentConfig(type=int, default=0),
+            "rest-area-rating": ArgumentConfig(type=int, default=0),
+            "food-quality-rating": ArgumentConfig(type=int, default=0),
+            "sauna-temperature": ArgumentConfig(type=float, default=0),
+            "sauna-duration-minutes": ArgumentConfig(type=int, default=0),
+            "sauna-rating": ArgumentConfig(type=int, default=0),
+            "outdoor-bath-temperature": ArgumentConfig(type=float, default=0),
+            "outdoor-bath-rating": ArgumentConfig(type=int, default=0),
+            "energy-level-change": ArgumentConfig(type=int, default=0),
+            "hydration-level": ArgumentConfig(type=int, default=0),
+            "previous-location": ArgumentConfig(type=int, default=0),
+            "next-location": ArgumentConfig(type=int, default=0),
+            "visit-order": ArgumentConfig(type=int, default=0),
+            "atmosphere-rating": ArgumentConfig(type=int, default=0),
+            "personal-rating": ArgumentConfig(type=int, default=0),
+            "temperature-outside-celsius": ArgumentConfig(type=float, default=0),
+            "payment-method": ArgumentConfig(type=str, default=""),
             "weather": ArgumentConfig(type=str, default=""),
-            "time_of_day": ArgumentConfig(type=str, default=""),
-            "visited_with": ArgumentConfig(type=str, default=""),
-            "travel_mode": ArgumentConfig(type=str, default=""),
-            "exercise_type": ArgumentConfig(type=str, default=""),
-            "crowd_level": ArgumentConfig(type=str, default=""),
-            "main_bath_type": ArgumentConfig(type=str, default=""),
-            "main_bath_water_type": ArgumentConfig(type=str, default=""),
-            "water_color": ArgumentConfig(type=str, default=""),
-            "pre_visit_mood": ArgumentConfig(type=str, default=""),
-            "post_visit_mood": ArgumentConfig(type=str, default=""),
-            "visit_time": ArgumentConfig(help="YYYY-MM-DD HH:MM", default=None),
-            "exercise_before_onsen": ArgumentConfig(action="store_true"),
-            "had_soap": ArgumentConfig(action="store_true"),
-            "had_sauna": ArgumentConfig(action="store_true"),
-            "had_outdoor_bath": ArgumentConfig(action="store_true"),
-            "had_rest_area": ArgumentConfig(action="store_true"),
-            "had_food_service": ArgumentConfig(action="store_true"),
-            "massage_chair_available": ArgumentConfig(action="store_true"),
-            "sauna_visited": ArgumentConfig(action="store_true"),
-            "sauna_steam": ArgumentConfig(action="store_true"),
-            "outdoor_bath_visited": ArgumentConfig(action="store_true"),
-            "multi_onsen_day": ArgumentConfig(action="store_true"),
+            "time-of-day": ArgumentConfig(type=str, default=""),
+            "visited-with": ArgumentConfig(type=str, default=""),
+            "travel-mode": ArgumentConfig(type=str, default=""),
+            "exercise-type": ArgumentConfig(type=str, default=""),
+            "crowd-level": ArgumentConfig(type=str, default=""),
+            "main-bath-type": ArgumentConfig(type=str, default=""),
+            "main-bath-water-type": ArgumentConfig(type=str, default=""),
+            "water-color": ArgumentConfig(type=str, default=""),
+            "pre-visit-mood": ArgumentConfig(type=str, default=""),
+            "post-visit-mood": ArgumentConfig(type=str, default=""),
+            "visit-time": ArgumentConfig(help="YYYY-MM-DD HH:MM", default=None),
+            "exercise-before-onsen": ArgumentConfig(action="store_true"),
+            "had-soap": ArgumentConfig(action="store_true"),
+            "had-sauna": ArgumentConfig(action="store_true"),
+            "had-outdoor-bath": ArgumentConfig(action="store_true"),
+            "had-rest-area": ArgumentConfig(action="store_true"),
+            "had-food-service": ArgumentConfig(action="store_true"),
+            "massage-chair-available": ArgumentConfig(action="store_true"),
+            "sauna-visited": ArgumentConfig(action="store_true"),
+            "sauna-steam": ArgumentConfig(action="store_true"),
+            "outdoor-bath-visited": ArgumentConfig(action="store_true"),
+            "multi-onsen-day": ArgumentConfig(action="store_true"),
         },
     ),
     "visit-list": CommandConfig(
@@ -204,12 +204,12 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.visit.delete", "delete_visit"),
         help="Delete a visit from the database.",
         args={
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
             ),
-            "visit_id": ArgumentConfig(type=int, required=False, help="Visit ID"),
+            "visit-id": ArgumentConfig(type=int, required=False, help="Visit ID"),
             "force": ArgumentConfig(
                 action="store_true", help="Skip confirmation prompt"
             ),
@@ -219,23 +219,23 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.visit.modify", "modify_visit"),
         help="Modify an existing visit.",
         args={
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
             ),
-            "visit_id": ArgumentConfig(type=int, required=False, help="Visit ID"),
-            "entry_fee_yen": ArgumentConfig(
+            "visit-id": ArgumentConfig(type=int, required=False, help="Visit ID"),
+            "entry-fee-yen": ArgumentConfig(
                 type=int, required=False, help="New entry fee"
             ),
-            "stay_length_minutes": ArgumentConfig(
+            "stay-length-minutes": ArgumentConfig(
                 type=int, required=False, help="New stay length"
             ),
-            "personal_rating": ArgumentConfig(
+            "personal-rating": ArgumentConfig(
                 type=int, required=False, help="New personal rating (1-10)"
             ),
             "weather": ArgumentConfig(type=str, required=False, help="New weather"),
-            "travel_mode": ArgumentConfig(
+            "travel-mode": ArgumentConfig(
                 type=str, required=False, help="New travel mode"
             ),
         },
@@ -245,7 +245,7 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.onsen.add", "add_onsen"),
         help="Add a new onsen.",
         args={
-            "ban_number": ArgumentConfig(type=str, required=True),
+            "ban-number": ArgumentConfig(type=str, required=True),
             "name": ArgumentConfig(type=str, required=True),
             "address": ArgumentConfig(type=str, default=""),
         },
@@ -254,8 +254,8 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.onsen.print_summary", "print_summary"),
         help="Print a summary for an onsen by ID or ban number.",
         args={
-            "onsen_id": ArgumentConfig(type=int, required=False, help="Onsen ID"),
-            "ban_number": ArgumentConfig(
+            "onsen-id": ArgumentConfig(type=int, required=False, help="Onsen ID"),
+            "ban-number": ArgumentConfig(
                 type=str, required=False, help="Onsen BAN number"
             ),
             "name": ArgumentConfig(
@@ -267,7 +267,7 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.onsen.map", "map_onsens"),
         help="Generate interactive map of all onsens in the database.",
         args={
-            "no_open_map": ArgumentConfig(
+            "no-open-map": ArgumentConfig(
                 action="store_true",
                 help="Do not automatically open map in browser (default: auto-open)",
             ),
@@ -277,7 +277,7 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.onsen.recommend", "recommend_onsen"),
         help="Get onsen recommendations based on location and criteria.",
         args={
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
@@ -293,13 +293,13 @@ CLI_COMMANDS = {
                 default="medium",
                 help="Distance category (very_close, close, medium, far, any)",
             ),
-            "exclude_closed": ArgumentConfig(
+            "exclude-closed": ArgumentConfig(
                 action="store_true", default=True, help="Exclude closed onsens"
             ),
-            "exclude_visited": ArgumentConfig(
+            "exclude-visited": ArgumentConfig(
                 action="store_true", default=True, help="Exclude visited onsens"
             ),
-            "min_hours_after": ArgumentConfig(
+            "min-hours-after": ArgumentConfig(
                 type=int,
                 required=False,
                 default=2,
@@ -308,17 +308,17 @@ CLI_COMMANDS = {
             "limit": ArgumentConfig(
                 type=int, required=False, help="Maximum number of recommendations"
             ),
-            "stay_restriction_filter": ArgumentConfig(
+            "stay-restriction-filter": ArgumentConfig(
                 type=str,
                 required=False,
                 default="non_stay_restricted",
                 help="Stay restriction filter (non_stay_restricted, all)",
             ),
-            "no_generate_map": ArgumentConfig(
+            "no-generate-map": ArgumentConfig(
                 action="store_true",
                 help="Disable interactive map generation",
             ),
-            "open_map": ArgumentConfig(
+            "open-map": ArgumentConfig(
                 action="store_true",
                 help="Automatically open map in browser after generation",
             ),
@@ -328,11 +328,11 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.onsen.scrape_data", "scrape_onsen_data"),
         help="Scrape onsen data from the web.",
         args={
-            "fetch_mapping_only": ArgumentConfig(
+            "fetch-mapping-only": ArgumentConfig(
                 action="store_true",
                 help="Only fetch the onsen mapping (list of all onsens), skip individual scraping",
             ),
-            "scrape_individual_only": ArgumentConfig(
+            "scrape-individual-only": ArgumentConfig(
                 action="store_true",
                 help="Only scrape individual onsen pages, skip fetching the mapping (requires existing mapping file)",
             ),
@@ -367,7 +367,7 @@ CLI_COMMANDS = {
                 required=False,
                 help="Region name (supports fuzzy matching)",
             ),
-            "max_distance": ArgumentConfig(
+            "max-distance": ArgumentConfig(
                 type=float,
                 required=False,
                 help="Maximum distance in kilometers (for location-based search)",
@@ -377,21 +377,21 @@ CLI_COMMANDS = {
                 default=5,
                 help="Maximum number of results to return (default: 5)",
             ),
-            "auto_print": ArgumentConfig(
+            "auto-print": ArgumentConfig(
                 action="store_true",
                 help="Automatically print summary of best match without prompting",
             ),
-            "name_threshold": ArgumentConfig(
+            "name-threshold": ArgumentConfig(
                 type=float,
                 default=0.6,
                 help="Minimum similarity threshold for name matching (0.0-1.0, default: 0.6)",
             ),
-            "address_threshold": ArgumentConfig(
+            "address-threshold": ArgumentConfig(
                 type=float,
                 default=0.5,
                 help="Minimum similarity threshold for address matching (0.0-1.0, default: 0.5)",
             ),
-            "region_threshold": ArgumentConfig(
+            "region-threshold": ArgumentConfig(
                 type=float,
                 default=0.6,
                 help="Minimum similarity threshold for region matching (0.0-1.0, default: 0.6)",
@@ -410,12 +410,12 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.database.fill_db", "fill_db"),
         help="Fill the database with onsen data. In interactive mode, will search for scraped data files.",
         args={
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
             ),
-            "json_path": ArgumentConfig(
+            "json-path": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Path to JSON file with onsen data (optional in interactive mode)",
@@ -426,17 +426,17 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.database.backup", "backup_db"),
         help="Backup the current database to a specified folder. In interactive mode, type 'browse' to open folder selection dialog, or type 'artifact' to backup to latest artifact.",
         args={
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
             ),
-            "backup_folder": ArgumentConfig(
+            "backup-folder": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Folder path where the backup should be stored (optional in interactive mode)",
             ),
-            "to_latest_artifact": ArgumentConfig(
+            "to-latest-artifact": ArgumentConfig(
                 action="store_true",
                 short="a",
                 help="Backup directly to the latest artifact path (artifacts/db/onsen_latest.db)",
@@ -452,17 +452,17 @@ CLI_COMMANDS = {
                 default="random",
                 help="Mock data scenario (random, weekend_warrior, daily_visitor, seasonal_explorer, multi_onsen_enthusiast, custom, seasonal)",
             ),
-            "num_days": ArgumentConfig(
+            "num-days": ArgumentConfig(
                 type=int,
                 default=44,
                 help="Number of days for custom scenario (default: 44)",
             ),
-            "visits_per_day": ArgumentConfig(
+            "visits-per-day": ArgumentConfig(
                 type=int,
                 default=2,
                 help="Visits per day for custom scenario (default: 2)",
             ),
-            "num_visits": ArgumentConfig(
+            "num-visits": ArgumentConfig(
                 type=int,
                 default=10,
                 help="Number of visits for seasonal scenario (default: 10)",
@@ -472,7 +472,7 @@ CLI_COMMANDS = {
                 default="summer",
                 help="Season for seasonal scenario (spring, summer, autumn, winter)",
             ),
-            "start_date": ArgumentConfig(
+            "start-date": ArgumentConfig(
                 type=str,
                 help="Start date for custom scenario (YYYY-MM-DD)",
             ),
@@ -486,7 +486,7 @@ CLI_COMMANDS = {
                 action="store_true",
                 help="Skip confirmation prompt",
             ),
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
@@ -497,23 +497,23 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.database.drop_visits", "drop_visits_by_criteria"),
         help="Drop visits from the database based on specific criteria.",
         args={
-            "onsen_id": ArgumentConfig(
+            "onsen-id": ArgumentConfig(
                 type=int,
                 help="Filter visits by specific onsen ID",
             ),
-            "before_date": ArgumentConfig(
+            "before-date": ArgumentConfig(
                 type=str,
                 help="Filter visits before this date (YYYY-MM-DD)",
             ),
-            "after_date": ArgumentConfig(
+            "after-date": ArgumentConfig(
                 type=str,
                 help="Filter visits after this date (YYYY-MM-DD)",
             ),
-            "rating_below": ArgumentConfig(
+            "rating-below": ArgumentConfig(
                 type=int,
                 help="Filter visits with rating below this value (1-10)",
             ),
-            "rating_above": ArgumentConfig(
+            "rating-above": ArgumentConfig(
                 type=int,
                 help="Filter visits with rating above this value (1-10)",
             ),
@@ -521,7 +521,7 @@ CLI_COMMANDS = {
                 action="store_true",
                 help="Skip confirmation prompt",
             ),
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
@@ -537,7 +537,7 @@ CLI_COMMANDS = {
                 default="comprehensive",
                 help="Data scenario (comprehensive, econometric, heart_rate, pricing, spatial, temporal, tourist, local_regular, integrated)",
             ),
-            "num_visits": ArgumentConfig(
+            "num-visits": ArgumentConfig(
                 type=int,
                 help="Number of visits to generate (default varies by scenario)",
             ),
@@ -549,15 +549,15 @@ CLI_COMMANDS = {
                 type=int,
                 help="Number of months (for temporal, local_regular scenarios)",
             ),
-            "trip_days": ArgumentConfig(
+            "trip-days": ArgumentConfig(
                 type=int,
                 help="Trip duration in days (for tourist scenario)",
             ),
-            "visits_per_day": ArgumentConfig(
+            "visits-per-day": ArgumentConfig(
                 type=int,
                 help="Visits per day (for tourist scenario)",
             ),
-            "hr_coverage": ArgumentConfig(
+            "hr-coverage": ArgumentConfig(
                 type=float,
                 help="Heart rate coverage 0.0-1.0 (for integrated scenario)",
             ),
@@ -588,14 +588,14 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.system.calculate_milestones", "calculate_milestones"),
         help="Calculate distance milestones for a location based on onsen distribution.",
         args={
-            "location_identifier": ArgumentConfig(
+            "location-identifier": ArgumentConfig(
                 type=str, required=True, help="Location ID or name", positional=True
             ),
-            "update_engine": ArgumentConfig(
+            "update-engine": ArgumentConfig(
                 action="store_true",
                 help="Update the recommendation engine with calculated milestones",
             ),
-            "show_recommendations": ArgumentConfig(
+            "show-recommendations": ArgumentConfig(
                 action="store_true",
                 help="Show sample recommendations using the new milestones",
             ),
@@ -622,7 +622,7 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.heart_rate.import_", "import_heart_rate_data"),
         help="Import heart rate data from a file",
         args={
-            "file_path": ArgumentConfig(
+            "file-path": ArgumentConfig(
                 type=str,
                 required=True,
                 help="Path to heart rate data file",
@@ -638,7 +638,7 @@ CLI_COMMANDS = {
                 required=False,
                 help="Optional notes about the recording session",
             ),
-            "validate_only": ArgumentConfig(
+            "validate-only": ArgumentConfig(
                 action="store_true", help="Only validate data without importing"
             ),
         },
@@ -647,13 +647,13 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.heart_rate.list", "list_heart_rate_data"),
         help="List and manage heart rate data records",
         args={
-            "linked_only": ArgumentConfig(
+            "linked-only": ArgumentConfig(
                 action="store_true", help="Show only records linked to visits"
             ),
-            "unlinked_only": ArgumentConfig(
+            "unlinked-only": ArgumentConfig(
                 action="store_true", help="Show only records not linked to visits"
             ),
-            "visit_id": ArgumentConfig(
+            "visit-id": ArgumentConfig(
                 type=int,
                 required=False,
                 help="Show heart rate data for specific visit ID",
@@ -668,13 +668,13 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.heart_rate.list", "link_heart_rate_to_visit"),
         help="Link heart rate data to a visit",
         args={
-            "heart_rate_id": ArgumentConfig(
+            "heart-rate-id": ArgumentConfig(
                 type=int,
                 required=True,
                 help="Heart rate record ID",
                 positional=True,
             ),
-            "visit_id_link": ArgumentConfig(
+            "visit-id-link": ArgumentConfig(
                 type=int,
                 required=True,
                 help="Visit ID to link to",
@@ -686,7 +686,7 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.heart_rate.list", "unlink_heart_rate_from_visit"),
         help="Unlink heart rate data from its visit",
         args={
-            "heart_rate_id": ArgumentConfig(
+            "heart-rate-id": ArgumentConfig(
                 type=int,
                 required=True,
                 help="Heart rate record ID",
@@ -698,7 +698,7 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.heart_rate.list", "delete_heart_rate_record"),
         help="Delete a heart rate record",
         args={
-            "heart_rate_id": ArgumentConfig(
+            "heart-rate-id": ArgumentConfig(
                 type=int,
                 required=True,
                 help="Heart rate record ID",
@@ -732,11 +732,11 @@ CLI_COMMANDS = {
                 required=False,
                 help="Optional notes to add to all imported sessions",
             ),
-            "dry_run": ArgumentConfig(
+            "dry-run": ArgumentConfig(
                 action="store_true",
                 help="Show what would be imported without storing data",
             ),
-            "max_workers": ArgumentConfig(
+            "max-workers": ArgumentConfig(
                 type=int, default=4, help="Maximum number of parallel workers"
             ),
         },
@@ -746,19 +746,19 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.analysis.run_analysis", "run_analysis"),
         help="Run a custom analysis",
         args={
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
             ),
-            "analysis_type": ArgumentConfig(
+            "analysis-type": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Type of analysis to perform",
                 positional=True,
                 nargs="?",
             ),
-            "data_categories": ArgumentConfig(
+            "data-categories": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Comma-separated list of data categories",
@@ -788,43 +788,43 @@ CLI_COMMANDS = {
                 required=False,
                 help="Comma-separated list of columns to group by",
             ),
-            "time_range": ArgumentConfig(
+            "time-range": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Time range in format 'start,end' (YYYY-MM-DD HH:MM)",
             ),
-            "spatial_bounds": ArgumentConfig(
+            "spatial-bounds": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Spatial bounds in format 'min_lat,max_lat,min_lon,max_lon'",
             ),
-            "custom_metrics": ArgumentConfig(
+            "custom-metrics": ArgumentConfig(
                 type=str,
                 required=False,
                 help="JSON string of custom metrics",
             ),
-            "output_format": ArgumentConfig(
+            "output-format": ArgumentConfig(
                 type=str,
                 required=False,
                 default="html",
                 help="Output format for reports",
             ),
-            "include_raw_data": ArgumentConfig(
+            "include-raw-data": ArgumentConfig(
                 action="store_true",
                 help="Include raw data in results",
             ),
-            "include_statistical_tests": ArgumentConfig(
+            "include-statistical-tests": ArgumentConfig(
                 action="store_true",
                 default=True,
                 help="Include statistical tests",
             ),
-            "confidence_level": ArgumentConfig(
+            "confidence-level": ArgumentConfig(
                 type=float,
                 required=False,
                 default=0.95,
                 help="Confidence level for statistical tests",
             ),
-            "output_dir": ArgumentConfig(
+            "output-dir": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Output directory for analysis results",
@@ -840,7 +840,7 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.analysis.run_scenario_analysis", "run_scenario_analysis"),
         help="Run a predefined analysis scenario",
         args={
-            "no_interactive": ArgumentConfig(
+            "no-interactive": ArgumentConfig(
                 action="store_true",
                 short="ni",
                 help="Run in non-interactive mode (default: False)",
@@ -852,12 +852,12 @@ CLI_COMMANDS = {
                 positional=True,
                 nargs="?",
             ),
-            "custom_config": ArgumentConfig(
+            "custom-config": ArgumentConfig(
                 type=str,
                 required=False,
                 help="JSON string of custom configuration overrides",
             ),
-            "output_dir": ArgumentConfig(
+            "output-dir": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Output directory for analysis results",
@@ -883,7 +883,7 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.analysis.show_analysis_summary", "show_analysis_summary"),
         help="Show summary of all analyses performed",
         args={
-            "output_dir": ArgumentConfig(
+            "output-dir": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Output directory for analysis results",
@@ -894,22 +894,22 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.analysis.clear_analysis_cache", "clear_analysis_cache"),
         help="Clear the analysis cache and optionally clean up old directories",
         args={
-            "output_dir": ArgumentConfig(
+            "output-dir": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Output directory for analysis results",
             ),
-            "cleanup_old_analyses": ArgumentConfig(
+            "cleanup-old-analyses": ArgumentConfig(
                 action="store_true",
                 help="Clean up old analysis directories, keeping only recent ones",
             ),
-            "keep_recent": ArgumentConfig(
+            "keep-recent": ArgumentConfig(
                 type=int,
                 required=False,
                 default=5,
                 help="Number of recent analysis directories to keep (default: 5)",
             ),
-            "cleanup_shared_dirs": ArgumentConfig(
+            "cleanup-shared-dirs": ArgumentConfig(
                 action="store_true",
                 help="Clean up old shared directories (models, visualizations)",
             ),
@@ -919,7 +919,7 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.analysis.export_analysis_results", "export_analysis_results"),
         help="Export analysis results",
         args={
-            "analysis_key": ArgumentConfig(
+            "analysis-key": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Analysis key to export",
@@ -930,7 +930,7 @@ CLI_COMMANDS = {
                 default="json",
                 help="Export format (json, csv)",
             ),
-            "output_dir": ArgumentConfig(
+            "output-dir": ArgumentConfig(
                 type=str,
                 required=False,
                 help="Output directory for analysis results",

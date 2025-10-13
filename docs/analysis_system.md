@@ -119,7 +119,7 @@ onsendo analysis run descriptive \
 onsendo analysis summary
 
 # Clean up old analyses (keep only 5 most recent)
-onsendo analysis clear-cache --cleanup_old_analyses --keep_recent 5
+onsendo analysis clear-cache --cleanup-old-analyses --keep-recent 5
 ```
 
 ## CLI Commands

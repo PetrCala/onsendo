@@ -167,7 +167,7 @@ This directory contains original heart rate data files from your devices.
 
 ### Other Devices
 - Export to `other/[YYYY_MM]/`
-- Determine format with `--validate_only` flag first
+- Determine format with `--validate-only` flag first
 EOF
 
 cat > "$BASE_DIR/processed/README.md" << 'EOF'
