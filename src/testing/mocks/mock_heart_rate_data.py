@@ -7,7 +7,7 @@ for testing and development purposes.
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Optional, Any
 from faker import Faker
 import random
 import csv
@@ -36,10 +36,10 @@ class MockHeartRateSession:
 
     # Data quality
     sample_rate_hz: float = 1.0  # samples per second
-    confidence_range: Tuple[float, float] = (0.85, 1.0)
+    confidence_range: tuple[float, float] = (0.85, 1.0)
 
     # Generated data (computed)
-    data_points: List[Tuple[datetime, float, float]] = field(default_factory=list)
+    data_points: list[tuple[datetime, float, float]] = field(default_factory=list)
 
     def __post_init__(self):
         """Generate realistic heart rate data points."""
@@ -460,7 +460,7 @@ class MockHeartRateDataGenerator:
 
     def generate_daily_sessions(
         self, date: Optional[datetime] = None, num_sessions: int = 3, **kwargs
-    ) -> List[MockHeartRateSession]:
+    ) -> list[MockHeartRateSession]:
         """Generate multiple sessions for a single day."""
         if date is None:
             date = self.fake.date_time_between(
@@ -529,7 +529,7 @@ def create_sleep_session(
 
 def create_daily_sessions(
     date: Optional[datetime] = None, num_sessions: int = 3, **kwargs
-) -> List[MockHeartRateSession]:
+) -> list[MockHeartRateSession]:
     """Create multiple sessions for a single day."""
     generator = MockHeartRateDataGenerator()
     return generator.generate_daily_sessions(date, num_sessions, **kwargs)
@@ -537,7 +537,7 @@ def create_daily_sessions(
 
 def create_realistic_scenario(
     scenario_type: str = "daily", **kwargs
-) -> List[MockHeartRateSession]:
+) -> list[MockHeartRateSession]:
     """Create realistic heart rate scenarios."""
     generator = MockHeartRateDataGenerator()
 

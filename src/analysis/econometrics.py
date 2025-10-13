@@ -7,7 +7,7 @@ following econometric best practices for causal inference and robust estimation.
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Optional, Any
 import logging
 from dataclasses import dataclass, field
 
@@ -20,7 +20,7 @@ class RegressionResult:
 
     model_name: str
     dependent_var: str
-    independent_vars: List[str]
+    independent_vars: list[str]
     n_obs: int
     r_squared: float
     adj_r_squared: float
@@ -31,10 +31,10 @@ class RegressionResult:
     coefficients: pd.DataFrame  # columns: coef, std_err, t_stat, p_value, ci_lower, ci_upper
 
     # Diagnostics
-    heteroskedasticity_test: Dict[str, Any]
-    normality_test: Dict[str, Any]
+    heteroskedasticity_test: dict[str, Any]
+    normality_test: dict[str, Any]
     multicollinearity: pd.DataFrame  # VIF scores
-    autocorrelation_test: Optional[Dict[str, Any]] = None
+    autocorrelation_test: Optional[dict[str, Any]] = None
 
     # Model comparison metrics
     aic: float = 0.0
@@ -52,8 +52,8 @@ class RegressionResult:
     overall_quality: str = "unknown"  # excellent, good, acceptable, poor
 
     # Notes and warnings
-    warnings: List[str] = field(default_factory=list)
-    notes: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
 
 
 class EconometricAnalyzer:
@@ -65,14 +65,14 @@ class EconometricAnalyzer:
     """
 
     def __init__(self):
-        self.models_estimated: List[RegressionResult] = []
+        self.models_estimated: list[RegressionResult] = []
         self.significance_level: float = 0.05
 
     def estimate_ols(
         self,
         data: pd.DataFrame,
         dependent_var: str,
-        independent_vars: List[str],
+        independent_vars: list[str],
         model_name: str = "OLS Model",
         robust_se: bool = True,
         include_constant: bool = True,
@@ -213,9 +213,9 @@ class EconometricAnalyzer:
         self,
         data: pd.DataFrame,
         dependent_var: str,
-        specifications: Dict[str, List[str]],
+        specifications: dict[str, list[str]],
         robust_se: bool = True,
-    ) -> List[RegressionResult]:
+    ) -> list[RegressionResult]:
         """
         Estimate multiple model specifications for robustness checking.
 
@@ -249,7 +249,7 @@ class EconometricAnalyzer:
     def _calculate_vif(
         self,
         X: pd.DataFrame,
-        var_names: List[str],
+        var_names: list[str],
     ) -> pd.DataFrame:
         """Calculate Variance Inflation Factor for each predictor."""
         from statsmodels.stats.outliers_influence import variance_inflation_factor
@@ -267,7 +267,7 @@ class EconometricAnalyzer:
         results,
         X: pd.DataFrame,
         y: pd.Series,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Test for heteroskedasticity using Breusch-Pagan test."""
         from statsmodels.stats.diagnostic import het_breuschpagan
 
@@ -287,7 +287,7 @@ class EconometricAnalyzer:
             logger.warning(f"Heteroskedasticity test failed: {e}")
             return {'test': 'Breusch-Pagan', 'error': str(e)}
 
-    def _test_normality(self, residuals: np.ndarray) -> Dict[str, Any]:
+    def _test_normality(self, residuals: np.ndarray) -> dict[str, Any]:
         """Test residual normality using Jarque-Bera test."""
         import scipy.stats as stats
 
@@ -368,7 +368,7 @@ class EconometricAnalyzer:
 
     def format_regression_table(
         self,
-        results: List[RegressionResult],
+        results: list[RegressionResult],
         output_format: str = 'markdown',
     ) -> str:
         """
@@ -403,8 +403,8 @@ class EconometricAnalyzer:
 
     def _format_markdown_table(
         self,
-        results: List[RegressionResult],
-        all_vars: List[str],
+        results: list[RegressionResult],
+        all_vars: list[str],
     ) -> str:
         """Format as markdown table."""
 
@@ -466,8 +466,8 @@ class EconometricAnalyzer:
 
     def _format_html_table(
         self,
-        results: List[RegressionResult],
-        all_vars: List[str],
+        results: list[RegressionResult],
+        all_vars: list[str],
     ) -> str:
         """Format as HTML table with styling."""
 
@@ -532,12 +532,12 @@ class EconometricAnalyzer:
 
         return '\n'.join(html)
 
-    def _format_latex_table(self, results: List[RegressionResult], all_vars: List[str]) -> str:
+    def _format_latex_table(self, results: list[RegressionResult], all_vars: list[str]) -> str:
         """Format as LaTeX table."""
         # Placeholder for LaTeX formatting
         return "LaTeX formatting not yet implemented"
 
-    def compare_models(self, results: List[RegressionResult]) -> pd.DataFrame:
+    def compare_models(self, results: list[RegressionResult]) -> pd.DataFrame:
         """
         Create model comparison table with fit statistics.
 

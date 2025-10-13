@@ -5,10 +5,11 @@ Defines CLI commands using dataclasses for better structure and type safety.
 """
 
 import argparse
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
 from importlib import import_module
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Optional
 
 
 @dataclass
@@ -31,7 +32,7 @@ class CommandConfig:
 
     func: Callable[[argparse.Namespace], None]
     help: str
-    args: Dict[str, ArgumentConfig]
+    args: dict[str, ArgumentConfig]
 
 
 # Lazy loading helpers -----------------------------------------------------
@@ -1161,7 +1162,7 @@ CLI_COMMANDS = {
 }
 
 
-def get_argument_kwargs(arg_config: ArgumentConfig) -> Dict[str, Any]:
+def get_argument_kwargs(arg_config: ArgumentConfig) -> dict[str, Any]:
     """Convert ArgumentConfig to argparse kwargs."""
     kwargs = {}
 

@@ -5,7 +5,7 @@ Creates publication-quality HTML and Markdown reports with embedded
 visualizations, regression tables, diagnostics, and insights.
 """
 
-from typing import Dict, List, Any
+from typing import Any
 from pathlib import Path
 from datetime import datetime
 import logging
@@ -32,10 +32,10 @@ class ReportGenerator:
 
     def generate_html_report(
         self,
-        regression_results: List[Any],  # List[RegressionResult]
-        insights: List[Any],  # List[Insight]
-        visualizations: Dict[str, Any],
-        data_summary: Dict[str, Any],
+        regression_results: list[Any],  # list[RegressionResult]
+        insights: list[Any],  # list[Insight]
+        visualizations: dict[str, Any],
+        data_summary: dict[str, Any],
         analysis_name: str = "Econometric Analysis",
     ) -> Path:
         """
@@ -242,7 +242,7 @@ class ReportGenerator:
         <p><em>Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</em></p>
 """
 
-    def _generate_executive_summary(self, insights: List[Any]) -> str:
+    def _generate_executive_summary(self, insights: list[Any]) -> str:
         """Generate executive summary section."""
         html = ['<div class="executive-summary">']
         html.append("<h2>Executive Summary</h2>")
@@ -262,7 +262,7 @@ class ReportGenerator:
         html.append("</div>")
         return "\n".join(html)
 
-    def _generate_data_overview(self, data_summary: Dict[str, Any]) -> str:
+    def _generate_data_overview(self, data_summary: dict[str, Any]) -> str:
         """Generate data overview section."""
         html = ["<h2>📈 Data Overview</h2>"]
 
@@ -298,7 +298,7 @@ class ReportGenerator:
 
         return "\n".join(html)
 
-    def _generate_insights_section(self, insights: List[Any]) -> str:
+    def _generate_insights_section(self, insights: list[Any]) -> str:
         """Generate insights section."""
         html = ["<h2>🔍 Key Insights</h2>"]
 
@@ -335,7 +335,7 @@ class ReportGenerator:
 
         return "\n".join(html)
 
-    def _generate_regression_section(self, results: List[Any]) -> str:
+    def _generate_regression_section(self, results: list[Any]) -> str:
         """Generate regression results section."""
         html = ["<h2>📊 Regression Analysis</h2>"]
 
@@ -407,7 +407,7 @@ class ReportGenerator:
 
         return "\n".join(html)
 
-    def _generate_diagnostics_section(self, results: List[Any]) -> str:
+    def _generate_diagnostics_section(self, results: list[Any]) -> str:
         """Generate diagnostics section."""
         html = ["<h2>🔬 Model Diagnostics</h2>"]
 
@@ -502,7 +502,7 @@ class ReportGenerator:
 
         return "\n".join(html)
 
-    def _generate_visualizations_section(self, visualizations: Dict[str, Any]) -> str:
+    def _generate_visualizations_section(self, visualizations: dict[str, Any]) -> str:
         """Generate visualizations section."""
         html = ["<h2>📈 Visualizations</h2>"]
 
@@ -527,7 +527,7 @@ class ReportGenerator:
 
         return "\n".join(html)
 
-    def _generate_model_comparison(self, results: List[Any]) -> str:
+    def _generate_model_comparison(self, results: list[Any]) -> str:
         """Generate model comparison table."""
         html = ["<h2>🔄 Model Comparison</h2>"]
 
@@ -568,7 +568,7 @@ class ReportGenerator:
 
         return "\n".join(html)
 
-    def _generate_technical_appendix(self, results: List[Any]) -> str:
+    def _generate_technical_appendix(self, results: list[Any]) -> str:
         """Generate technical appendix."""
         html = ["<h2>📚 Technical Appendix</h2>"]
 
@@ -610,8 +610,8 @@ class ReportGenerator:
 
     def generate_markdown_summary(
         self,
-        regression_results: List[Any],
-        insights: List[Any],
+        regression_results: list[Any],
+        insights: list[Any],
     ) -> Path:
         """
         Generate concise Markdown summary.

@@ -4,7 +4,6 @@ Mock data generators for rule revisions.
 
 import random
 from datetime import datetime, timedelta
-from typing import List
 from src.types.rules import (
     WeeklyReviewMetrics,
     HealthWellbeingData,
@@ -96,7 +95,7 @@ def generate_mock_next_week() -> NextWeekPlan:
     )
 
 
-def generate_mock_modifications(num_mods: int = 1) -> List[RuleModification]:
+def generate_mock_modifications(num_mods: int = 1) -> list[RuleModification]:
     """Generate mock rule modifications."""
     modifications = []
 

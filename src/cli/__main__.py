@@ -1,5 +1,4 @@
 import argparse
-from typing import Dict
 from src import config
 from .cmd_list import CLI_COMMANDS, CommandConfig, get_argument_kwargs
 
@@ -20,7 +19,7 @@ def create_command_group_parser(
     return group_parser, subparsers_obj
 
 
-def get_command_group_config() -> Dict[str, str]:
+def get_command_group_config() -> dict[str, str]:
     """Get configuration for all command groups."""
     return {
         "location": "Location management commands",
@@ -34,7 +33,7 @@ def get_command_group_config() -> Dict[str, str]:
     }
 
 
-def get_command_group_mapping() -> Dict[str, str]:
+def get_command_group_mapping() -> dict[str, str]:
     """Get mapping of command prefixes to their group names."""
     return {
         "location-": "location",
@@ -78,7 +77,7 @@ def add_subcommands_to_group(
 
 
 def show_command_group_help(
-    command_group: str, group_parsers: Dict[str, argparse.ArgumentParser]
+    command_group: str, group_parsers: dict[str, argparse.ArgumentParser]
 ) -> None:
     """Show help for a specific command group."""
     if command_group in group_parsers:

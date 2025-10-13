@@ -2,7 +2,7 @@
 Distance milestone calculation utilities.
 """
 
-from typing import List, Tuple, Optional
+from typing import Optional
 from statistics import mean, median, stdev
 from sqlalchemy.orm import Session
 
@@ -77,7 +77,7 @@ def calculate_location_milestones(
     n = len(sorted_distances)
 
     # Helper function to calculate quantiles
-    def quantile(data: List[float], q: float) -> float:
+    def quantile(data: list[float], q: float) -> float:
         """Calculate quantile value from sorted data."""
         idx = int(q * (len(data) - 1))
         return data[idx]
@@ -146,7 +146,7 @@ def analyze_location_distances(location: Location, db_session: Session) -> dict:
     sorted_distances = sorted(distances)
     n = len(sorted_distances)
 
-    def quantile(data: List[float], q: float) -> float:
+    def quantile(data: list[float], q: float) -> float:
         idx = int(q * (len(data) - 1))
         return data[idx]
 

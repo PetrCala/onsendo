@@ -11,7 +11,7 @@ import os
 import csv
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional, Union
 from dataclasses import dataclass
 import logging
 from sqlalchemy.orm import Session
@@ -38,7 +38,7 @@ class HeartRateSession:
 
     start_time: datetime
     end_time: datetime
-    data_points: List[HeartRatePoint]
+    data_points: list[HeartRatePoint]
     format: str
     source_file: str
     notes: Optional[str] = None
@@ -87,7 +87,7 @@ class HeartRateDataValidator:
     MIN_DATA_POINTS = 5  # Minimum data points for meaningful analysis
 
     @classmethod
-    def validate_session(cls, session: HeartRateSession) -> Tuple[bool, List[str]]:
+    def validate_session(cls, session: HeartRateSession) -> tuple[bool, list[str]]:
         """Validate a heart rate session and return validation results."""
         errors = []
 
@@ -131,7 +131,7 @@ class HeartRateDataValidator:
         return len(errors) == 0, errors
 
     @classmethod
-    def _check_data_gaps(cls, session: HeartRateSession) -> List[str]:
+    def _check_data_gaps(cls, session: HeartRateSession) -> list[str]:
         """Check for suspicious gaps in heart rate data."""
         if len(session.data_points) < 2:
             return []
@@ -584,17 +584,17 @@ class HeartRateDataManager:
             self.db_session.rollback()
             return False
 
-    def get_by_visit(self, visit_id: int) -> List[HeartRateData]:
+    def get_by_visit(self, visit_id: int) -> list[HeartRateData]:
         """Get all heart rate data for a specific visit."""
         return self.db_session.query(HeartRateData).filter_by(visit_id=visit_id).all()
 
-    def get_unlinked(self) -> List[HeartRateData]:
+    def get_unlinked(self) -> list[HeartRateData]:
         """Get all heart rate data not linked to any visit."""
         return self.db_session.query(HeartRateData).filter_by(visit_id=None).all()
 
     def get_by_date_range(
         self, start_date: datetime, end_date: datetime
-    ) -> List[HeartRateData]:
+    ) -> list[HeartRateData]:
         """Get heart rate data within a date range."""
         return (
             self.db_session.query(HeartRateData)

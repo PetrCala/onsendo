@@ -2,7 +2,7 @@
 
 import heapq
 import math
-from typing import Tuple, List, Optional, Dict
+from typing import Optional
 from dataclasses import dataclass
 from statistics import mean, median, stdev
 
@@ -32,7 +32,7 @@ class DistanceMilestones:
     medium_max: float
     far_min: float
 
-    def to_categories(self) -> Dict[str, DistanceCategory]:
+    def to_categories(self) -> dict[str, DistanceCategory]:
         """Convert milestones to distance categories."""
         return {
             "very_close": DistanceCategory(
@@ -90,7 +90,7 @@ def calculate_distance_milestones(location: Location, db_session) -> DistanceMil
     n = len(sorted_distances)
 
     # Helper function to calculate quantiles
-    def quantile(data: List[float], q: float) -> float:
+    def quantile(data: list[float], q: float) -> float:
         """Calculate quantile value from sorted data."""
         idx = int(q * (len(data) - 1))
         return data[idx]
@@ -205,11 +205,11 @@ def calculate_distance_to_onsen(location: Location, onsen: Onsen) -> Optional[fl
 
 
 def filter_onsens_by_distance(
-    onsens: List[Onsen],
+    onsens: list[Onsen],
     location: Location,
     distance_category: str,
     limit: Optional[int] = None,
-) -> List[Tuple[Onsen, float]]:
+) -> list[tuple[Onsen, float]]:
     """
     Filter onsens by distance from a location.
 
@@ -227,9 +227,9 @@ def filter_onsens_by_distance(
     if limit is not None and limit <= 0:
         return []
 
-    filtered_onsens: List[Tuple[Onsen, float]] = []
+    filtered_onsens: list[tuple[Onsen, float]] = []
     use_heap = limit is not None
-    heap: List[Tuple[float, int, Onsen, float]] = []
+    heap: list[tuple[float, int, Onsen, float]] = []
     counter = 0
 
     for onsen in onsens:

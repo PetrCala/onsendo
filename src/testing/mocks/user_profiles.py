@@ -6,10 +6,12 @@ preferences, and visiting patterns. Each profile generates data with realistic
 correlations and econometric relationships suitable for analysis.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Callable, Any
 from datetime import datetime, timedelta
 import random
+from typing import Optional, Any
+
 import numpy as np
 
 
@@ -30,25 +32,25 @@ class UserProfile:
 
     # Visit frequency and timing
     visits_per_month: float  # Average visits per month
-    preferred_times: List[str]  # Preferred times of day
-    preferred_days: List[str]  # Preferred days (weekday, weekend, any)
+    preferred_times: list[str]  # Preferred times of day
+    preferred_days: list[str]  # Preferred days (weekday, weekend, any)
     multi_onsen_probability: float  # Probability of multi-onsen days
 
     # Travel and logistics
-    preferred_travel_modes: Dict[str, float]  # Mode -> probability
+    preferred_travel_modes: dict[str, float]  # Mode -> probability
     typical_travel_time_range: tuple[int, int]  # Minutes
     price_sensitivity: float  # 0-1, higher = more price sensitive
     max_acceptable_price: int  # Yen
 
     # Experience preferences
-    facility_preferences: Dict[str, float]  # Feature -> importance weight
-    quality_standards: Dict[str, float]  # Aspect -> minimum acceptable rating
+    facility_preferences: dict[str, float]  # Feature -> importance weight
+    quality_standards: dict[str, float]  # Aspect -> minimum acceptable rating
     experience_seeking: float  # 0-1, higher = seeks new experiences
 
     # Rating behavior
     rating_bias: float  # -2 to +2, overall rating tendency
     rating_variance: float  # 0-2, consistency of ratings
-    rating_correlations: Dict[str, float]  # Which factors most influence personal rating
+    rating_correlations: dict[str, float]  # Which factors most influence personal rating
 
     # Health and wellness
     exercise_probability: float  # Probability of exercising before visit
@@ -56,11 +58,11 @@ class UserProfile:
     relaxation_seeking: float  # 0-1, importance of relaxation
 
     # Social patterns
-    social_preference: Dict[str, float]  # Visiting companion -> probability
+    social_preference: dict[str, float]  # Visiting companion -> probability
     crowd_tolerance: float  # 0-1, tolerance for crowds
 
     # Seasonal patterns
-    seasonal_preferences: Dict[str, float]  # Season -> relative preference
+    seasonal_preferences: dict[str, float]  # Season -> relative preference
     weather_sensitivity: float  # 0-1, how much weather affects decisions
 
     def __post_init__(self):
@@ -562,7 +564,7 @@ def get_random_profile() -> UserProfile:
     return random.choice(ALL_PROFILES)
 
 
-def get_profile_mix(weights: Optional[Dict[str, float]] = None) -> UserProfile:
+def get_profile_mix(weights: Optional[dict[str, float]] = None) -> UserProfile:
     """
     Get a random profile with custom weights.
 

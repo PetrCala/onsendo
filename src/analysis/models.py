@@ -6,7 +6,7 @@ Note: Regression analysis is handled by src/analysis/econometrics.py
 
 import pandas as pd
 import numpy as np
-from typing import Dict, Optional, Any
+from typing import Optional, Any
 import logging
 import warnings
 from datetime import datetime
@@ -28,12 +28,12 @@ class ModelEngine:
     def __init__(self, save_dir: Optional[str] = None):
         self.save_dir = Path(save_dir) if save_dir else Path("output/models")
         self.save_dir.mkdir(parents=True, exist_ok=True)
-        self.models: Dict[str, Any] = {}
-        self.scalers: Dict[str, Any] = {}
+        self.models: dict[str, Any] = {}
+        self.scalers: dict[str, Any] = {}
 
     def create_clustering_model(
         self, data: pd.DataFrame, config: ModelConfig, n_clusters: Optional[int] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a clustering model."""
         if config.type not in [ModelType.KMEANS, ModelType.DBSCAN]:
             raise ValueError(f"Model type {config.type} is not a clustering model")
@@ -104,7 +104,7 @@ class ModelEngine:
         data: pd.DataFrame,
         config: ModelConfig,
         n_components: Optional[int] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a dimensionality reduction model."""
         if config.type not in [ModelType.PCA, ModelType.TSNE]:
             raise ValueError(
@@ -213,7 +213,7 @@ class ModelEngine:
         else:
             return 3  # Default fallback
 
-    def get_model_summary(self, model_key: str) -> Optional[Dict[str, Any]]:
+    def get_model_summary(self, model_key: str) -> Optional[dict[str, Any]]:
         """Get a summary of a trained model."""
         if model_key not in self.models:
             return None

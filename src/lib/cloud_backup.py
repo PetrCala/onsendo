@@ -14,7 +14,7 @@ import os
 import json
 import hashlib
 from pathlib import Path
-from typing import Optional, Dict, List, Any
+from typing import Optional, Any
 from datetime import datetime
 from loguru import logger
 
@@ -101,7 +101,7 @@ class GoogleDriveBackup:
         os.makedirs(os.path.dirname(self.token_file), exist_ok=True)
 
         self.service = None
-        self._folder_cache: Dict[str, str] = {}  # path -> folder_id mapping
+        self._folder_cache: dict[str, str] = {}  # path -> folder_id mapping
 
     def authenticate(self, force_reauth: bool = False) -> None:
         """
@@ -228,7 +228,7 @@ class GoogleDriveBackup:
                 sha256_hash.update(byte_block)
         return sha256_hash.hexdigest()
 
-    def _get_file_metadata(self, file_id: str) -> Optional[Dict[str, Any]]:
+    def _get_file_metadata(self, file_id: str) -> Optional[dict[str, Any]]:
         """Get file metadata from Drive."""
         try:
             file_metadata = self.service.files().get(
@@ -383,7 +383,7 @@ class GoogleDriveBackup:
         dry_run: bool = False,
         skip_if_exists: bool = True,
         recursive: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Sync entire directory to Google Drive.
 
@@ -448,7 +448,7 @@ class GoogleDriveBackup:
 
         return stats
 
-    def list_backups(self) -> List[Dict[str, Any]]:
+    def list_backups(self) -> list[dict[str, Any]]:
         """
         List all backups in the Drive folder.
 
@@ -480,7 +480,7 @@ class GoogleDriveBackup:
             raise CloudBackupError(f"Failed to list backups: {e}") from e
 
 
-def create_backup_manifest(backup_dir: str, files: List[str]) -> None:
+def create_backup_manifest(backup_dir: str, files: list[str]) -> None:
     """
     Create a JSON manifest file for a backup.
 

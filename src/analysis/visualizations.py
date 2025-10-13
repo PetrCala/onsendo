@@ -4,7 +4,7 @@ Visualization system for onsen analysis.
 
 import pandas as pd
 import numpy as np
-from typing import List, Optional, Any
+from typing import Optional, Any
 import logging
 from pathlib import Path
 from matplotlib import pyplot as plt
@@ -1075,7 +1075,7 @@ class VisualizationEngine:
     def create_visualization_grid(
         self,
         data: pd.DataFrame,
-        configs: List[VisualizationConfig],
+        configs: list[VisualizationConfig],
         rows: int = 2,
         cols: int = 2,
     ) -> Any:

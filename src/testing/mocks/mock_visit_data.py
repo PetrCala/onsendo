@@ -19,7 +19,7 @@ This module is best suited for:
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Optional, Any
 from faker import Faker
 import random
 
@@ -365,11 +365,11 @@ class MockVisitDataGenerator:
 
     def generate_multi_onsen_day(
         self,
-        onsen_ids: List[int],
+        onsen_ids: list[int],
         visit_date: Optional[datetime] = None,
         start_time: Optional[str] = None,
         **kwargs,
-    ) -> List[MockOnsenVisit]:
+    ) -> list[MockOnsenVisit]:
         """Generate multiple onsen visits for the same day."""
 
         if not onsen_ids:
@@ -418,12 +418,12 @@ class MockVisitDataGenerator:
 
     def generate_visit_series(
         self,
-        onsen_ids: List[int],
+        onsen_ids: list[int],
         num_days: int = 7,
         visits_per_day: int = 1,
         start_date: Optional[datetime] = None,
         **kwargs,
-    ) -> List[MockOnsenVisit]:
+    ) -> list[MockOnsenVisit]:
         """Generate a series of visits over multiple days."""
 
         if start_date is None:
@@ -457,8 +457,8 @@ class MockVisitDataGenerator:
         return all_visits
 
     def generate_seasonal_visits(
-        self, onsen_ids: List[int], season: str, num_visits: int = 10, **kwargs
-    ) -> List[MockOnsenVisit]:
+        self, onsen_ids: list[int], season: str, num_visits: int = 10, **kwargs
+    ) -> list[MockOnsenVisit]:
         """Generate visits for a specific season with appropriate characteristics."""
 
         # Determine date range for season
@@ -525,16 +525,16 @@ def create_single_visit(
 
 
 def create_multi_onsen_day(
-    onsen_ids: List[int], visit_date: Optional[datetime] = None, **kwargs
-) -> List[MockOnsenVisit]:
+    onsen_ids: list[int], visit_date: Optional[datetime] = None, **kwargs
+) -> list[MockOnsenVisit]:
     """Create multiple onsen visits for the same day."""
     generator = MockVisitDataGenerator()
     return generator.generate_multi_onsen_day(onsen_ids, visit_date, **kwargs)
 
 
 def create_visit_series(
-    onsen_ids: List[int], num_days: int = 7, visits_per_day: int = 1, **kwargs
-) -> List[MockOnsenVisit]:
+    onsen_ids: list[int], num_days: int = 7, visits_per_day: int = 1, **kwargs
+) -> list[MockOnsenVisit]:
     """Create a series of visits over multiple days."""
     generator = MockVisitDataGenerator()
     return generator.generate_visit_series(
@@ -543,16 +543,16 @@ def create_visit_series(
 
 
 def create_seasonal_visits(
-    onsen_ids: List[int], season: str, num_visits: int = 10, **kwargs
-) -> List[MockOnsenVisit]:
+    onsen_ids: list[int], season: str, num_visits: int = 10, **kwargs
+) -> list[MockOnsenVisit]:
     """Create visits for a specific season."""
     generator = MockVisitDataGenerator()
     return generator.generate_seasonal_visits(onsen_ids, season, num_visits, **kwargs)
 
 
 def create_realistic_visit_scenario(
-    onsen_ids: List[int], scenario_type: str = "random", **kwargs
-) -> List[MockOnsenVisit]:
+    onsen_ids: list[int], scenario_type: str = "random", **kwargs
+) -> list[MockOnsenVisit]:
     """Create a realistic visit scenario based on type."""
 
     generator = MockVisitDataGenerator()

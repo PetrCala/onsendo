@@ -4,7 +4,7 @@ Data pipeline for transforming raw database data into analysis-ready formats.
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Any, Union
+from typing import Optional, Any, Union
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 import logging
@@ -25,10 +25,10 @@ class DataPipeline:
 
     def __init__(self, session: Session):
         self.session = session
-        self._cached_data: Dict[str, pd.DataFrame] = {}
+        self._cached_data: dict[str, pd.DataFrame] = {}
         self._data_mappings = self._initialize_data_mappings()
 
-    def _initialize_data_mappings(self) -> Dict[DataCategory, Dict[str, Any]]:
+    def _initialize_data_mappings(self) -> dict[DataCategory, dict[str, Any]]:
         """Initialize mappings for different data categories."""
         return {
             DataCategory.ONSEN_BASIC: {
@@ -242,10 +242,10 @@ class DataPipeline:
 
     def get_data_for_categories(
         self,
-        categories: List[DataCategory],
-        filters: Optional[Dict[str, Any]] = None,
-        time_range: Optional[Tuple[datetime, datetime]] = None,
-        spatial_bounds: Optional[Tuple[float, float, float, float]] = None,
+        categories: list[DataCategory],
+        filters: Optional[dict[str, Any]] = None,
+        time_range: Optional[tuple[datetime, datetime]] = None,
+        spatial_bounds: Optional[tuple[float, float, float, float]] = None,
     ) -> pd.DataFrame:
         """
         Get data for specified categories with optional filtering.
@@ -405,10 +405,10 @@ class DataPipeline:
 
     def _get_data_orm(
         self,
-        categories: List[DataCategory],
-        filters: Optional[Dict[str, Any]] = None,
-        time_range: Optional[Tuple[datetime, datetime]] = None,
-        spatial_bounds: Optional[Tuple[float, float, float, float]] = None,
+        categories: list[DataCategory],
+        filters: Optional[dict[str, Any]] = None,
+        time_range: Optional[tuple[datetime, datetime]] = None,
+        spatial_bounds: Optional[tuple[float, float, float, float]] = None,
     ) -> pd.DataFrame:
         """Fallback method using ORM queries."""
         dfs = []

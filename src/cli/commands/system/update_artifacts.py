@@ -10,7 +10,6 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Dict
 from loguru import logger
 from src.db.conn import get_db
 from src.db.import_data import import_onsen_data
@@ -248,7 +247,7 @@ class ArtifactGenerator:
 
         return str(artifact_path)
 
-    def generate_all_artifacts(self) -> Dict[str, str]:
+    def generate_all_artifacts(self) -> dict[str, str]:
         """Generate all database artifacts."""
         logger.info("Starting artifact generation...")
 

@@ -1,12 +1,12 @@
 import json
-from typing import Dict, Any
+from typing import Any
 
 from loguru import logger
 from sqlalchemy.orm import Session
 from src.db.models import Onsen
 
 
-def import_onsen_data(db: Session, json_path: str) -> Dict[str, int]:
+def import_onsen_data(db: Session, json_path: str) -> dict[str, int]:
     """
     Import onsens from a scraped JSON file and upsert into the database.
 
@@ -27,7 +27,7 @@ def import_onsen_data(db: Session, json_path: str) -> Dict[str, int]:
     """
     try:
         with open(json_path, "r", encoding="utf-8") as f:
-            data: Dict[str, Any] = json.load(f)
+            data: dict[str, Any] = json.load(f)
     except Exception as exc:
         logger.error(f"Failed to read JSON from {json_path}: {exc}")
         return {"inserted": 0, "updated": 0, "skipped": 0}
@@ -66,7 +66,7 @@ def import_onsen_data(db: Session, json_path: str) -> Dict[str, int]:
             skipped += 1
             continue
 
-        mapped: Dict[str, Any] = payload.get("mapped_data") or {}
+        mapped: dict[str, Any] = payload.get("mapped_data") or {}
 
         # Basic validation of required fields
         if (
@@ -81,7 +81,7 @@ def import_onsen_data(db: Session, json_path: str) -> Dict[str, int]:
             continue
 
         # Build values for the Onsen model
-        values: Dict[str, Any] = {field: mapped.get(field) for field in onsen_fields}
+        values: dict[str, Any] = {field: mapped.get(field) for field in onsen_fields}
 
         existing = db.query(Onsen).filter(Onsen.id == onsen_id).first()
         if existing:

@@ -6,7 +6,7 @@ import subprocess
 import sys
 from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Optional
 from src.db.conn import get_db
 from src.db.models import Onsen, OnsenVisit
 from src.const import CONST
@@ -19,8 +19,8 @@ class InteractiveSession:
     GO_BACK_MULTIPLE_COMMANDS = ["back", "b", "go back", "previous", "prev", "p"]
 
     def __init__(self):
-        self.visit_data: Dict[str, Any] = {}
-        self.history: List[Tuple[str, Any, str]] = []  # (field_name, value, prompt)
+        self.visit_data: dict[str, Any] = {}
+        self.history: list[tuple[str, Any, str]] = []  # (field_name, value, prompt)
         self.current_step = 0
 
     def add_to_history(self, field_name: str, value: Any, prompt: str):

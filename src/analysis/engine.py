@@ -4,7 +4,7 @@ Main analysis engine for orchestrating onsen analysis.
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Any
+from typing import Optional, Any
 import logging
 import time
 from datetime import datetime
@@ -63,7 +63,7 @@ class AnalysisEngine:
         self.model_engine = None  # Will be initialized per analysis
 
         # Cache for analysis results
-        self._analysis_cache: Dict[str, AnalysisResult] = {}
+        self._analysis_cache: dict[str, AnalysisResult] = {}
 
     def _setup_analysis_directory(self, request: AnalysisRequest) -> None:
         """Set up the analysis-specific output directory."""
@@ -170,7 +170,7 @@ class AnalysisEngine:
             )
 
     def run_scenario_analysis(
-        self, scenario: AnalysisScenario, custom_config: Optional[Dict[str, Any]] = None
+        self, scenario: AnalysisScenario, custom_config: Optional[dict[str, Any]] = None
     ) -> AnalysisResult:
         """
         Run a predefined analysis scenario.
@@ -232,7 +232,7 @@ class AnalysisEngine:
 
     def _calculate_metrics(
         self, data: pd.DataFrame, request: AnalysisRequest
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Calculate metrics based on the request."""
         # Use simplified metrics calculator - summary stats and correlations only
         metrics = {}
@@ -255,7 +255,7 @@ class AnalysisEngine:
 
     def _create_visualizations(
         self, data: pd.DataFrame, request: AnalysisRequest
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create visualizations based on the request."""
         visualizations = {}
 
@@ -331,7 +331,7 @@ class AnalysisEngine:
 
     def _create_models(
         self, data: pd.DataFrame, request: AnalysisRequest
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Create models based on the request.
 
@@ -409,10 +409,10 @@ class AnalysisEngine:
     def _generate_insights(
         self,
         data: pd.DataFrame,
-        metrics: Dict[str, Any],
-        models: Optional[Dict[str, Any]],
+        metrics: dict[str, Any],
+        models: Optional[dict[str, Any]],
         request: AnalysisRequest,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate basic insights from the analysis results.
 
@@ -500,7 +500,7 @@ class AnalysisEngine:
 
     def _perform_statistical_tests(
         self, data: pd.DataFrame, request: AnalysisRequest
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Perform statistical tests based on the analysis type."""
         tests = {}
 
@@ -665,7 +665,7 @@ class AnalysisEngine:
         """Get the current analysis output directory."""
         return self.output_dir
 
-    def list_analysis_directories(self) -> List[Path]:
+    def list_analysis_directories(self) -> list[Path]:
         """List all analysis directories."""
         if not self.base_output_dir.exists():
             return []
@@ -679,7 +679,7 @@ class AnalysisEngine:
         analysis_dirs.sort(key=lambda x: x.stat().st_ctime, reverse=True)
         return analysis_dirs
 
-    def get_analysis_summary(self) -> Dict[str, Any]:
+    def get_analysis_summary(self) -> dict[str, Any]:
         """Get a summary of all analyses performed."""
         summary = {
             "total_analyses": len(self._analysis_cache),
@@ -950,10 +950,10 @@ class AnalysisEngine:
     def run_econometric_analysis(
         self,
         dependent_var: str = "personal_rating",
-        data_categories: Optional[List[DataCategory]] = None,
+        data_categories: Optional[list[DataCategory]] = None,
         max_models: int = 20,
         analysis_name: str = "Econometric Analysis",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Run comprehensive econometric analysis with automated insights.
 

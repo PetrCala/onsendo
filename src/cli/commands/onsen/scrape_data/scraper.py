@@ -3,7 +3,7 @@ Web scraping functionality for onsen data.
 """
 
 import re
-from typing import Dict, Any, List
+from typing import Any
 
 from loguru import logger
 from selenium import webdriver
@@ -37,7 +37,7 @@ def setup_selenium_driver() -> webdriver.Chrome:
     return driver
 
 
-def find_all_onsen_divs(driver: webdriver.Chrome) -> List:
+def find_all_onsen_divs(driver: webdriver.Chrome) -> list:
     """
     Find all divs that contain onsen data by recursively searching through all areaDIV elements.
 
@@ -143,7 +143,7 @@ def is_onsen_div(div_element) -> bool:
         return False
 
 
-def extract_onsen_data_from_div(div_element) -> Dict[str, str]:
+def extract_onsen_data_from_div(div_element) -> dict[str, str]:
     """
     Extract onsen ID and ban number from a div element.
 
@@ -201,7 +201,7 @@ def extract_onsen_data_from_div(div_element) -> Dict[str, str]:
     return onsen_data
 
 
-def extract_all_onsen_mapping(driver: webdriver.Chrome) -> Dict[str, str]:
+def extract_all_onsen_mapping(driver: webdriver.Chrome) -> dict[str, str]:
     """
     Extract all onsen ID to ban number mappings from the page.
 
@@ -243,7 +243,7 @@ def extract_all_onsen_mapping(driver: webdriver.Chrome) -> Dict[str, str]:
     return onsen_mapping
 
 
-def scrape_onsen_page_with_selenium(onsen_id: str) -> Dict[str, Any]:
+def scrape_onsen_page_with_selenium(onsen_id: str) -> dict[str, Any]:
     """
     Scrape individual onsen page using Selenium for better JavaScript handling.
 
@@ -292,7 +292,7 @@ def scrape_onsen_page_with_selenium(onsen_id: str) -> Dict[str, Any]:
         driver.quit()
 
 
-def extract_detailed_onsen_data(driver) -> Dict[str, Any]:
+def extract_detailed_onsen_data(driver) -> dict[str, Any]:
     """
     Extract detailed onsen data using the provided XPath selectors.
 
@@ -406,7 +406,7 @@ def extract_detailed_onsen_data(driver) -> Dict[str, Any]:
     return extracted_data
 
 
-def extract_table_data(table_element) -> Dict[str, str]:
+def extract_table_data(table_element) -> dict[str, str]:
     """
     Extract key-value pairs from the onsen information table.
 

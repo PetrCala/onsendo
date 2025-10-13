@@ -2,7 +2,7 @@
 Mock onsen data for testing the scraper functionality.
 """
 
-from typing import Dict, Any
+from typing import Any
 
 
 # Sample onsen mapping data (what would be extracted from the main page)
@@ -283,37 +283,37 @@ MOCK_YUFUIN_ONSEN_DATA = {
 }
 
 
-def get_mock_onsen_mapping() -> Dict[str, str]:
+def get_mock_onsen_mapping() -> dict[str, str]:
     """Get mock onsen mapping data."""
     return MOCK_ONSEN_MAPPING.copy()
 
 
-def get_mock_extracted_data() -> Dict[str, Any]:
+def get_mock_extracted_data() -> dict[str, Any]:
     """Get mock extracted onsen data."""
     return MOCK_EXTRACTED_ONSEN_DATA.copy()
 
 
-def get_mock_mapped_data() -> Dict[str, Any]:
+def get_mock_mapped_data() -> dict[str, Any]:
     """Get mock mapped onsen data."""
     return MOCK_MAPPED_ONSEN_DATA.copy()
 
 
-def get_mock_complete_entry() -> Dict[str, Any]:
+def get_mock_complete_entry() -> dict[str, Any]:
     """Get mock complete onsen entry."""
     return MOCK_COMPLETE_ONSEN_ENTRY.copy()
 
 
-def get_mock_error_entry() -> Dict[str, Any]:
+def get_mock_error_entry() -> dict[str, Any]:
     """Get mock error onsen entry."""
     return MOCK_ERROR_ONSEN_ENTRY.copy()
 
 
-def get_mock_incomplete_data() -> Dict[str, Any]:
+def get_mock_incomplete_data() -> dict[str, Any]:
     """Get mock incomplete onsen data."""
     return MOCK_INCOMPLETE_ONSEN_DATA.copy()
 
 
-def get_mock_yufuin_data() -> Dict[str, Any]:
+def get_mock_yufuin_data() -> dict[str, Any]:
     """Get mock Yufuin onsen data."""
     return MOCK_YUFUIN_ONSEN_DATA.copy()
 
@@ -342,7 +342,7 @@ MOCK_DELETED_ONSEN_DATA = {
 }
 
 
-def get_mock_deleted_onsen_data() -> Dict[str, Any]:
+def get_mock_deleted_onsen_data() -> dict[str, Any]:
     """Get mock deleted onsen data."""
     return MOCK_DELETED_ONSEN_DATA.copy()
 

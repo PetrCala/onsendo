@@ -2,7 +2,7 @@
 
 import math
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 from sqlalchemy.orm import Session, load_only
 
 from src.db.models import Onsen, Location, OnsenVisit
@@ -25,10 +25,10 @@ class OnsenRecommendationEngine:
         self.db_session = db_session
         self.location = location
         self._distance_milestones: Optional[DistanceMilestones] = None
-        self._usage_time_cache: Dict[int, Tuple[Optional[str], Any]] = {}
-        self._closed_days_cache: Dict[int, Tuple[Optional[str], Any]] = {}
-        self._stay_restriction_cache: Dict[int, Tuple[Optional[str], Any]] = {}
-        self._visited_onsen_ids: Optional[Set[int]] = None
+        self._usage_time_cache: dict[int, tuple[Optional[str], Any]] = {}
+        self._closed_days_cache: dict[int, tuple[Optional[str], Any]] = {}
+        self._stay_restriction_cache: dict[int, tuple[Optional[str], Any]] = {}
+        self._visited_onsen_ids: Optional[set[int]] = None
         self._visit_cache_supported: bool = True
 
         # Calculate distance milestones if location is provided
@@ -39,8 +39,8 @@ class OnsenRecommendationEngine:
         self,
         target_time: datetime,
         min_hours_after: Optional[int] = None,
-        onsens: Optional[List[Onsen]] = None,
-    ) -> List[Onsen]:
+        onsens: Optional[list[Onsen]] = None,
+    ) -> list[Onsen]:
         """
         Get onsens that are open at the specified time.
 
@@ -136,7 +136,7 @@ class OnsenRecommendationEngine:
 
         return False
 
-    def get_unvisited_onsens(self, onsens: List[Onsen]) -> List[Onsen]:
+    def get_unvisited_onsens(self, onsens: list[Onsen]) -> list[Onsen]:
         """
         Filter out onsens that have been visited.
 
@@ -156,7 +156,7 @@ class OnsenRecommendationEngine:
 
         return unvisited_onsens
 
-    def get_non_stay_restricted_onsens(self, onsens: List[Onsen]) -> List[Onsen]:
+    def get_non_stay_restricted_onsens(self, onsens: list[Onsen]) -> list[Onsen]:
         """
         Filter out onsens that are restricted to facility guests only.
 
@@ -185,7 +185,7 @@ class OnsenRecommendationEngine:
         min_hours_after: Optional[int] = None,
         limit: Optional[int] = None,
         stay_restriction_filter: Optional[str] = None,
-    ) -> List[Tuple[Onsen, float, dict]]:
+    ) -> list[tuple[Onsen, float, dict]]:
         """
         Get onsen recommendations based on specified criteria.
 
@@ -265,7 +265,7 @@ class OnsenRecommendationEngine:
 
     def _get_candidate_onsens(
         self, location: Location, distance_category: str
-    ) -> List[Onsen]:
+    ) -> list[Onsen]:
         """Return onsens roughly matching the requested distance bucket."""
 
         query = self.db_session.query(Onsen).options(
@@ -421,7 +421,7 @@ class OnsenRecommendationEngine:
             self.db_session.query(Location).filter(Location.name == identifier).first()
         )
 
-    def list_locations(self) -> List[Location]:
+    def list_locations(self) -> list[Location]:
         """Get all locations."""
         return self.db_session.query(Location).order_by(Location.name).all()
 
@@ -459,13 +459,13 @@ class OnsenRecommendationEngine:
         self._stay_restriction_cache[onsen.id] = (remarks, parsed)
         return parsed
 
-    def _get_visited_onsen_ids(self) -> Set[int]:
+    def _get_visited_onsen_ids(self) -> set[int]:
         if self._visited_onsen_ids is None:
             try:
                 visited_rows = (
                     self.db_session.query(OnsenVisit.onsen_id).distinct().all()
                 )
-                ids: Set[int] = set()
+                ids: set[int] = set()
                 for row in visited_rows:
                     if isinstance(row, (tuple, list)):
                         ids.add(row[0])

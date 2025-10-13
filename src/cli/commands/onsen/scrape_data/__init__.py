@@ -6,7 +6,7 @@ import argparse
 import json
 import os
 import time
-from typing import Dict, Any
+from typing import Any
 
 from loguru import logger
 
@@ -46,7 +46,7 @@ def ensure_output_directory() -> None:
     os.makedirs(PATHS.OUTPUT_DIR, exist_ok=True)
 
 
-def load_existing_data() -> Dict[str, Any]:
+def load_existing_data() -> dict[str, Any]:
     """Load existing scraped data if it exists."""
     if os.path.exists(PATHS.SCRAPED_ONSEN_DATA_FILE):
         with open(PATHS.SCRAPED_ONSEN_DATA_FILE, "r", encoding="utf-8") as f:
@@ -54,13 +54,13 @@ def load_existing_data() -> Dict[str, Any]:
     return {}
 
 
-def save_data(data: Dict[str, Any], filepath: str) -> None:
+def save_data(data: dict[str, Any], filepath: str) -> None:
     """Save data to JSON file."""
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-def process_scraped_onsen_data(raw_data: Dict[str, Any]) -> Dict[str, Any]:
+def process_scraped_onsen_data(raw_data: dict[str, Any]) -> dict[str, Any]:
     """
     Process scraped onsen data to include mapped data for database insertion.
 
@@ -190,7 +190,7 @@ def scrape_onsen_data(args: argparse.Namespace) -> None:
         logger.info(f"Found {len(onsen_mapping)} onsens in total")
 
 
-def print_summary_statistics(data: Dict[str, Any]) -> None:
+def print_summary_statistics(data: dict[str, Any]) -> None:
     """
     Print summary statistics about the scraped data.
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 import re
-from typing import List, Optional, Set, Tuple
+from typing import Optional
 
 # Reuse helpers and holiday service from the usage time parser
 from src.lib.parsers.usage_time import (
@@ -73,7 +73,7 @@ class ClosedRule:
 
 @dataclass
 class WeeklyClosedRule(ClosedRule):
-    weekdays: Set[int]  # 0=Mon..6=Sun (can be empty when only holiday-based)
+    weekdays: set[int]  # 0=Mon..6=Sun (can be empty when only holiday-based)
     closes_on_holidays_too: bool = False  # e.g., "土日祝日" or standalone 祝日
     shift_to_next_day_if_holiday: bool = False  # e.g., "祝日の場合は翌日"
     exclude_holidays: bool = False  # e.g., "祝日の場合は営業" / "祝祭日除く"
@@ -104,7 +104,7 @@ class WeeklyClosedRule(ClosedRule):
 
 @dataclass
 class MonthlySpecificDaysRule(ClosedRule):
-    days: Set[int]  # e.g., {5, 20}
+    days: set[int]  # e.g., {5, 20}
     shift_to_next_day_if_holiday: bool = False
 
     def is_closed(self, dt: datetime) -> Optional[bool]:
@@ -123,7 +123,7 @@ class MonthlySpecificDaysRule(ClosedRule):
 
 @dataclass
 class MonthlyOrdinalWeekdayRule(ClosedRule):
-    ordinals: Set[int]  # e.g., {1, 3}
+    ordinals: set[int]  # e.g., {1, 3}
     weekday: int  # 0..6
     shift_to_next_day_if_holiday: bool = False
 
@@ -172,9 +172,9 @@ class AbsoluteDatesRule(ClosedRule):
     """
 
     # Single specific month/day pairs
-    dates_mmdd: Set[Tuple[int, int]] = field(default_factory=set)
+    dates_mmdd: set[tuple[int, int]] = field(default_factory=set)
     # Ranges as (start_month, start_day, end_month, end_day)
-    ranges: List[Tuple[int, int, int, int]] = field(default_factory=list)
+    ranges: list[tuple[int, int, int, int]] = field(default_factory=list)
 
     def _in_range(self, dt: date, s_m: int, s_d: int, e_m: int, e_d: int) -> bool:
         # Build concrete start/end around dt.year to account for wrap-around
@@ -207,11 +207,11 @@ class ClosedDaysParsed:
     raw: Optional[str]
     normalized: Optional[str]
 
-    rules: List[ClosedRule] = field(default_factory=list)
+    rules: list[ClosedRule] = field(default_factory=list)
     no_regular_closures: bool = False  # "なし"
     irregular_or_unknown: bool = False  # 不定/不定休/臨時など
     requires_inquiry: bool = False
-    notes: List[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
 
     def is_closed_on(self, dt: Optional[datetime] = None) -> Optional[bool]:
         if dt is None:
@@ -245,7 +245,7 @@ _RE_PARENS_SHIFT_NEXT = re.compile(r"祝(?:祭)?日の場合は?翌日")
 _RE_EXCLUDE_HOLIDAYS = re.compile(r"(祝(?:祭)?日除く|祝(?:祭)?日の場合は営業)")
 
 
-def _extract_shift_flag(s: str) -> Tuple[str, bool]:
+def _extract_shift_flag(s: str) -> tuple[str, bool]:
     """Detect and remove the common parenthetical shift note.
 
     Returns (text_without_note, shift_flag)
@@ -265,7 +265,7 @@ def _extract_shift_flag(s: str) -> Tuple[str, bool]:
     return s.strip(), shift
 
 
-def _extract_exclude_holidays_flag(s: str) -> Tuple[str, bool]:
+def _extract_exclude_holidays_flag(s: str) -> tuple[str, bool]:
     exclude = False
     # Look both in parens and after delimiters
     # Remove recognized token and return flag
@@ -285,14 +285,14 @@ def _extract_exclude_holidays_flag(s: str) -> Tuple[str, bool]:
     return s.strip(), exclude
 
 
-def _split_on_delimiters(s: str) -> List[str]:
+def _split_on_delimiters(s: str) -> list[str]:
     # Split on common separators while preserving content
     parts = re.split(r"[・,、／/]|\s+|※", s)
     return [p for p in (p.strip() for p in parts) if p]
 
 
-def _parse_weekly_tokens(tokens: List[str]) -> Set[int]:
-    days: Set[int] = set()
+def _parse_weekly_tokens(tokens: list[str]) -> set[int]:
+    days: set[int] = set()
     for t in tokens:
         # Skip '毎月'
         if t.startswith("毎月"):
@@ -303,7 +303,7 @@ def _parse_weekly_tokens(tokens: List[str]) -> Set[int]:
     return days
 
 
-def _parse_monthly_day_tokens(s: str) -> Optional[Set[int]]:
+def _parse_monthly_day_tokens(s: str) -> Optional[set[int]]:
     # Expect forms like "毎月15日", "毎月5・20日", "毎月6・16・26日"
     m = re.match(r"毎月(?P<body>.+)", s)
     if not m:
@@ -312,7 +312,7 @@ def _parse_monthly_day_tokens(s: str) -> Optional[Set[int]]:
     body = body.replace("日", "")
     body = body.replace(".", "・")
     nums = re.split(r"[・,、\s]+", body)
-    out: Set[int] = set()
+    out: set[int] = set()
     for n in nums:
         if not n:
             continue
@@ -322,7 +322,7 @@ def _parse_monthly_day_tokens(s: str) -> Optional[Set[int]]:
     return out if out else None
 
 
-def _parse_ordinal_weekday(s: str) -> Optional[Tuple[Set[int], int]]:
+def _parse_ordinal_weekday(s: str) -> Optional[tuple[set[int], int]]:
     # Examples: 第３水曜日, 第1第3水曜, 第1・3日曜日, 第2・第4水曜日
     # Normalize separators
     s2 = s
@@ -339,7 +339,7 @@ def _parse_ordinal_weekday(s: str) -> Optional[Tuple[Set[int], int]]:
     # Replace '第' with separator and strip
     head = head.replace("第", " ")
     nums = re.split(r"[・,、\s]+", head)
-    ords: Set[int] = set()
+    ords: set[int] = set()
     for n in nums:
         v = _jp_num_to_int(n)
         if v:
@@ -350,8 +350,8 @@ def _parse_ordinal_weekday(s: str) -> Optional[Tuple[Set[int], int]]:
 def _parse_absolute_dates(s: str) -> Optional[AbsoluteDatesRule]:
     # Examples: "1/1～3", "12/31～1/3", "12/31", "12/30.31", "12/31、1/1〜3"
     text = s.replace(".", "・")
-    dates: Set[Tuple[int, int]] = set()
-    ranges: List[Tuple[int, int, int, int]] = []
+    dates: set[tuple[int, int]] = set()
+    ranges: list[tuple[int, int, int, int]] = []
 
     # Find ranges anywhere in the string (not only at the start)
     for m_rng in re.finditer(

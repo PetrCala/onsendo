@@ -7,7 +7,7 @@ and comprehensive onsen statistics.
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Optional, Any
 from pathlib import Path
 import logging
 
@@ -33,7 +33,7 @@ class InteractiveMapGenerator:
         self,
         data: pd.DataFrame,
         map_name: str = "onsen_overview.html",
-        center: Optional[Tuple[float, float]] = None,
+        center: Optional[tuple[float, float]] = None,
         zoom_start: int = 12,
     ) -> Path:
         """

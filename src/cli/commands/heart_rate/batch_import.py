@@ -4,7 +4,7 @@ Batch import heart rate data from a directory.
 
 import argparse
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from src.lib.heart_rate_manager import (
@@ -16,7 +16,7 @@ from src.db.conn import get_db
 from src.const import CONST
 
 
-def get_heart_rate_files(directory: str, recursive: bool = False) -> List[Path]:
+def get_heart_rate_files(directory: str, recursive: bool = False) -> list[Path]:
     """Get all heart rate data files from a directory."""
     directory_path = Path(directory)
 

@@ -1,7 +1,8 @@
-from typing import Generator
+from collections.abc import Generator
+from contextlib import contextmanager
+
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import sessionmaker, Session
-from contextlib import contextmanager
 
 
 def is_valid_url(url: str) -> bool:

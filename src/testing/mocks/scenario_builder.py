@@ -12,7 +12,7 @@ This module creates sophisticated mock datasets with:
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any, Tuple
+from typing import Optional, Any
 import random
 import numpy as np
 from faker import Faker
@@ -45,12 +45,12 @@ class ScenarioConfig:
     end_date: datetime
 
     # User profiles
-    profiles: List[UserProfile]
-    profile_weights: Optional[List[float]] = None
+    profiles: list[UserProfile]
+    profile_weights: Optional[list[float]] = None
 
     # Onsen selection
-    onsen_ids: List[int] = None
-    onsen_visit_probabilities: Optional[Dict[int, float]] = None  # Popularity weights
+    onsen_ids: list[int] = None
+    onsen_visit_probabilities: Optional[dict[int, float]] = None  # Popularity weights
 
     # Data volume
     total_visits: Optional[int] = None
@@ -224,7 +224,7 @@ class RealisticDataGenerator:
 
         return random.choices(levels, weights=weights)[0]
 
-    def _select_onsen(self, profile: UserProfile, previous_onsens: List[int]) -> int:
+    def _select_onsen(self, profile: UserProfile, previous_onsens: list[int]) -> int:
         """
         Select onsen based on user profile and experience seeking behavior.
         """
@@ -257,7 +257,7 @@ class RealisticDataGenerator:
         weather: str,
         crowd_level: str,
         season: str,
-    ) -> Dict[str, int]:
+    ) -> dict[str, int]:
         """
         Generate facility ratings with realistic correlations.
 
@@ -359,7 +359,7 @@ class RealisticDataGenerator:
         self,
         profile: UserProfile,
         visit_date: datetime,
-        previous_onsens: List[int],
+        previous_onsens: list[int],
         visit_count: int,
     ) -> MockOnsenVisit:
         """Generate a single realistic visit based on user profile."""
@@ -496,7 +496,7 @@ class RealisticDataGenerator:
 
         return visit
 
-    def generate_scenario(self) -> List[MockOnsenVisit]:
+    def generate_scenario(self) -> list[MockOnsenVisit]:
         """
         Generate complete scenario based on configuration.
 
@@ -549,7 +549,7 @@ class RealisticDataGenerator:
 
         return all_visits
 
-    def _add_missing_data(self, visits: List[MockOnsenVisit]) -> List[MockOnsenVisit]:
+    def _add_missing_data(self, visits: list[MockOnsenVisit]) -> list[MockOnsenVisit]:
         """Randomly set some optional fields to None to simulate realistic missing data."""
         for visit in visits:
             if random.random() < self.config.missing_data_rate:
@@ -573,11 +573,11 @@ class RealisticDataGenerator:
 
 # Pre-configured scenarios for common use cases
 def create_analysis_ready_dataset(
-    onsen_ids: List[int],
+    onsen_ids: list[int],
     num_visits: int = 100,
     start_date: Optional[datetime] = None,
     days: int = 90,
-) -> List[MockOnsenVisit]:
+) -> list[MockOnsenVisit]:
     """
     Create a comprehensive dataset ready for all analysis types.
 
@@ -613,9 +613,9 @@ def create_analysis_ready_dataset(
 
 
 def create_econometric_test_dataset(
-    onsen_ids: List[int],
+    onsen_ids: list[int],
     num_visits: int = 200,
-) -> List[MockOnsenVisit]:
+) -> list[MockOnsenVisit]:
     """
     Create dataset specifically optimized for econometric analysis.
 
@@ -645,10 +645,10 @@ def create_econometric_test_dataset(
 
 
 def create_tourist_scenario(
-    onsen_ids: List[int],
+    onsen_ids: list[int],
     trip_days: int = 7,
     visits_per_day: int = 3,
-) -> List[MockOnsenVisit]:
+) -> list[MockOnsenVisit]:
     """
     Create scenario for intensive tourist visiting pattern.
 
@@ -677,9 +677,9 @@ def create_tourist_scenario(
 
 
 def create_local_regular_scenario(
-    onsen_ids: List[int],
+    onsen_ids: list[int],
     months: int = 12,
-) -> List[MockOnsenVisit]:
+) -> list[MockOnsenVisit]:
     """
     Create scenario for local regular visitor.
 

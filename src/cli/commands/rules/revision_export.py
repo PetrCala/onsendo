@@ -6,7 +6,7 @@ import argparse
 import json
 import csv
 import os
-from typing import List, Optional
+from typing import Optional
 from src.db.conn import get_db
 from src.db.models import RuleRevision
 from src.const import CONST
@@ -81,7 +81,7 @@ def export_revisions(args: argparse.Namespace) -> None:
     print(f"Exported {len(revisions)} revision(s) to: {output_path}")
 
 
-def export_json(revisions: List[RuleRevision], output_path: str, include_weekly: bool) -> None:
+def export_json(revisions: list[RuleRevision], output_path: str, include_weekly: bool) -> None:
     """Export revisions to JSON format."""
     data = []
 
@@ -142,7 +142,7 @@ def export_json(revisions: List[RuleRevision], output_path: str, include_weekly:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-def export_csv(revisions: List[RuleRevision], output_path: str, include_weekly: bool) -> None:
+def export_csv(revisions: list[RuleRevision], output_path: str, include_weekly: bool) -> None:
     """Export revisions to CSV format."""
     fieldnames = [
         "version_number",
@@ -210,7 +210,7 @@ def export_csv(revisions: List[RuleRevision], output_path: str, include_weekly: 
             writer.writerow(row)
 
 
-def export_markdown(revisions: List[RuleRevision], output_path: str, include_weekly: bool) -> None:
+def export_markdown(revisions: list[RuleRevision], output_path: str, include_weekly: bool) -> None:
     """Export revisions to consolidated markdown format."""
     lines = []
 

@@ -2,10 +2,10 @@
 Data mapper for converting scraped onsen data to database model format.
 """
 
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
 
-def map_scraped_data_to_onsen_model(scraped_data: Dict[str, Any]) -> Dict[str, Any]:
+def map_scraped_data_to_onsen_model(scraped_data: dict[str, Any]) -> dict[str, Any]:
     """
     Map scraped onsen data to the Onsen model fields.
 
@@ -58,7 +58,7 @@ def map_scraped_data_to_onsen_model(scraped_data: Dict[str, Any]) -> Dict[str, A
     return mapped_data
 
 
-def create_description(scraped_data: Dict[str, Any]) -> str:
+def create_description(scraped_data: dict[str, Any]) -> str:
     """
     Create a description from available scraped data.
 
@@ -97,7 +97,7 @@ def create_description(scraped_data: Dict[str, Any]) -> str:
     return " | ".join(description_parts) if description_parts else ""
 
 
-def validate_mapped_data(mapped_data: Dict[str, Any]) -> bool:
+def validate_mapped_data(mapped_data: dict[str, Any]) -> bool:
     """
     Validate that mapped data has required fields.
 
@@ -116,7 +116,7 @@ def validate_mapped_data(mapped_data: Dict[str, Any]) -> bool:
     return True
 
 
-def get_mapping_summary(scraped_data: Dict[str, Any]) -> Dict[str, Any]:
+def get_mapping_summary(scraped_data: dict[str, Any]) -> dict[str, Any]:
     """
     Get a summary of the mapping process.
 

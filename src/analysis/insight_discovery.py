@@ -7,7 +7,7 @@ and actionable insights from regression results and exploratory analysis.
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Optional, Any
 import logging
 from dataclasses import dataclass, field
 
@@ -23,10 +23,10 @@ class Insight:
     variable: str
     effect_size: float
     p_value: float
-    confidence_interval: Tuple[float, float]
+    confidence_interval: tuple[float, float]
     interpretation: str
     technical_note: str
-    related_variables: List[str] = field(default_factory=list)
+    related_variables: list[str] = field(default_factory=list)
 
 
 class InsightDiscovery:
@@ -39,14 +39,14 @@ class InsightDiscovery:
 
     def __init__(self, significance_level: float = 0.05):
         self.significance_level = significance_level
-        self.insights: List[Insight] = []
+        self.insights: list[Insight] = []
 
     def discover_insights(
         self,
-        regression_results: List[Any],  # List[RegressionResult]
+        regression_results: list[Any],  # list[RegressionResult]
         data: pd.DataFrame,
         dependent_var: str = 'personal_rating',
-    ) -> List[Insight]:
+    ) -> list[Insight]:
         """
         Comprehensive insight discovery from regression results and data.
 
@@ -87,7 +87,7 @@ class InsightDiscovery:
         logger.info(f"Discovered {len(self.insights)} insights")
         return self.insights
 
-    def _find_strong_effects(self, result, dependent_var: str) -> List[Insight]:
+    def _find_strong_effects(self, result, dependent_var: str) -> list[Insight]:
         """Identify variables with strong, statistically significant effects."""
         insights = []
 
@@ -135,7 +135,7 @@ class InsightDiscovery:
 
         return insights
 
-    def _find_surprising_findings(self, result, dependent_var: str) -> List[Insight]:
+    def _find_surprising_findings(self, result, dependent_var: str) -> list[Insight]:
         """Identify counterintuitive or unexpected relationships."""
         insights = []
 
@@ -199,7 +199,7 @@ class InsightDiscovery:
 
         return insights
 
-    def _find_nonlinear_relationships(self, result) -> List[Insight]:
+    def _find_nonlinear_relationships(self, result) -> list[Insight]:
         """Detect non-linear (quadratic/cubic) relationships."""
         insights = []
 
@@ -250,7 +250,7 @@ class InsightDiscovery:
 
         return insights
 
-    def _find_interaction_effects(self, result) -> List[Insight]:
+    def _find_interaction_effects(self, result) -> list[Insight]:
         """Identify significant interaction/moderation effects."""
         insights = []
 
@@ -297,7 +297,7 @@ class InsightDiscovery:
 
         return insights
 
-    def _find_threshold_effects(self, data: pd.DataFrame, dependent_var: str) -> List[Insight]:
+    def _find_threshold_effects(self, data: pd.DataFrame, dependent_var: str) -> list[Insight]:
         """Identify threshold effects using binned analysis."""
         insights = []
 
@@ -354,7 +354,7 @@ class InsightDiscovery:
 
         return insights
 
-    def _find_heart_rate_insights(self, data: pd.DataFrame, dependent_var: str) -> List[Insight]:
+    def _find_heart_rate_insights(self, data: pd.DataFrame, dependent_var: str) -> list[Insight]:
         """Discover insights related to heart rate data."""
         insights = []
 
@@ -402,7 +402,7 @@ class InsightDiscovery:
 
         return insights
 
-    def _find_temporal_patterns(self, data: pd.DataFrame, dependent_var: str) -> List[Insight]:
+    def _find_temporal_patterns(self, data: pd.DataFrame, dependent_var: str) -> list[Insight]:
         """Discover temporal patterns (seasonality, day-of-week effects)."""
         insights = []
 

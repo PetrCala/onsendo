@@ -7,7 +7,7 @@ the most robust, interpretable, and well-fitting models.
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Optional, Any
 import logging
 from itertools import combinations
 
@@ -35,7 +35,7 @@ class ModelSearchEngine:
             econometric_analyzer: Instance of EconometricAnalyzer for estimation
         """
         self.analyzer = econometric_analyzer
-        self.search_results: List[Any] = []
+        self.search_results: list[Any] = []
 
     def search_models(
         self,
@@ -44,7 +44,7 @@ class ModelSearchEngine:
         max_models: int = 20,
         include_polynomials: bool = True,
         include_interactions: bool = True,
-    ) -> List[Any]:
+    ) -> list[Any]:
         """
         Automated model search.
 
@@ -102,7 +102,7 @@ class ModelSearchEngine:
         dependent_var: str,
         include_polynomials: bool,
         include_interactions: bool,
-    ) -> List[Tuple[str, List[str]]]:
+    ) -> list[tuple[str, list[str]]]:
         """
         Generate model specifications to test.
 
@@ -231,7 +231,7 @@ class ModelSearchEngine:
         logger.info(f"Generated {len(specs)} model specifications")
         return specs
 
-    def _rank_models(self, results: List[Any]) -> List[Any]:
+    def _rank_models(self, results: list[Any]) -> list[Any]:
         """
         Rank models by overall quality.
 
@@ -302,7 +302,7 @@ class ModelSearchEngine:
 
         return ranked
 
-    def get_best_models(self, top_n: int = 5) -> List[Any]:
+    def get_best_models(self, top_n: int = 5) -> list[Any]:
         """
         Get the top N models from search results.
 
@@ -318,7 +318,7 @@ class ModelSearchEngine:
 
         return self.search_results[:top_n]
 
-    def get_robust_specifications(self) -> List[Any]:
+    def get_robust_specifications(self) -> list[Any]:
         """
         Get models that pass all diagnostic tests.
 
@@ -371,7 +371,7 @@ class ModelSearchEngine:
         self,
         variable: str,
         min_models: int = 3,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Identify variables with consistent effects across specifications.
 

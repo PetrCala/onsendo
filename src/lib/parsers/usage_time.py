@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, time, date
 import re
 import requests
-from typing import List, Optional, Set, Tuple, Dict
+from typing import Optional
 from abc import ABC, abstractmethod
 
 from src.const import CONST
@@ -19,7 +19,7 @@ class HolidayService(ABC):
     """Abstract base class for holiday services."""
 
     @abstractmethod
-    def get_holidays(self, year: int) -> Set[date]:
+    def get_holidays(self, year: int) -> set[date]:
         """Return a set of holiday dates for the given year."""
         pass
 
@@ -30,7 +30,7 @@ class JapanHolidayService(HolidayService):
     def __init__(self, base_url: str = CONST.HOLIDAY_SERVICE_URL):
         self.base_url = base_url
 
-    def get_holidays(self, year: int) -> Set[date]:
+    def get_holidays(self, year: int) -> set[date]:
         """Fetch Japanese holidays for the given year from the internet."""
         try:
             url = f"{self.base_url}/{year}/date.json"
@@ -55,10 +55,10 @@ class JapanHolidayService(HolidayService):
 class MockHolidayService(HolidayService):
     """Mock holiday service for testing."""
 
-    def __init__(self, holidays: Optional[Dict[int, Set[date]]] = None):
+    def __init__(self, holidays: Optional[dict[int, set[date]]] = None):
         self.holidays = holidays or {}
 
-    def get_holidays(self, year: int) -> Set[date]:
+    def get_holidays(self, year: int) -> set[date]:
         """Return mock holidays for the given year."""
         return self.holidays.get(year, set())
 
@@ -117,8 +117,8 @@ class TimeWindow:
     start_time: time
     end_time: Optional[time]
     end_next_day: bool = False
-    days_of_week: Optional[Set[int]] = None  # 0=Mon .. 6=Sun
-    month_ranges: List[MonthRange] = field(default_factory=list)
+    days_of_week: Optional[set[int]] = None  # 0=Mon .. 6=Sun
+    month_ranges: list[MonthRange] = field(default_factory=list)
     last_admission_time: Optional[time] = None
     includes_holidays: bool = False
     notes: Optional[str] = None
@@ -182,7 +182,7 @@ class UsageTimeParsed:
     raw: Optional[str]
     normalized: Optional[str]
 
-    windows: List[TimeWindow] = field(default_factory=list)
+    windows: list[TimeWindow] = field(default_factory=list)
 
     # Flags/metadata captured from strings
     is_closed: bool = False
@@ -195,7 +195,7 @@ class UsageTimeParsed:
     check_out_time: Optional[time] = None
 
     # Misc informational notes if something couldn't be structured
-    notes: List[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
 
     def is_open(
         self, dt: Optional[datetime] = None, assume_unknown_closed: bool = True
@@ -289,7 +289,7 @@ def parse_hhmm(token: str) -> Optional[time]:
     return time(hour=hour, minute=minute)
 
 
-def parse_time_token(raw: str, is_end: bool = False) -> Tuple[Optional[time], bool]:
+def parse_time_token(raw: str, is_end: bool = False) -> tuple[Optional[time], bool]:
     """Parse a time token like '6:30', '深夜0:00', '翌11:00'.
 
     Returns (time_obj or None, end_next_day).
@@ -310,10 +310,10 @@ def parse_time_token(raw: str, is_end: bool = False) -> Tuple[Optional[time], bo
     return t, end_next_day
 
 
-def extract_dow_set(segment: str) -> Tuple[Optional[Set[int]], bool]:
+def extract_dow_set(segment: str) -> tuple[Optional[set[int]], bool]:
     """Extract a set of days-of-week from a segment and whether holidays are included."""
     includes_holidays = False
-    days: Optional[Set[int]] = None
+    days: Optional[set[int]] = None
 
     # Explicit ranges like 月～土
     m = re.search(
@@ -349,8 +349,8 @@ def extract_dow_set(segment: str) -> Tuple[Optional[Set[int]], bool]:
     return (set(days) if days is not None else None, includes_holidays)
 
 
-def extract_month_ranges(segment: str) -> List[MonthRange]:
-    ranges: List[MonthRange] = []
+def extract_month_ranges(segment: str) -> list[MonthRange]:
+    ranges: list[MonthRange] = []
     # Patterns like (5～10月)
     for m in re.finditer(
         r"\(?(?P<s>\d{1,2})\s*[～~\-〜]\s*(?P<e>\d{1,2})月\)?", segment
@@ -362,13 +362,13 @@ def extract_month_ranges(segment: str) -> List[MonthRange]:
     return ranges
 
 
-def _split_statements(text: str) -> List[str]:
+def _split_statements(text: str) -> list[str]:
     # Split by Japanese commas that often separate statements while preserving qualifiers
     parts = re.split(r"(?:(?<=\))|(?<=\d))\s*[、,]\s*", text)
     return [p.strip() for p in parts if p.strip()]
 
 
-def _split_windows(segment: str) -> List[str]:
+def _split_windows(segment: str) -> list[str]:
     # Split multiple windows using / or ／ or comma
     parts = re.split(r"\s*[／/，,]\s*", segment)
 

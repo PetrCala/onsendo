@@ -5,7 +5,7 @@ Run an analysis.
 """
 
 import argparse
-from typing import Dict, Any, Optional, List
+from typing import Any, Optional
 from pathlib import Path
 import json
 import logging

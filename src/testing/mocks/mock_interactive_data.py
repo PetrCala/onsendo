@@ -6,13 +6,12 @@ add-visit functionality. Each function returns a list of strings that simulate
 user responses to the interactive questionnaire.
 """
 
-from typing import List
 from faker import Faker
 
 fake = Faker()
 
 
-def get_complete_flow_inputs() -> List[str]:
+def get_complete_flow_inputs() -> list[str]:
     """
     Get user inputs for a complete interactive flow with all features enabled.
 
@@ -81,7 +80,7 @@ def get_complete_flow_inputs() -> List[str]:
     ]
 
 
-def get_exercise_flow_inputs() -> List[str]:
+def get_exercise_flow_inputs() -> list[str]:
     """
     Get user inputs for a flow where the user exercised before the onsen.
 
@@ -146,7 +145,7 @@ def get_exercise_flow_inputs() -> List[str]:
     ]
 
 
-def get_minimal_flow_inputs() -> List[str]:
+def get_minimal_flow_inputs() -> list[str]:
     """
     Get user inputs for a minimal flow with basic information only.
 
@@ -213,7 +212,7 @@ def get_minimal_flow_inputs() -> List[str]:
     ]
 
 
-def get_invalid_onsen_retry_inputs() -> List[str]:
+def get_invalid_onsen_retry_inputs() -> list[str]:
     """
     Get user inputs that include an invalid onsen ID followed by a valid one.
 
@@ -281,7 +280,7 @@ def get_invalid_onsen_retry_inputs() -> List[str]:
     ]
 
 
-def get_invalid_rating_retry_inputs() -> List[str]:
+def get_invalid_rating_retry_inputs() -> list[str]:
     """
     Get user inputs that include an invalid rating followed by a valid one.
 
@@ -349,7 +348,7 @@ def get_invalid_rating_retry_inputs() -> List[str]:
     ]
 
 
-def get_multi_onsen_day_inputs() -> List[str]:
+def get_multi_onsen_day_inputs() -> list[str]:
     """
     Get user inputs for a multi-onsen day scenario.
 

@@ -5,7 +5,7 @@ Fixtures for the project.
 import json
 import os
 import tempfile
-from typing import Dict, Any
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest

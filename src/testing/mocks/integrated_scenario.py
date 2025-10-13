@@ -10,7 +10,7 @@ This module creates complete, analysis-ready datasets with:
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Tuple
+from typing import Optional
 import random
 import numpy as np
 
@@ -156,12 +156,12 @@ def _apply_onsen_effects_to_hr(
 
 
 def create_integrated_dataset(
-    onsen_ids: List[int],
+    onsen_ids: list[int],
     num_visits: int = 100,
     start_date: Optional[datetime] = None,
     days: int = 90,
     hr_coverage: float = 0.6,  # Percentage of visits with HR data
-) -> List[IntegratedVisitData]:
+) -> list[IntegratedVisitData]:
     """
     Create integrated dataset with visits and linked heart rate data.
 
@@ -207,7 +207,7 @@ def create_integrated_dataset(
     return integrated_data
 
 
-def _group_visits_by_user(visits: List[MockOnsenVisit]) -> List[Tuple[UserProfile, List[MockOnsenVisit]]]:
+def _group_visits_by_user(visits: list[MockOnsenVisit]) -> list[tuple[UserProfile, list[MockOnsenVisit]]]:
     """
     Group visits by likely user based on temporal proximity.
 
@@ -246,9 +246,9 @@ def _group_visits_by_user(visits: List[MockOnsenVisit]) -> List[Tuple[UserProfil
 
 
 def create_heart_rate_analysis_dataset(
-    onsen_ids: List[int],
+    onsen_ids: list[int],
     num_visits: int = 150,
-) -> List[IntegratedVisitData]:
+) -> list[IntegratedVisitData]:
     """
     Create dataset optimized for heart rate impact analysis.
 
@@ -301,9 +301,9 @@ def create_heart_rate_analysis_dataset(
 
 
 def create_pricing_analysis_dataset(
-    onsen_ids: List[int],
+    onsen_ids: list[int],
     num_visits: int = 200,
-) -> List[MockOnsenVisit]:
+) -> list[MockOnsenVisit]:
     """
     Create dataset optimized for pricing/value analysis.
 
@@ -337,9 +337,9 @@ def create_pricing_analysis_dataset(
 
 
 def create_spatial_analysis_dataset(
-    onsen_ids: List[int],
+    onsen_ids: list[int],
     num_visits: int = 150,
-) -> List[MockOnsenVisit]:
+) -> list[MockOnsenVisit]:
     """
     Create dataset optimized for spatial/geographic analysis.
 
@@ -372,10 +372,10 @@ def create_spatial_analysis_dataset(
 
 
 def create_temporal_analysis_dataset(
-    onsen_ids: List[int],
+    onsen_ids: list[int],
     num_visits: int = 250,
     months: int = 12,
-) -> List[MockOnsenVisit]:
+) -> list[MockOnsenVisit]:
     """
     Create dataset optimized for temporal/seasonal analysis.
 
