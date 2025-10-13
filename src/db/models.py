@@ -239,3 +239,115 @@ class HeartRateData(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     visit = relationship("OnsenVisit")
+
+
+class RuleRevision(Base):
+    """
+    Rule revisions for the Onsendo challenge ruleset.
+
+    Tracks weekly reviews and rule modifications following the Rule Review Sunday template.
+
+    Columns:
+    - id: primary key
+    - version_number: sequential version number (unique)
+    - revision_date: when the revision was created
+    - effective_date: when the rule changes take effect
+    - week_start_date: start of the week being reviewed
+    - week_end_date: end of the week being reviewed
+
+    Weekly Review Data (Summary Metrics):
+    - onsen_visits_count: number of onsen visits this week
+    - total_soaking_hours: total hours spent soaking
+    - sauna_sessions_count: number of sauna sessions
+    - running_distance_km: total running distance in km
+    - gym_sessions_count: number of gym sessions
+    - hike_completed: whether the weekly hike was completed
+    - rest_days_count: number of rest days
+
+    Health and Wellbeing:
+    - energy_level: energy level rating (1-10)
+    - sleep_hours: average sleep hours per night
+    - sleep_quality_rating: subjective sleep quality description
+    - soreness_notes: notes about soreness, pain, or warning signs
+    - hydration_nutrition_notes: notes about hydration and nutrition
+    - mood_mental_state: mood and mental state notes
+
+    Reflections:
+    - reflection_positive: what went particularly well
+    - reflection_patterns: patterns or improvements noticed
+    - reflection_warnings: any warning signs (fatigue, skin, dehydration)
+    - reflection_standout_onsens: which onsens stood out and why
+    - reflection_routine_notes: which elements felt natural or forced
+
+    Rule Adjustment Context:
+    - adjustment_reason: reason for adjustment (fatigue, injury, schedule, etc.)
+    - adjustment_description: high-level description of modification
+    - expected_duration: temporary or permanent
+    - health_safeguard_applied: health safeguard measures taken
+
+    Plans for Next Week:
+    - next_week_focus: focus area (recovery, pace stabilization, exploration)
+    - next_week_goals: intentional goals (specific onsens, route clusters, workout balance)
+    - next_week_sauna_limit: sauna limit for the week
+    - next_week_run_volume: estimated total run volume
+    - next_week_hike_destination: hike destination idea
+
+    Revision Metadata:
+    - sections_modified: JSON array of section numbers/names modified
+    - revision_summary: brief description for listings
+    - markdown_file_path: path to detailed revision markdown
+    - created_at: when this record was created in the database
+    """
+
+    __tablename__ = "rule_revisions"
+
+    # Primary fields
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    version_number = Column(Integer, unique=True, nullable=False)
+    revision_date = Column(DateTime, nullable=False)
+    effective_date = Column(DateTime, nullable=False)
+    week_start_date = Column(String, nullable=False)  # YYYY-MM-DD format
+    week_end_date = Column(String, nullable=False)  # YYYY-MM-DD format
+
+    # Weekly Review Data - Summary Metrics
+    onsen_visits_count = Column(Integer)
+    total_soaking_hours = Column(Float)
+    sauna_sessions_count = Column(Integer)
+    running_distance_km = Column(Float)
+    gym_sessions_count = Column(Integer)
+    hike_completed = Column(Boolean)
+    rest_days_count = Column(Integer)
+
+    # Health and Wellbeing
+    energy_level = Column(Integer)  # 1-10
+    sleep_hours = Column(Float)
+    sleep_quality_rating = Column(String)
+    soreness_notes = Column(String)
+    hydration_nutrition_notes = Column(String)
+    mood_mental_state = Column(String)
+
+    # Reflections
+    reflection_positive = Column(String)
+    reflection_patterns = Column(String)
+    reflection_warnings = Column(String)
+    reflection_standout_onsens = Column(String)
+    reflection_routine_notes = Column(String)
+
+    # Rule Adjustment Context
+    adjustment_reason = Column(String)
+    adjustment_description = Column(String)
+    expected_duration = Column(String)  # temporary/permanent
+    health_safeguard_applied = Column(String)
+
+    # Plans for Next Week
+    next_week_focus = Column(String)
+    next_week_goals = Column(String)
+    next_week_sauna_limit = Column(Integer)
+    next_week_run_volume = Column(Float)
+    next_week_hike_destination = Column(String)
+
+    # Revision Metadata
+    sections_modified = Column(String)  # JSON array
+    revision_summary = Column(String)
+    markdown_file_path = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)

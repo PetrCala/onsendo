@@ -937,6 +937,163 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    # Rules commands
+    "rules-print": CommandConfig(
+        func=lazy_command("src.cli.commands.rules.print", "print_rules"),
+        help="Print the current Onsendo rules, formatted.",
+        args={
+            "section": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Specific section number to print (default: all)",
+            ),
+            "raw": ArgumentConfig(
+                action="store_true",
+                help="Output raw markdown (default: formatted)",
+            ),
+            "version": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Print rules at specific revision version",
+            ),
+        },
+    ),
+    "rules-revision-create": CommandConfig(
+        func=lazy_command("src.cli.commands.rules.revision_create", "create_revision"),
+        help="Create a new rule revision with interactive workflow (Rule Review Sunday).",
+        args={},
+    ),
+    "rules-revision-list": CommandConfig(
+        func=lazy_command("src.cli.commands.rules.revision_list", "list_revisions"),
+        help="List all rule revisions.",
+        args={
+            "verbose": ArgumentConfig(
+                action="store_true",
+                help="Include full adjustment descriptions",
+            ),
+            "limit": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Maximum number of revisions to show",
+            ),
+            "section": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Filter by specific section number",
+            ),
+        },
+    ),
+    "rules-revision-show": CommandConfig(
+        func=lazy_command("src.cli.commands.rules.revision_show", "show_revision"),
+        help="Show detailed information about a specific rule revision.",
+        args={
+            "version": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Version number to show",
+            ),
+            "date": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Date filter (YYYY-MM-DD)",
+            ),
+            "format": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output format (text, json, markdown)",
+            ),
+            "open-file": ArgumentConfig(
+                action="store_true",
+                help="Open the revision markdown file in default editor",
+            ),
+        },
+    ),
+    "rules-revision-modify": CommandConfig(
+        func=lazy_command("src.cli.commands.rules.revision_modify", "modify_revision"),
+        help="Modify an existing rule revision's metadata (not the rules themselves).",
+        args={
+            "version": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Version number to modify",
+            ),
+        },
+    ),
+    "rules-revision-compare": CommandConfig(
+        func=lazy_command("src.cli.commands.rules.revision_compare", "compare_revisions"),
+        help="Compare two rule revisions.",
+        args={
+            "version-a": ArgumentConfig(
+                type=int,
+                required=False,
+                help="First version number",
+            ),
+            "version-b": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Second version number",
+            ),
+            "section": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Limit comparison to specific section",
+            ),
+            "metrics-only": ArgumentConfig(
+                action="store_true",
+                help="Only show metrics comparison",
+            ),
+            "rules-only": ArgumentConfig(
+                action="store_true",
+                help="Only show rules comparison",
+            ),
+        },
+    ),
+    "rules-revision-export": CommandConfig(
+        func=lazy_command("src.cli.commands.rules.revision_export", "export_revisions"),
+        help="Export rule revision data.",
+        args={
+            "version": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Specific version to export (default: all)",
+            ),
+            "format": ArgumentConfig(
+                type=str,
+                required=False,
+                default="json",
+                help="Export format (json, csv, markdown)",
+            ),
+            "output": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output file path",
+            ),
+            "include-weekly-reviews": ArgumentConfig(
+                action="store_true",
+                help="Include full weekly review data",
+            ),
+        },
+    ),
+    "rules-history": CommandConfig(
+        func=lazy_command("src.cli.commands.rules.history", "show_history"),
+        help="Show chronological history of all rule changes.",
+        args={
+            "section": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Filter to specific section number",
+            ),
+            "date-range": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Filter by date range 'YYYY-MM-DD,YYYY-MM-DD'",
+            ),
+            "visual": ArgumentConfig(
+                action="store_true",
+                help="Generate visual timeline chart",
+            ),
+        },
+    ),
 }
 
 

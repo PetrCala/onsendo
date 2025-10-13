@@ -123,14 +123,79 @@ make hr-maintenance CMD=validate         # Validate integrity
 make hr-manager
 ```
 
+### Rules Management
+
+The rules management system tracks revisions to the Onsendo Challenge ruleset following the Rule Review Sunday template.
+
+```bash
+# Print current rules
+poetry run onsendo rules-print
+poetry run onsendo rules-print --section 3  # Specific section only
+poetry run onsendo rules-print --version 2  # Rules at specific revision
+
+# Create a new rule revision (interactive)
+poetry run onsendo rules-revision-create
+
+# List all revisions
+poetry run onsendo rules-revision-list
+poetry run onsendo rules-revision-list --verbose
+poetry run onsendo rules-revision-list --limit 5
+poetry run onsendo rules-revision-list --section 3
+
+# Show specific revision
+poetry run onsendo rules-revision-show
+poetry run onsendo rules-revision-show --version 2
+poetry run onsendo rules-revision-show --format json
+poetry run onsendo rules-revision-show --version 2 --open-file
+
+# Modify revision metadata
+poetry run onsendo rules-revision-modify
+poetry run onsendo rules-revision-modify --version 2
+
+# Compare two revisions
+poetry run onsendo rules-revision-compare
+poetry run onsendo rules-revision-compare --version-a 1 --version-b 2
+poetry run onsendo rules-revision-compare --version-a 1 --version-b 2 --metrics-only
+poetry run onsendo rules-revision-compare --version-a 1 --version-b 2 --section 3
+
+# Export revisions
+poetry run onsendo rules-revision-export --format json
+poetry run onsendo rules-revision-export --version 2 --format csv
+poetry run onsendo rules-revision-export --include-weekly-reviews --format markdown
+
+# Show history timeline
+poetry run onsendo rules-history
+poetry run onsendo rules-history --visual
+poetry run onsendo rules-history --section 3
+poetry run onsendo rules-history --date-range 2025-11-01,2025-12-31
+```
+
+**Rule Revision Workflow:**
+
+1. **Weekly Review**: Every Sunday, complete the rule review process using `rules-revision-create`
+2. **Data Collection**: The interactive workflow guides you through:
+   - Summary metrics (onsen visits, sauna sessions, running distance, etc.)
+   - Health and wellbeing check (energy, sleep, soreness, mood)
+   - Reflections (what went well, patterns, warnings, standout onsens)
+   - Plans for next week (focus, goals, sauna limit, run volume)
+3. **Rule Adjustment Context**: Provide reason, description, duration, and safeguards
+4. **Section Modifications**: Select and modify specific rule sections if needed
+5. **Preview & Confirmation**: Review all data before creating the revision
+6. **Automatic Updates**: System updates database, generates markdown, and modifies rules file
+
+**Revision Files:**
+- Revisions stored in: `rules/revisions/v{N}_YYYY-MM-DD.md`
+- Main rules file: `rules/onsendo-rules.md`
+- Version history appended to main rules file automatically
+
 ## Architecture & Code Organization
 
 ### Module Structure
 
 The codebase follows a layered architecture with clear separation of concerns:
 
-- **`src/cli/`** - Command-line interface with subcommand groups (location, visit, onsen, heart-rate, analysis, database, system)
-- **`src/db/`** - Database layer with SQLAlchemy models (Location, Onsen, OnsenVisit, HeartRateData)
+- **`src/cli/`** - Command-line interface with subcommand groups (location, visit, onsen, heart-rate, analysis, database, system, rules)
+- **`src/db/`** - Database layer with SQLAlchemy models (Location, Onsen, OnsenVisit, HeartRateData, RuleRevision)
 - **`src/lib/`** - Core business logic and utilities (distance calculations, recommendations, heart rate management)
 - **`src/analysis/`** - Analysis engine with data pipeline, metrics, models, and visualizations
 - **`src/types/`** - Type definitions and enums for analysis and general use
@@ -145,6 +210,7 @@ The codebase follows a layered architecture with clear separation of concerns:
 - `Onsen` - Hot spring facilities with detailed metadata (ban_number, coordinates, facilities, hours)
 - `OnsenVisit` - Visit records with ratings, health metrics, logistics, weather
 - `HeartRateData` - Physiological data linked to visits via foreign key
+- `RuleRevision` - Rule revision tracking with weekly review data and rule modifications
 
 **Path Management** (`src/paths.py`):
 - All file paths are centralized in the `PATHS` enum

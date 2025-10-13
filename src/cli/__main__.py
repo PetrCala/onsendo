@@ -30,6 +30,7 @@ def get_command_group_config() -> Dict[str, str]:
         "database": "Database management commands",
         "heart-rate": "Heart rate management commands",
         "analysis": "Analysis and modeling commands",
+        "rules": "Rules management commands",
     }
 
 
@@ -43,6 +44,7 @@ def get_command_group_mapping() -> Dict[str, str]:
         "database-": "database",
         "heart-rate-": "heart-rate",
         "analysis-": "analysis",
+        "rules-": "rules",
     }
 
 
