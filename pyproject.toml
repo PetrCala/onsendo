@@ -36,6 +36,7 @@ google-auth = "^2.23.0"
 google-auth-oauthlib = "^1.1.0"
 google-api-python-client = "^2.100.0"
 python-dotenv = "^1.0.0"
+alembic = "^1.13.0"
 
 
 [tool.poetry.group.dev.dependencies]

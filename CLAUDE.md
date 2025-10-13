@@ -54,6 +54,38 @@ make db-fill DATA_FILE=path/to/data.json
 make db-path
 ```
 
+### Database Migrations
+
+The project uses Alembic for database schema migrations. This allows you to add new tables or columns to an existing database without recreating it from scratch.
+
+```bash
+# Apply migrations to update your database schema
+poetry run onsendo database migrate-upgrade
+
+# Check current migration status
+poetry run onsendo database migrate-current
+
+# View migration history
+poetry run onsendo database migrate-history
+poetry run onsendo database migrate-history --verbose
+
+# Generate new migration when you add/modify models
+poetry run onsendo database migrate-generate "Add new field to Visit"
+
+# Downgrade to previous migration (if needed)
+poetry run onsendo database migrate-downgrade -1
+poetry run onsendo database migrate-downgrade <revision_id>
+
+# Mark existing database as up-to-date (for databases created before migrations)
+poetry run onsendo database migrate-stamp head
+```
+
+**Important Notes:**
+- Always run `migrate-upgrade` after pulling new code that includes model changes
+- If you have an existing database created before the migration system was added, run `migrate-stamp head` to mark it as current
+- Review auto-generated migrations before applying them
+- Backup your database before running migrations
+
 ### Backup Operations
 
 **Critical:** The project now has a robust backup system with local and cloud (Google Drive) support.

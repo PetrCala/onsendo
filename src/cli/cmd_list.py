@@ -584,6 +584,70 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    "database-migrate-upgrade": CommandConfig(
+        func=lazy_command("src.cli.commands.database.migrate", "migrate_upgrade"),
+        help="Run database migrations to upgrade to the latest version.",
+        args={
+            "revision": ArgumentConfig(
+                type=str,
+                required=False,
+                default="head",
+                help="Revision to upgrade to (default: head)",
+            ),
+        },
+    ),
+    "database-migrate-downgrade": CommandConfig(
+        func=lazy_command("src.cli.commands.database.migrate", "migrate_downgrade"),
+        help="Downgrade database to a previous migration.",
+        args={
+            "revision": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Revision to downgrade to (use '-1' for previous)",
+            ),
+            "force": ArgumentConfig(
+                action="store_true",
+                help="Skip confirmation prompt",
+            ),
+        },
+    ),
+    "database-migrate-current": CommandConfig(
+        func=lazy_command("src.cli.commands.database.migrate", "migrate_current"),
+        help="Show current database migration revision.",
+        args={},
+    ),
+    "database-migrate-history": CommandConfig(
+        func=lazy_command("src.cli.commands.database.migrate", "migrate_history"),
+        help="Show migration history.",
+        args={
+            "verbose": ArgumentConfig(
+                action="store_true",
+                help="Show detailed information",
+            ),
+        },
+    ),
+    "database-migrate-generate": CommandConfig(
+        func=lazy_command("src.cli.commands.database.migrate", "migrate_generate"),
+        help="Generate a new migration based on model changes.",
+        args={
+            "message": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Migration message",
+            ),
+        },
+    ),
+    "database-migrate-stamp": CommandConfig(
+        func=lazy_command("src.cli.commands.database.migrate", "migrate_stamp"),
+        help="Stamp the database with a specific revision without running migrations.",
+        args={
+            "revision": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Revision to stamp (use 'head' for latest)",
+            ),
+        },
+    ),
     "calculate-milestones": CommandConfig(
         func=lazy_command("src.cli.commands.system.calculate_milestones", "calculate_milestones"),
         help="Calculate distance milestones for a location based on onsen distribution.",
