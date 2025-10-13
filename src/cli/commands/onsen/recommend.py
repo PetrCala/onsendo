@@ -6,6 +6,7 @@ import argparse
 from datetime import datetime
 from src.db.conn import get_db
 from src.lib.recommendation import OnsenRecommendationEngine
+from src.lib.map_generator import generate_recommendation_map
 from src.const import CONST
 
 
@@ -84,6 +85,23 @@ def recommend_onsen(args: argparse.Namespace) -> None:
                     for note in metadata["stay_restriction_notes"]:
                         print(f"     Note: {note}")
             print()
+
+        # Generate interactive map by default (unless disabled)
+        should_generate_map = not (hasattr(args, "no_generate_map") and args.no_generate_map)
+        if hasattr(args, "generate_map"):
+            should_generate_map = args.generate_map
+
+        if should_generate_map:
+            try:
+                map_path = generate_recommendation_map(
+                    recommendations, location
+                )
+                print("=" * 60)
+                print("Interactive Map Generated!")
+                print(f"Open in browser: file://{map_path}")
+                print("=" * 60)
+            except (OSError, IOError, ValueError) as e:
+                print(f"Error generating map: {e}")
 
 
 def recommend_onsen_interactive() -> None:
@@ -212,6 +230,12 @@ def recommend_onsen_interactive() -> None:
             except ValueError:
                 print("Invalid number. No limit will be applied.")
 
+        # Ask about interactive map generation
+        generate_map_input = input(
+            "Generate interactive map? (y/n, default: y): "
+        ).strip().lower()
+        generate_map = generate_map_input != "n"
+
         # Create args object for the main function
         class Args:
             pass
@@ -225,6 +249,7 @@ def recommend_onsen_interactive() -> None:
         args.stay_restriction_filter = stay_restriction_filter
         args.min_hours_after = min_hours_after if min_hours_after > 0 else None
         args.limit = limit
+        args.generate_map = generate_map
         args.no_interactive = True
 
         recommend_onsen(args)

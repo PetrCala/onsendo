@@ -13,6 +13,7 @@ class PATHS(CustomStrEnum):
     TMP_DATA_DIR = os.path.join(DATA_DIR, "tmp")
     DB_DIR = os.path.join(DATA_DIR, "db")
     OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output")
+    MAPS_DIR = os.path.join(OUTPUT_DIR, "maps")
     ARTIFACTS_DIR = os.path.join(PROJECT_ROOT, "artifacts")
     ARTIFACTS_DB_DIR = os.path.join(ARTIFACTS_DIR, "db")
     ARTIFACTS_DB_BACKUPS_DIR = os.path.join(ARTIFACTS_DB_DIR, "backups")

@@ -304,6 +304,10 @@ CLI_COMMANDS = {
                 default="non_stay_restricted",
                 help="Stay restriction filter (non_stay_restricted, all)",
             ),
+            "no_generate_map": ArgumentConfig(
+                action="store_true",
+                help="Disable interactive map generation",
+            ),
         },
     ),
     "onsen-scrape-data": CommandConfig(
