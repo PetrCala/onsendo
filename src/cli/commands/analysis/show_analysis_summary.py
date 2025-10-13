@@ -5,14 +5,12 @@ Show summary of all analyses performed.
 """
 
 import argparse
-import logging
+
+from loguru import logger
 
 from src.const import CONST
 from src.db.conn import get_db
 from src.analysis.engine import AnalysisEngine
-
-
-logger = logging.getLogger(__name__)
 
 
 def show_analysis_summary(args: argparse.Namespace) -> None:

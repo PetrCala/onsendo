@@ -13,14 +13,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional, Union
 from dataclasses import dataclass
-import logging
 from sqlalchemy.orm import Session
+from loguru import logger
 
 from src.db.conn import get_db
 from src.const import CONST
 from src.db.models import HeartRateData, OnsenVisit
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

@@ -7,12 +7,10 @@ and comprehensive onsen statistics.
 
 from typing import Optional
 from pathlib import Path
-import logging
 
 import pandas as pd
 import numpy as np
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class InteractiveMapGenerator:

@@ -6,15 +6,13 @@ For detailed statistical analysis, use:
 - InsightDiscovery from src.analysis.insight_discovery for pattern detection
 """
 
-import logging
 from typing import Any
 
 import numpy as np
 import pandas as pd
 from scipy import stats
 from scipy.stats import skew, kurtosis
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class MetricsCalculator:

@@ -5,15 +5,14 @@ Run a predefined analysis scenario.
 """
 
 import argparse
-import logging
 import json
+
+from loguru import logger
 
 from src.const import CONST
 from src.db.conn import get_db
 from src.analysis.engine import AnalysisEngine
 from src.types.analysis import AnalysisScenario, ANALYSIS_SCENARIOS
-
-logger = logging.getLogger(__name__)
 
 
 def run_scenario_analysis(args: argparse.Namespace) -> None:

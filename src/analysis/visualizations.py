@@ -4,16 +4,14 @@ Visualization system for onsen analysis.
 
 from typing import Optional, Any
 from pathlib import Path
-import logging
 
 import pandas as pd
 import numpy as np
 import seaborn as sns
+from loguru import logger
 
 from src.types.analysis import VisualizationType, VisualizationConfig
 from src.analysis.metrics import MetricsCalculator
-
-logger = logging.getLogger(__name__)
 
 
 class VisualizationEngine:

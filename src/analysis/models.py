@@ -7,16 +7,15 @@ Note: Regression analysis is handled by src/analysis/econometrics.py
 from typing import Optional, Any
 from datetime import datetime
 from pathlib import Path
-import logging
 import warnings
 
 import pandas as pd
 import numpy as np
+from loguru import logger
 
 from src.types.analysis import ModelType, ModelConfig
 
 warnings.filterwarnings("ignore")
-logger = logging.getLogger(__name__)
 
 
 class ModelEngine:

@@ -8,10 +8,9 @@ following econometric best practices for causal inference and robust estimation.
 import pandas as pd
 import numpy as np
 from typing import Optional, Any
-import logging
 from dataclasses import dataclass, field
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 @dataclass

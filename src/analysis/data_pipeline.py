@@ -4,18 +4,15 @@ Data pipeline for transforming raw database data into analysis-ready formats.
 
 from typing import Optional, Any
 from datetime import datetime, timedelta
-import logging
 
 import pandas as pd
 import numpy as np
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from loguru import logger
 
 from src.db.models import Onsen, OnsenVisit, HeartRateData
 from src.types.analysis import DataCategory
-
-
-logger = logging.getLogger(__name__)
 
 
 class DataPipeline:

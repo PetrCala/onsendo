@@ -5,11 +5,12 @@ Main analysis engine for orchestrating onsen analysis.
 import pandas as pd
 import numpy as np
 from typing import Optional, Any
-import logging
 import time
 from datetime import datetime
 from pathlib import Path
 import json
+
+from loguru import logger
 
 from src.types.analysis import (
     AnalysisRequest,
@@ -36,8 +37,6 @@ from src.analysis.insight_discovery import InsightDiscovery
 from src.analysis.report_generator import ReportGenerator
 from src.analysis.interactive_maps import InteractiveMapGenerator
 from src.analysis.model_search import ModelSearchEngine
-
-logger = logging.getLogger(__name__)
 
 
 class AnalysisEngine:

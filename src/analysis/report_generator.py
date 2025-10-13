@@ -8,9 +8,8 @@ visualizations, regression tables, diagnostics, and insights.
 from typing import Any
 from pathlib import Path
 from datetime import datetime
-import logging
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class ReportGenerator:

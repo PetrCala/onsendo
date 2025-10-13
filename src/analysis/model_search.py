@@ -8,10 +8,9 @@ the most robust, interpretable, and well-fitting models.
 import pandas as pd
 import numpy as np
 from typing import Optional, Any
-import logging
 from itertools import combinations
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class ModelSearchEngine:

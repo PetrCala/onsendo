@@ -8,7 +8,8 @@ import argparse
 from typing import Any, Optional
 from pathlib import Path
 import json
-import logging
+
+from loguru import logger
 
 from src.const import CONST
 from src.db.conn import get_db
@@ -23,8 +24,6 @@ from src.types.analysis import (
     AnalysisScenario,
     ANALYSIS_SCENARIOS,
 )
-
-logger = logging.getLogger(__name__)
 
 
 def run_analysis(args: argparse.Namespace) -> None:
