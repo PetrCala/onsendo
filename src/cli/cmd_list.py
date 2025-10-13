@@ -308,6 +308,10 @@ CLI_COMMANDS = {
                 action="store_true",
                 help="Disable interactive map generation",
             ),
+            "open_map": ArgumentConfig(
+                action="store_true",
+                help="Automatically open map in browser after generation",
+            ),
         },
     ),
     "onsen-scrape-data": CommandConfig(

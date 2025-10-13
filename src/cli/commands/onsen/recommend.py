@@ -3,7 +3,9 @@ Recommend onsen command with interactive support.
 """
 
 import argparse
+import webbrowser
 from datetime import datetime
+from pathlib import Path
 from src.db.conn import get_db
 from src.lib.recommendation import OnsenRecommendationEngine
 from src.lib.map_generator import generate_recommendation_map
@@ -98,7 +100,18 @@ def recommend_onsen(args: argparse.Namespace) -> None:
                 )
                 print("=" * 60)
                 print("Interactive Map Generated!")
-                print(f"Open in browser: file://{map_path}")
+                print(f"\nMap saved to: {map_path}")
+
+                # Check if auto-open is requested
+                auto_open = getattr(args, "open_map", False)
+                if auto_open:
+                    print("\nOpening map in browser...")
+                    webbrowser.open(Path(map_path).as_uri())
+                else:
+                    print("\nTo open in browser, click the link below:")
+                    print(f"{Path(map_path).as_uri()}")
+                    print(f"\nOr run: open '{map_path}'")
+                    print("Tip: Use --open_map flag to automatically open in browser")
                 print("=" * 60)
             except (OSError, IOError, ValueError) as e:
                 print(f"Error generating map: {e}")
@@ -236,6 +249,14 @@ def recommend_onsen_interactive() -> None:
         ).strip().lower()
         generate_map = generate_map_input != "n"
 
+        # Ask about auto-opening if map will be generated
+        open_map = False
+        if generate_map:
+            open_map_input = input(
+                "Automatically open map in browser? (y/n, default: y): "
+            ).strip().lower()
+            open_map = open_map_input != "n"
+
         # Create args object for the main function
         class Args:
             pass
@@ -250,6 +271,7 @@ def recommend_onsen_interactive() -> None:
         args.min_hours_after = min_hours_after if min_hours_after > 0 else None
         args.limit = limit
         args.generate_map = generate_map
+        args.open_map = open_map
         args.no_interactive = True
 
         recommend_onsen(args)
