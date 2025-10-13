@@ -328,6 +328,66 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    "onsen-identify": CommandConfig(
+        func=lazy_command("src.cli.commands.onsen.identify", "identify"),
+        help="Identify an onsen based on name, location, address, or region.",
+        args={
+            "name": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Onsen name (supports fuzzy matching)",
+            ),
+            "latitude": ArgumentConfig(
+                type=float,
+                required=False,
+                help="Latitude in decimal degrees (requires --longitude)",
+            ),
+            "longitude": ArgumentConfig(
+                type=float,
+                required=False,
+                help="Longitude in decimal degrees (requires --latitude)",
+            ),
+            "address": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Address (supports fuzzy matching)",
+            ),
+            "region": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Region name (supports fuzzy matching)",
+            ),
+            "max_distance": ArgumentConfig(
+                type=float,
+                required=False,
+                help="Maximum distance in kilometers (for location-based search)",
+            ),
+            "limit": ArgumentConfig(
+                type=int,
+                default=5,
+                help="Maximum number of results to return (default: 5)",
+            ),
+            "auto_print": ArgumentConfig(
+                action="store_true",
+                help="Automatically print summary of best match without prompting",
+            ),
+            "name_threshold": ArgumentConfig(
+                type=float,
+                default=0.6,
+                help="Minimum similarity threshold for name matching (0.0-1.0, default: 0.6)",
+            ),
+            "address_threshold": ArgumentConfig(
+                type=float,
+                default=0.5,
+                help="Minimum similarity threshold for address matching (0.0-1.0, default: 0.5)",
+            ),
+            "region_threshold": ArgumentConfig(
+                type=float,
+                default=0.6,
+                help="Minimum similarity threshold for region matching (0.0-1.0, default: 0.6)",
+            ),
+        },
+    ),
     # Database commands
     "database-init": CommandConfig(
         func=lazy_command("src.cli.commands.database.init_db", "init_db"),
