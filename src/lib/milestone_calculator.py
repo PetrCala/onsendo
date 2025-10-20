@@ -2,6 +2,8 @@
 Distance milestone calculation utilities.
 """
 
+from statistics import mean, median, stdev
+
 from sqlalchemy.orm import Session
 
 from src.db.models import Onsen, Location
