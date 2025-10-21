@@ -1180,7 +1180,12 @@ CLI_COMMANDS = {
     "rules-revision-create": CommandConfig(
         func=lazy_command("src.cli.commands.rules.revision_create", "create_revision"),
         help="Create a new rule revision with interactive workflow (Rule Review Sunday).",
-        args={},
+        args={
+            "auto-fetch": ArgumentConfig(
+                action="store_true",
+                help="Automatically fetch weekly statistics from database (onsen visits, exercise data)",
+            ),
+        },
     ),
     "rules-revision-list": CommandConfig(
         func=lazy_command("src.cli.commands.rules.revision_list", "list_revisions"),

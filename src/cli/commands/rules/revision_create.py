@@ -30,6 +30,9 @@ from src.types.rules import (
     AdjustmentReasonEnum,
     RevisionDurationEnum,
 )
+from src.lib.exercise_manager import ExerciseDataManager
+from src.db.models import OnsenVisit
+from src.types.exercise import ExerciseType
 
 
 def create_revision(args: argparse.Namespace) -> None:
@@ -58,7 +61,20 @@ def create_revision(args: argparse.Namespace) -> None:
             print("Operation cancelled.")
             return
 
-        metrics = collect_summary_metrics()
+        week_start, week_end, _, _ = week_dates
+
+        # Auto-fetch statistics if requested
+        auto_fetched_metrics = None
+        # Note: argparse converts --auto-fetch to auto_fetch attribute
+        auto_fetch_enabled = getattr(args, 'auto_fetch', False)
+        if auto_fetch_enabled:
+            print()
+            print("Auto-fetching statistics from database...")
+            print()
+            auto_fetched_metrics = auto_fetch_week_statistics(week_start, week_end)
+            print()
+
+        metrics = collect_summary_metrics(auto_fetched_metrics)
         health = collect_health_wellbeing()
         reflections = collect_reflections()
         next_week = collect_next_week_plans()
@@ -115,6 +131,79 @@ def create_revision(args: argparse.Namespace) -> None:
         print(f"\nError creating revision: {e}")
         import traceback
         traceback.print_exc()
+
+
+def auto_fetch_week_statistics(week_start: str, week_end: str) -> Optional[WeeklyReviewMetrics]:
+    """
+    Automatically fetch weekly statistics from the database.
+
+    Args:
+        week_start: Week start date in YYYY-MM-DD format
+        week_end: Week end date in YYYY-MM-DD format
+
+    Returns:
+        WeeklyReviewMetrics populated with database data, or None if fetch fails
+    """
+    try:
+        # Parse dates
+        start_date = datetime.strptime(week_start, "%Y-%m-%d")
+        end_date = datetime.strptime(week_end, "%Y-%m-%d")
+
+        metrics = WeeklyReviewMetrics()
+
+        with get_db(url=CONST.DATABASE_URL) as db:
+            # Query onsen visits
+            onsen_visits = (
+                db.query(OnsenVisit)
+                .filter(OnsenVisit.visit_time >= start_date)
+                .filter(OnsenVisit.visit_time <= end_date)
+                .all()
+            )
+
+            metrics.onsen_visits_count = len(onsen_visits)
+
+            # Count sauna sessions (visits where sauna was used)
+            sauna_sessions = [v for v in onsen_visits if v.sauna_visited]
+            metrics.sauna_sessions_count = len(sauna_sessions)
+
+            # Calculate total soaking time (only if data exists)
+            soaking_times = [v.stay_length_minutes for v in onsen_visits if v.stay_length_minutes]
+            if soaking_times:
+                metrics.total_soaking_hours = sum(soaking_times) / 60.0
+
+            # Query exercise data
+            exercise_manager = ExerciseDataManager(db)
+            exercise_summary = exercise_manager.get_weekly_summary(start_date, end_date)
+
+            # Extract exercise metrics
+            sessions_by_type = exercise_summary.sessions_by_type or {}
+
+            # Running distance (sum all running sessions)
+            running_sessions = exercise_manager.get_by_date_range(start_date, end_date)
+            running_distance = sum(
+                s.distance_km
+                for s in running_sessions
+                if s.exercise_type == ExerciseType.RUNNING.value and s.distance_km
+            )
+            metrics.running_distance_km = round(running_distance, 2) if running_distance > 0 else None
+
+            # Gym sessions
+            gym_count = sessions_by_type.get(ExerciseType.GYM.value, 0)
+            metrics.gym_sessions_count = gym_count if gym_count > 0 else None
+
+            # Hike completed
+            hike_count = sessions_by_type.get(ExerciseType.HIKING.value, 0)
+            metrics.hike_completed = hike_count > 0
+
+            # Rest days - cannot be auto-calculated, leave as None
+
+        print("✅ Successfully auto-fetched weekly statistics from database")
+        return metrics
+
+    except Exception as e:
+        print(f"⚠️  Warning: Could not auto-fetch statistics: {e}")
+        print("Falling back to manual entry...")
+        return None
 
 
 def collect_week_dates() -> Optional[tuple[str, str, datetime, datetime]]:
@@ -176,46 +265,83 @@ def collect_week_dates() -> Optional[tuple[str, str, datetime, datetime]]:
     return (week_start, week_end, revision_date, effective_date)
 
 
-def collect_summary_metrics() -> WeeklyReviewMetrics:
-    """Collect weekly summary metrics."""
+def collect_summary_metrics(
+    auto_fetched_metrics: Optional[WeeklyReviewMetrics] = None,
+) -> WeeklyReviewMetrics:
+    """
+    Collect weekly summary metrics.
+
+    Args:
+        auto_fetched_metrics: Optional pre-populated metrics from database.
+                             If provided, shows auto-fetched values as defaults.
+
+    Returns:
+        WeeklyReviewMetrics with user input (and/or auto-fetched values)
+    """
     print("1. Summary Metrics")
     print()
 
+    if auto_fetched_metrics:
+        print("(Auto-fetched values shown in [brackets]. Press Enter to accept, or type new value)")
+        print()
+
     metrics = WeeklyReviewMetrics()
 
-    def get_int(prompt: str) -> Optional[int]:
-        value = input(prompt).strip()
+    def get_int(prompt: str, auto_value: Optional[int] = None) -> Optional[int]:
+        if auto_value is not None:
+            full_prompt = f"{prompt}[auto: {auto_value}]: "
+        else:
+            full_prompt = prompt
+        value = input(full_prompt).strip()
         if not value:
-            return None
+            return auto_value  # Accept auto-fetched value or None
         try:
             return int(value)
         except ValueError:
-            print("Invalid number, skipping.")
-            return None
+            print("Invalid number, using auto-fetched value." if auto_value else "Invalid number, skipping.")
+            return auto_value
 
-    def get_float(prompt: str) -> Optional[float]:
-        value = input(prompt).strip()
+    def get_float(prompt: str, auto_value: Optional[float] = None) -> Optional[float]:
+        if auto_value is not None:
+            full_prompt = f"{prompt}[auto: {auto_value:.2f}]: "
+        else:
+            full_prompt = prompt
+        value = input(full_prompt).strip()
         if not value:
-            return None
+            return auto_value  # Accept auto-fetched value or None
         try:
             return float(value)
         except ValueError:
-            print("Invalid number, skipping.")
-            return None
+            print("Invalid number, using auto-fetched value." if auto_value else "Invalid number, skipping.")
+            return auto_value
 
-    def get_bool(prompt: str) -> Optional[bool]:
-        value = input(prompt).strip().lower()
+    def get_bool(prompt: str, auto_value: Optional[bool] = None) -> Optional[bool]:
+        if auto_value is not None:
+            auto_display = "yes" if auto_value else "no"
+            full_prompt = f"{prompt}[auto: {auto_display}] (y/n): "
+        else:
+            full_prompt = prompt
+        value = input(full_prompt).strip().lower()
         if not value:
-            return None
+            return auto_value  # Accept auto-fetched value or None
         return value in ["y", "yes", "true", "1"]
 
-    metrics.onsen_visits_count = get_int("Onsen visits this week: ")
-    metrics.total_soaking_hours = get_float("Total soaking time (hours): ")
-    metrics.sauna_sessions_count = get_int("Sauna sessions: ")
-    metrics.running_distance_km = get_float("Running distance (km): ")
-    metrics.gym_sessions_count = get_int("Gym sessions: ")
-    metrics.hike_completed = get_bool("Hike completed (y/n): ")
-    metrics.rest_days_count = get_int("Rest days: ")
+    # Get auto-fetched values if available
+    auto_onsen = auto_fetched_metrics.onsen_visits_count if auto_fetched_metrics else None
+    auto_soaking = auto_fetched_metrics.total_soaking_hours if auto_fetched_metrics else None
+    auto_sauna = auto_fetched_metrics.sauna_sessions_count if auto_fetched_metrics else None
+    auto_running = auto_fetched_metrics.running_distance_km if auto_fetched_metrics else None
+    auto_gym = auto_fetched_metrics.gym_sessions_count if auto_fetched_metrics else None
+    auto_hike = auto_fetched_metrics.hike_completed if auto_fetched_metrics else None
+    auto_rest = auto_fetched_metrics.rest_days_count if auto_fetched_metrics else None
+
+    metrics.onsen_visits_count = get_int("Onsen visits this week: ", auto_onsen)
+    metrics.total_soaking_hours = get_float("Total soaking time (hours): ", auto_soaking)
+    metrics.sauna_sessions_count = get_int("Sauna sessions: ", auto_sauna)
+    metrics.running_distance_km = get_float("Running distance (km): ", auto_running)
+    metrics.gym_sessions_count = get_int("Gym sessions: ", auto_gym)
+    metrics.hike_completed = get_bool("Hike completed (y/n): ", auto_hike)
+    metrics.rest_days_count = get_int("Rest days: ", auto_rest)
 
     print()
     return metrics
