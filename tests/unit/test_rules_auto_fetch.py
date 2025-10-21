@@ -7,8 +7,6 @@ For integration tests with actual database, see tests/integration/test_rules_aut
 
 from unittest.mock import patch
 
-import pytest
-
 from src.cli.commands.rules.revision_create import collect_summary_metrics
 from src.types.rules import WeeklyReviewMetrics
 
@@ -76,13 +74,13 @@ class TestCollectSummaryMetricsWithAutoFetch:
 
         # Simulate user accepting some, overriding others
         mock_input.side_effect = [
-            "",     # Accept onsen visits: 3
-            "",     # Accept soaking hours: 2.5
-            "3",    # Override sauna sessions: 3
-            "20.5", # Override running distance: 20.5
-            "",     # Accept gym sessions: 1
+            "",  # Accept onsen visits: 3
+            "",  # Accept soaking hours: 2.5
+            "3",  # Override sauna sessions: 3
+            "20.5",  # Override running distance: 20.5
+            "",  # Accept gym sessions: 1
             "yes",  # Override hike completed: True
-            "2",    # Add rest days: 2
+            "2",  # Add rest days: 2
         ]
 
         metrics = collect_summary_metrics(auto_fetched_metrics=auto_metrics)
@@ -107,8 +105,8 @@ class TestCollectSummaryMetricsWithAutoFetch:
         # Simulate user entering invalid data (should fall back to auto value)
         mock_input.side_effect = [
             "invalid",  # Invalid int -> should use auto value (3)
-            "",         # Accept sauna sessions
-            "",         # Skip other fields
+            "",  # Accept sauna sessions
+            "",  # Skip other fields
             "",
             "",
             "",
@@ -170,13 +168,13 @@ class TestCollectSummaryMetricsWithAutoFetch:
 
         # User accepts auto values and manually enters others
         mock_input.side_effect = [
-            "",     # Accept onsen visits: 5
+            "",  # Accept onsen visits: 5
             "3.5",  # Manually enter soaking hours
-            "3",    # Manually enter sauna sessions
-            "",     # Accept running distance: 20.0
-            "2",    # Manually enter gym sessions
+            "3",  # Manually enter sauna sessions
+            "",  # Accept running distance: 20.0
+            "2",  # Manually enter gym sessions
             "yes",  # Manually enter hike completed
-            "1",    # Manually enter rest days
+            "1",  # Manually enter rest days
         ]
 
         metrics = collect_summary_metrics(auto_fetched_metrics=auto_metrics)
