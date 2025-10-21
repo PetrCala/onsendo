@@ -73,7 +73,6 @@ See [rules/onsendo-rules.md](rules/onsendo-rules.md) for the complete challenge 
     - [Exercise Tracking and Management](#exercise-tracking-and-management)
     - [Tips for Effective Use](#tips-for-effective-use)
     - [Example Workflows](#example-workflows)
-      - [Exercise Tracking and Management](#exercise-tracking-and-management-1)
 
 ## Set up the project
 
@@ -962,7 +961,7 @@ poetry run onsendo exercise list --type running --start-date 2025-11-01
 poetry run onsendo exercise list --unlinked-only
 
 # Show weekly statistics
-poetry run onsendo exercise stats --week-start 2025-11-10
+poetry run onsendo exercise stats --week 2025-11-10
 ```
 
 **Weekly Statistics for Onsendo Challenge**:
@@ -970,7 +969,7 @@ poetry run onsendo exercise stats --week-start 2025-11-10
 Track your progress against the challenge exercise targets:
 
 ```bash
-poetry run onsendo exercise stats --week-start 2025-11-10
+poetry run onsendo exercise stats --week 2025-11-10
 ```
 
 Output shows:
@@ -1041,7 +1040,7 @@ poetry run onsendo exercise import path/to/tuesday_gym.json
 poetry run onsendo exercise import path/to/saturday_hike.gpx
 
 # 2. Sunday: Review your week's exercise data
-poetry run onsendo exercise stats --week-start 2025-11-10
+poetry run onsendo exercise stats --week 2025-11-10
 # Output shows if you met targets: 20-35km running, 2-4 gym sessions, 1 hike
 
 # 3. Use stats in Rule Review Sunday
