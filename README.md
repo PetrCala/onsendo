@@ -35,6 +35,7 @@ See [rules/onsendo-rules.md](rules/onsendo-rules.md) for the complete challenge 
 
 - [The Onsendo Challenge](#the-onsendo-challenge)
 - [Set up the project](#set-up-the-project)
+- [Installation for Direct CLI Access](#installation-for-direct-cli-access)
 - [How to use](#how-to-use)
   - [Quick Start](#quick-start)
   - [Preparing a database](#preparing-a-database)
@@ -83,6 +84,37 @@ source .venv/bin/activate
 ```
 
 - Run `poetry install`
+
+## Installation for Direct CLI Access
+
+To use `onsendo` directly from your command line without `poetry run`, set up a symlink and PATH:
+
+**Option 1: Symlink to user bin directory (Recommended)**
+
+```bash
+# Create symlink (run from project root)
+ln -s "$(pwd)/.venv/bin/onsendo" ~/.local/bin/onsendo
+
+# Ensure ~/.local/bin is in PATH (add to ~/.zshrc if not present)
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**Option 2: Add project bin to PATH**
+
+```bash
+# Add to ~/.zshrc (replace /path/to/onsendo with actual path)
+echo 'export PATH="/path/to/onsendo/.venv/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**Verify installation:**
+
+```bash
+onsendo --help  # Should work without 'poetry run'
+```
+
+**Note:** After updating dependencies with `poetry install`, the symlink remains valid automatically.
 
 ## How to use
 
