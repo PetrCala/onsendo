@@ -339,8 +339,10 @@ class RuleMarkdownGenerator:
             lines.append(f"| Running distance (km) | {metrics.running_distance_km} |")
         if metrics.gym_sessions_count is not None:
             lines.append(f"| Gym sessions | {metrics.gym_sessions_count} |")
-        if metrics.hike_completed is not None:
-            lines.append(f"| Hike completed | {'Yes' if metrics.hike_completed else 'No'} |")
+        if metrics.long_exercise_completed is not None:
+            lines.append(
+                f"| Long exercise session completed | {'Yes' if metrics.long_exercise_completed else 'No'} |"
+            )
         if metrics.rest_days_count is not None:
             lines.append(f"| Rest days | {metrics.rest_days_count} |")
 

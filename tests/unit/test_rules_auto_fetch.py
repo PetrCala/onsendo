@@ -27,7 +27,7 @@ class TestCollectSummaryMetricsWithAutoFetch:
         assert metrics.sauna_sessions_count == 2
         assert metrics.running_distance_km == 15.5
         assert metrics.gym_sessions_count == 2
-        assert metrics.hike_completed is True
+        assert metrics.long_exercise_completed is True
         assert metrics.rest_days_count == 1
 
     @patch("builtins.input")
@@ -40,7 +40,7 @@ class TestCollectSummaryMetricsWithAutoFetch:
             sauna_sessions_count=2,
             running_distance_km=15.0,
             gym_sessions_count=1,
-            hike_completed=True,
+            long_exercise_completed=True,
             rest_days_count=None,
         )
 
@@ -55,7 +55,7 @@ class TestCollectSummaryMetricsWithAutoFetch:
         assert metrics.sauna_sessions_count == 2
         assert metrics.running_distance_km == 15.0
         assert metrics.gym_sessions_count == 1
-        assert metrics.hike_completed is True
+        assert metrics.long_exercise_completed is True
         assert metrics.rest_days_count is None
 
     @patch("builtins.input")
@@ -68,7 +68,7 @@ class TestCollectSummaryMetricsWithAutoFetch:
             sauna_sessions_count=2,
             running_distance_km=15.0,
             gym_sessions_count=1,
-            hike_completed=False,
+            long_exercise_completed=False,
             rest_days_count=None,
         )
 
@@ -90,7 +90,7 @@ class TestCollectSummaryMetricsWithAutoFetch:
         assert metrics.sauna_sessions_count == 3  # Overridden
         assert metrics.running_distance_km == 20.5  # Overridden
         assert metrics.gym_sessions_count == 1  # Accepted
-        assert metrics.hike_completed is True  # Overridden
+        assert metrics.long_exercise_completed is True  # Overridden
         assert metrics.rest_days_count == 2  # Manually entered
 
     @patch("builtins.input")
@@ -133,7 +133,7 @@ class TestCollectSummaryMetricsWithAutoFetch:
         assert metrics.sauna_sessions_count is None
         assert metrics.running_distance_km is None
         assert metrics.gym_sessions_count is None
-        assert metrics.hike_completed is None
+        assert metrics.long_exercise_completed is None
         assert metrics.rest_days_count is None
 
     @patch("builtins.input")
@@ -143,7 +143,7 @@ class TestCollectSummaryMetricsWithAutoFetch:
         auto_metrics = WeeklyReviewMetrics(
             onsen_visits_count=0,
             sauna_sessions_count=0,
-            hike_completed=False,
+            long_exercise_completed=False,
         )
 
         # Accept all values
@@ -154,7 +154,7 @@ class TestCollectSummaryMetricsWithAutoFetch:
         # Should preserve zero values
         assert metrics.onsen_visits_count == 0
         assert metrics.sauna_sessions_count == 0
-        assert metrics.hike_completed is False
+        assert metrics.long_exercise_completed is False
 
     @patch("builtins.input")
     def test_collect_metrics_partial_auto_fetch(self, mock_input):
@@ -184,31 +184,31 @@ class TestCollectSummaryMetricsWithAutoFetch:
         assert metrics.sauna_sessions_count == 3  # Manual
         assert metrics.running_distance_km == 20.0  # Auto
         assert metrics.gym_sessions_count == 2  # Manual
-        assert metrics.hike_completed is True  # Manual
+        assert metrics.long_exercise_completed is True  # Manual
         assert metrics.rest_days_count == 1  # Manual
 
     @patch("builtins.input")
     def test_collect_metrics_boolean_variations(self, mock_input):
-        """Test different boolean input variations for hike_completed."""
+        """Test different boolean input variations for long_exercise_completed."""
         # Test with True auto value
-        auto_metrics = WeeklyReviewMetrics(hike_completed=True)
+        auto_metrics = WeeklyReviewMetrics(long_exercise_completed=True)
 
         mock_input.side_effect = ["", "", "", "", "", "", ""]
         metrics = collect_summary_metrics(auto_fetched_metrics=auto_metrics)
-        assert metrics.hike_completed is True
+        assert metrics.long_exercise_completed is True
 
         # Test overriding True to False
         mock_input.side_effect = ["", "", "", "", "", "n", ""]
         metrics = collect_summary_metrics(auto_fetched_metrics=auto_metrics)
-        assert metrics.hike_completed is False
+        assert metrics.long_exercise_completed is False
 
         # Test with False auto value
-        auto_metrics = WeeklyReviewMetrics(hike_completed=False)
+        auto_metrics = WeeklyReviewMetrics(long_exercise_completed=False)
         mock_input.side_effect = ["", "", "", "", "", "", ""]
         metrics = collect_summary_metrics(auto_fetched_metrics=auto_metrics)
-        assert metrics.hike_completed is False
+        assert metrics.long_exercise_completed is False
 
         # Test overriding False to True
         mock_input.side_effect = ["", "", "", "", "", "yes", ""]
         metrics = collect_summary_metrics(auto_fetched_metrics=auto_metrics)
-        assert metrics.hike_completed is True
+        assert metrics.long_exercise_completed is True

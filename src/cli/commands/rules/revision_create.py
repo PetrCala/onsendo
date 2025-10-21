@@ -191,9 +191,22 @@ def auto_fetch_week_statistics(week_start: str, week_end: str) -> Optional[Weekl
             gym_count = sessions_by_type.get(ExerciseType.GYM.value, 0)
             metrics.gym_sessions_count = gym_count if gym_count > 0 else None
 
-            # Hike completed
+            # Long exercise session completed (hike or long run)
+            # Criteria: hiking session OR running session >= 15km OR >= 2.5hr (150 min)
             hike_count = sessions_by_type.get(ExerciseType.HIKING.value, 0)
-            metrics.hike_completed = hike_count > 0
+
+            # Check for long running sessions
+            all_sessions = exercise_manager.get_by_date_range(start_date, end_date)
+            long_run_count = sum(
+                1 for s in all_sessions
+                if s.exercise_type == ExerciseType.RUNNING.value
+                and (
+                    (s.distance_km is not None and s.distance_km >= 15.0)
+                    or s.duration_minutes >= 150
+                )
+            )
+
+            metrics.long_exercise_completed = (hike_count > 0) or (long_run_count > 0)
 
             # Rest days - cannot be auto-calculated, leave as None
 
@@ -332,7 +345,7 @@ def collect_summary_metrics(
     auto_sauna = auto_fetched_metrics.sauna_sessions_count if auto_fetched_metrics else None
     auto_running = auto_fetched_metrics.running_distance_km if auto_fetched_metrics else None
     auto_gym = auto_fetched_metrics.gym_sessions_count if auto_fetched_metrics else None
-    auto_hike = auto_fetched_metrics.hike_completed if auto_fetched_metrics else None
+    auto_long_ex = auto_fetched_metrics.long_exercise_completed if auto_fetched_metrics else None
     auto_rest = auto_fetched_metrics.rest_days_count if auto_fetched_metrics else None
 
     metrics.onsen_visits_count = get_int("Onsen visits this week: ", auto_onsen)
@@ -340,7 +353,9 @@ def collect_summary_metrics(
     metrics.sauna_sessions_count = get_int("Sauna sessions: ", auto_sauna)
     metrics.running_distance_km = get_float("Running distance (km): ", auto_running)
     metrics.gym_sessions_count = get_int("Gym sessions: ", auto_gym)
-    metrics.hike_completed = get_bool("Hike completed (y/n): ", auto_hike)
+    metrics.long_exercise_completed = get_bool(
+        "Long exercise session completed (hike or long run >= 15km/2.5hr) (y/n): ", auto_long_ex
+    )
     metrics.rest_days_count = get_int("Rest days: ", auto_rest)
 
     print()
@@ -707,7 +722,7 @@ def create_and_save_revision(
             sauna_sessions_count=metrics.sauna_sessions_count,
             running_distance_km=metrics.running_distance_km,
             gym_sessions_count=metrics.gym_sessions_count,
-            hike_completed=metrics.hike_completed,
+            long_exercise_completed=metrics.long_exercise_completed,
             rest_days_count=metrics.rest_days_count,
             energy_level=health.energy_level,
             sleep_hours=health.sleep_hours,

@@ -179,7 +179,9 @@ def compare_metrics(revision_a: RuleRevision, revision_b: RuleRevision) -> None:
         "km",
     )
     show_metric("Gym sessions", revision_a.gym_sessions_count, revision_b.gym_sessions_count)
-    show_metric("Hike completed", revision_a.hike_completed, revision_b.hike_completed)
+    show_metric(
+        "Long exercise session", revision_a.long_exercise_completed, revision_b.long_exercise_completed
+    )
     show_metric("Rest days", revision_a.rest_days_count, revision_b.rest_days_count)
     show_metric("Energy level", revision_a.energy_level, revision_b.energy_level, "/10")
     show_metric("Sleep hours", revision_a.sleep_hours, revision_b.sleep_hours, "h")

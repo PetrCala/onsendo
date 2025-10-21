@@ -109,7 +109,7 @@ def export_json(revisions: list[RuleRevision], output_path: str, include_weekly:
                 "sauna_sessions_count": revision.sauna_sessions_count,
                 "running_distance_km": revision.running_distance_km,
                 "gym_sessions_count": revision.gym_sessions_count,
-                "hike_completed": revision.hike_completed,
+                "long_exercise_completed": revision.long_exercise_completed,
                 "rest_days_count": revision.rest_days_count,
             }
             revision_dict["health"] = {
@@ -164,7 +164,7 @@ def export_csv(revisions: list[RuleRevision], output_path: str, include_weekly: 
                 "sauna_sessions_count",
                 "running_distance_km",
                 "gym_sessions_count",
-                "hike_completed",
+                "long_exercise_completed",
                 "rest_days_count",
                 "energy_level",
                 "sleep_hours",
@@ -198,7 +198,7 @@ def export_csv(revisions: list[RuleRevision], output_path: str, include_weekly: 
                         "sauna_sessions_count": revision.sauna_sessions_count,
                         "running_distance_km": revision.running_distance_km,
                         "gym_sessions_count": revision.gym_sessions_count,
-                        "hike_completed": revision.hike_completed,
+                        "long_exercise_completed": revision.long_exercise_completed,
                         "rest_days_count": revision.rest_days_count,
                         "energy_level": revision.energy_level,
                         "sleep_hours": revision.sleep_hours,

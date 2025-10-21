@@ -103,11 +103,24 @@ def show_exercise_stats(args: argparse.Namespace) -> int:
                 if s.exercise_type == ExerciseType.RUNNING.value and s.distance_km
             )
 
+            # Check for long running sessions (>= 15km or >= 2.5hr)
+            all_sessions = manager.get_by_date_range(week_start, week_end)
+            long_run_sessions = sum(
+                1
+                for s in all_sessions
+                if s.exercise_type == ExerciseType.RUNNING.value
+                and ((s.distance_km is not None and s.distance_km >= 15.0) or s.duration_minutes >= 150)
+            )
+
+            long_exercise_completed = (hike_sessions > 0) or (long_run_sessions > 0)
+
             print(f"🏃 Running: {running_distance:.1f} km "
                   f"(target: 20-35 km, max: 40 km)")
             print(f"🏋️  Gym Sessions: {gym_sessions} (target: 2-4, max: 4)")
-            print(f"⛰️  Hike Completed: {'✅ Yes' if hike_sessions > 0 else '❌ No'} "
-                  f"(mandatory)")
+            print(
+                f"⛰️  Long Exercise Session: {'✅ Yes' if long_exercise_completed else '❌ No'} "
+                f"(mandatory: hike or long run >= 15km/2.5hr)"
+            )
 
             # Check limits
             warnings = []
@@ -115,8 +128,11 @@ def show_exercise_stats(args: argparse.Namespace) -> int:
                 warnings.append(f"⚠️  Running distance ({running_distance:.1f} km) exceeds limit (40 km)")
             if gym_sessions > 4:
                 warnings.append(f"⚠️  Gym sessions ({gym_sessions}) exceed limit (4)")
-            if hike_sessions == 0 and week:
-                warnings.append("⚠️  No hike completed this week (mandatory)")
+            if not long_exercise_completed and week:
+                warnings.append(
+                    "⚠️  No long exercise session this week "
+                    "(mandatory: hike or long run >= 15km/2.5hr)"
+                )
 
             if warnings:
                 print("\n⚠️  Warnings:")

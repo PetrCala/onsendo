@@ -53,7 +53,7 @@ class WeeklyReviewMetrics:
     sauna_sessions_count: Optional[int] = None
     running_distance_km: Optional[float] = None
     gym_sessions_count: Optional[int] = None
-    hike_completed: Optional[bool] = None
+    long_exercise_completed: Optional[bool] = None  # Hike or long run (>= 15km or >= 2.5hr)
     rest_days_count: Optional[int] = None
 
 

@@ -42,11 +42,11 @@
 1. **Running:** 2–4 times per week (8–12 km average per session).  
 2. **Gym or strength training:** 2–4 times per week (1.25–2 hours per session).  
 3. **Saturday hike or long run:** Mandatory unless prevented by illness, injury, or unsafe weather conditions.
-   - **Good weather:** Up and down Mt. Tsurumi.
-   - **Poor weather:** Choose an alternative such as a Beppu city loop, a coastal or indoor long-run session.
+   - **Good weather:** Up and down Mt. Tsurumi (hiking).
+   - **Poor weather:** Choose an alternative such as a long run session (≥ 15 km or ≥ 2.5 hours), Beppu city loop, or coastal route.
    - **Definition of poor weather:** Typhoon, heavy rain, strong wind, low visibility, dense fog, or nighttime running conditions.
-   - **Duration:** Aim for a total exercise time of approximately 3–6 hours, regardless of activity.
-   - **Recovery:** A post-hike onsen session is required for muscle relaxation and recovery.
+   - **Duration:** Aim for approximately 3–6 hours for hikes, or ≥ 15 km / ≥ 2.5 hours for long runs.
+   - **Recovery:** A post-exercise onsen session is required for muscle relaxation and recovery.
 4. **Rest day:** At least one full or partial rest day weekly (no run/gym/hike).  
 5. Avoid scheduling **more than two consecutive “high-load” days per week.**  
    - A “high-load” day is any day that includes:
@@ -115,7 +115,7 @@
 | Total onsen time | ~6–8 hrs | 8 max |
 | Running distance | 20–35 km | 40 max |
 | Gym sessions | 2–4 | 4 max |
-| Hike/Long run | 1 | mandatory |
+| Long exercise session (hike or long run ≥15km/2.5hr) | 1 | mandatory |
 | Rest days | 1–2 | — |
 
 ---

@@ -7,15 +7,15 @@
 
 ## 1. Summary Metrics
 
-| Metric                   | This Week | Previous Week | Change (%) | Notes |
-| ------------------------ | --------- | ------------- | ---------- | ----- |
-| Onsen visits             |           |               |            |       |
-| Total soaking time (hrs) |           |               |            |       |
-| Sauna sessions           |           |               |            |       |
-| Running distance (km)    |           |               |            |       |
-| Gym sessions             |           |               |            |       |
-| Hike completed (Y/N)     |           |               |            |       |
-| Rest days                |           |               |            |       |
+| Metric                                      | This Week | Previous Week | Change (%) | Notes |
+| ------------------------------------------- | --------- | ------------- | ---------- | ----- |
+| Onsen visits                                |           |               |            |       |
+| Total soaking time (hrs)                    |           |               |            |       |
+| Sauna sessions                              |           |               |            |       |
+| Running distance (km)                       |           |               |            |       |
+| Gym sessions                                |           |               |            |       |
+| Long exercise session (hike/long run) (Y/N) |           |               |            |       |
+| Rest days                                   |           |               |            |       |
 
 ---
 

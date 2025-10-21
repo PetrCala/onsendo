@@ -24,7 +24,7 @@ def generate_mock_metrics() -> WeeklyReviewMetrics:
         sauna_sessions_count=random.randint(2, 5),
         running_distance_km=round(random.uniform(15.0, 40.0), 1),
         gym_sessions_count=random.randint(2, 4),
-        hike_completed=random.choice([True, False]),
+        long_exercise_completed=random.choice([True, False]),
         rest_days_count=random.randint(1, 2),
     )
 

@@ -171,7 +171,9 @@ def modify_weekly_metrics(revision: RuleRevision) -> None:
         "Running distance (km)", revision.running_distance_km
     )
     revision.gym_sessions_count = get_int_input("Gym sessions", revision.gym_sessions_count)
-    revision.hike_completed = get_bool_input("Hike completed", revision.hike_completed)
+    revision.long_exercise_completed = get_bool_input(
+        "Long exercise session completed (hike/long run)", revision.long_exercise_completed
+    )
     revision.rest_days_count = get_int_input("Rest days", revision.rest_days_count)
 
 

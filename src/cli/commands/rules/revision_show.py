@@ -163,8 +163,8 @@ def display_revision_text(revision: RuleRevision) -> None:
         print(f"Running distance: {revision.running_distance_km} km")
     if revision.gym_sessions_count is not None:
         print(f"Gym sessions: {revision.gym_sessions_count}")
-    if revision.hike_completed is not None:
-        print(f"Hike completed: {'Yes' if revision.hike_completed else 'No'}")
+    if revision.long_exercise_completed is not None:
+        print(f"Long exercise session completed: {'Yes' if revision.long_exercise_completed else 'No'}")
     if revision.rest_days_count is not None:
         print(f"Rest days: {revision.rest_days_count}")
     print()
@@ -259,7 +259,7 @@ def display_revision_json(revision: RuleRevision) -> None:
             "sauna_sessions_count": revision.sauna_sessions_count,
             "running_distance_km": revision.running_distance_km,
             "gym_sessions_count": revision.gym_sessions_count,
-            "hike_completed": revision.hike_completed,
+            "long_exercise_completed": revision.long_exercise_completed,
             "rest_days_count": revision.rest_days_count,
         },
         "health": {

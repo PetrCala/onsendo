@@ -329,7 +329,7 @@ class RuleRevision(Base):
     - sauna_sessions_count: number of sauna sessions
     - running_distance_km: total running distance in km
     - gym_sessions_count: number of gym sessions
-    - hike_completed: whether the weekly hike was completed
+    - long_exercise_completed: whether a long exercise session was completed (hike or long run >= 15km/2.5hr)
     - rest_days_count: number of rest days
 
     Health and Wellbeing:
@@ -383,7 +383,7 @@ class RuleRevision(Base):
     sauna_sessions_count = Column(Integer)
     running_distance_km = Column(Float)
     gym_sessions_count = Column(Integer)
-    hike_completed = Column(Boolean)
+    long_exercise_completed = Column(Boolean)
     rest_days_count = Column(Integer)
 
     # Health and Wellbeing
