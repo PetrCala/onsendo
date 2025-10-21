@@ -314,7 +314,7 @@ The codebase follows a layered architecture with clear separation of concerns:
 
 - `Location` - User-defined locations for distance calculations
 - `Onsen` - Hot spring facilities with detailed metadata (ban_number, coordinates, facilities, hours)
-- `OnsenVisit` - Visit records with ratings, health metrics, logistics, weather
+- `OnsenVisit` - Visit records with ratings, health metrics, logistics, weather, and optional notes
 - `HeartRateData` - Physiological data linked to visits via foreign key
 - `ExerciseSession` - Exercise/workout data with GPS routes, metrics, and links to visits/heart rate
 - `RuleRevision` - Rule revision tracking with weekly review data and rule modifications

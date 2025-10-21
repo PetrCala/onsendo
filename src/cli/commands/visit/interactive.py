@@ -640,6 +640,13 @@ def add_visit_interactive() -> None:
             "processor": lambda x: int(x) if x else None,
             "step_title": "Personal rating",
         },
+        {
+            "name": "notes",
+            "prompt": "Any additional notes about this visit? (optional): ",
+            "validator": lambda x: True,
+            "processor": lambda x: x if x else None,
+            "step_title": "Additional notes",
+        },
     ]
 
     # Execute the workflow

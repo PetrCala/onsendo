@@ -183,6 +183,7 @@ CLI_COMMANDS = {
             "pre-visit-mood": ArgumentConfig(type=str, default=""),
             "post-visit-mood": ArgumentConfig(type=str, default=""),
             "visit-time": ArgumentConfig(help="YYYY-MM-DD HH:MM", default=None),
+            "notes": ArgumentConfig(type=str, default="", help="Optional notes about the visit"),
             "exercise-before-onsen": ArgumentConfig(action="store_true"),
             "had-soap": ArgumentConfig(action="store_true"),
             "had-sauna": ArgumentConfig(action="store_true"),

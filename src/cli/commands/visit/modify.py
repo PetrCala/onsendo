@@ -34,6 +34,8 @@ def modify_visit(args: argparse.Namespace) -> None:
             visit.weather = args.weather
         if hasattr(args, "travel_mode") and args.travel_mode is not None:
             visit.travel_mode = args.travel_mode
+        if hasattr(args, "notes") and args.notes is not None:
+            visit.notes = args.notes
 
         db.commit()
         onsen = db.query(Onsen).filter(Onsen.id == visit.onsen_id).first()
@@ -89,6 +91,7 @@ def modify_visit_interactive() -> None:
         print(f"  Personal rating: {selected_visit.personal_rating}/10")
         print(f"  Weather: {selected_visit.weather or '(none)'}")
         print(f"  Travel mode: {selected_visit.travel_mode or '(none)'}")
+        print(f"  Notes: {selected_visit.notes or '(none)'}")
 
         # Get new values
         print("\nEnter new values (press Enter to keep current value):")
@@ -138,6 +141,13 @@ def modify_visit_interactive() -> None:
         ).strip()
         if travel_input:
             selected_visit.travel_mode = travel_input
+
+        # Notes
+        notes_input = input(
+            f"Notes [{selected_visit.notes or '(none)'}]: "
+        ).strip()
+        if notes_input:
+            selected_visit.notes = notes_input
 
         # Save changes
         db.commit()

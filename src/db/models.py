@@ -139,6 +139,7 @@ class OnsenVisit(Base):
     - visit_order: the order of this visit in the multi-onsen day (integer)
     - atmosphere_rating: my rating of the atmosphere (1-10)
     - personal_rating: my personal rating (1-10)
+    - notes: optional notes about the visit
     """
 
     __tablename__ = "onsen_visits"
@@ -198,6 +199,7 @@ class OnsenVisit(Base):
     visit_order = Column(Integer)
     atmosphere_rating = Column(Integer)
     personal_rating = Column(Integer)
+    notes = Column(String)
 
     onsen = relationship("Onsen", back_populates="visits")
 

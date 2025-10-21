@@ -37,4 +37,6 @@ def list_visits(args: argparse.Namespace) -> None:  # pylint: disable=unused-arg
                 print(f"Weather: {visit.weather}")
             if visit.travel_mode:
                 print(f"Travel mode: {visit.travel_mode}")
+            if visit.notes:
+                print(f"Notes: {visit.notes}")
             print("-" * 100)

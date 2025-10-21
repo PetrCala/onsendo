@@ -80,6 +80,9 @@ class MockOnsenVisit:
     atmosphere_rating: int
     personal_rating: int
 
+    # Optional notes
+    notes: Optional[str] = None
+
     # Optional fields with defaults
     exercise_type: Optional[str] = None
     exercise_length_minutes: Optional[int] = None
@@ -197,6 +200,25 @@ class MockVisitDataGenerator:
         self.WATER_COLORS = ["clear", "brown", "green", "blue", "milky"]
         self.MOODS = ["relaxed", "stressed", "anxious", "tired", "energetic", "excited"]
 
+        # Note templates for realistic visit notes
+        self.NOTE_TEMPLATES = [
+            "Great experience, will definitely return",
+            "Water was perfect temperature today",
+            "Very crowded, came at a bad time",
+            "Beautiful views from the outdoor bath",
+            "Staff was very friendly and helpful",
+            "Sauna was excellent, best in the area",
+            "First time visit, exceeded expectations",
+            "Regular visit, as good as always",
+            "Water color was different today, interesting",
+            "Met some friendly locals here",
+            "Perfect after a long run",
+            "Exactly what I needed after work",
+            "Lovely quiet atmosphere",
+            "A bit too hot for my taste today",
+            "Great value for the price",
+        ]
+
         # Temperature ranges for different seasons
         self.TEMP_RANGES = {
             "spring": (15.0, 25.0),
@@ -260,6 +282,12 @@ class MockVisitDataGenerator:
             ]
         else:
             return random.randint(6, 10)
+
+    def _generate_optional_notes(self) -> Optional[str]:
+        """Generate optional notes for a visit (50% chance)."""
+        if random.choice([True, False]):
+            return random.choice(self.NOTE_TEMPLATES)
+        return None
 
     def generate_single_visit(
         self,
@@ -356,6 +384,7 @@ class MockVisitDataGenerator:
             "atmosphere_rating": random.randint(7, 10),
             "personal_rating": random.randint(6, 10),
             "accessibility_rating": self._get_realistic_ratings("accessibility"),
+            "notes": self._generate_optional_notes(),
         }
 
         # Override with any provided kwargs
