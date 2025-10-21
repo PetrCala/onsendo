@@ -16,12 +16,13 @@ from src.const import CONST
 def import_exercise_data(args: argparse.Namespace) -> int:
     """Import exercise data from a file."""
     try:
-        file_path = args.file_path
-        format_hint = args.format
-        notes = args.notes
-        validate_only = args.validate_only
-        link_visit = args.link_visit
-        link_heart_rate = args.link_heart_rate
+        # Positional arguments keep hyphens, optional arguments use underscores
+        file_path = getattr(args, 'file-path', None)
+        format_hint = getattr(args, 'format', None)
+        notes = getattr(args, 'notes', None)
+        validate_only = getattr(args, 'validate_only', False)
+        link_visit = getattr(args, 'link_visit', None)
+        link_heart_rate = getattr(args, 'link_heart_rate', None)
 
         print(f"📁 Importing exercise data from: {file_path}")
 
