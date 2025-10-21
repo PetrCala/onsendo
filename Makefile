@@ -12,7 +12,8 @@ RED := \033[0;31m
 NC := \033[0m # No Color
 
 # Database environment configuration
-ENV ?= dev
+# Check ONSENDO_ENV environment variable first, then ENV parameter, then default to dev
+ENV ?= $(if $(ONSENDO_ENV),$(ONSENDO_ENV),dev)
 DB_FILE := data/db/onsen.$(ENV).db
 
 # Backup configuration

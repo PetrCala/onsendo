@@ -47,11 +47,16 @@ poetry run onsendo --help
 
 The project supports multiple database environments (dev/prod) to separate development and production data.
 
-**Environment Selection Priority:**
+**Environment Selection Priority (for CLI):**
 1. Explicit path: `--database /path/to/db.db`
 2. CLI flag: `--env prod`
 3. Environment variable: `ONSENDO_ENV=prod`
 4. Default: `dev`
+
+**Environment Selection Priority (for Makefile):**
+1. ENV parameter: `make backup ENV=prod`
+2. Environment variable: `ONSENDO_ENV=prod` (set via `eval $(make use-prod)`)
+3. Default: `dev`
 
 **Usage Examples:**
 
