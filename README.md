@@ -70,8 +70,10 @@ See [rules/onsendo-rules.md](rules/onsendo-rules.md) for the complete challenge 
     - [System Management](#system-management)
     - [Rules Management](#rules-management)
     - [Database Management and Testing](#database-management-and-testing)
+    - [Exercise Tracking and Management](#exercise-tracking-and-management)
     - [Tips for Effective Use](#tips-for-effective-use)
     - [Example Workflows](#example-workflows)
+      - [Exercise Tracking and Management](#exercise-tracking-and-management-1)
 
 ## Set up the project
 
@@ -853,36 +855,7 @@ poetry run onsendo onsen recommend --location "Hotel"
 poetry run onsendo database drop-visits --force
 ```
 
-#### Tips for Effective Use
-
-1. **Start with Locations**: Add your main locations first so the system can provide accurate distance calculations
-2. **Use Interactive Mode**: For visits and complex operations, the interactive mode guides you through all options
-3. **Record Consistently**: The more visit data you record, the better the system can understand your preferences
-4. **Update Regularly**: Use the scraping commands to keep onsen data current
-5. **Experiment with Filters**: Try different distance categories and time windows to discover new options
-
-#### Example Workflows
-
-**Planning a Day Trip**:
-
-1. Check recommendations from your hotel: `onsendo onsen recommend --location "Hotel" --distance "medium"`
-2. Record your visit: `onsendo visit add`
-3. Update your location if you move: `onsendo location add`
-
-**Discovering New Areas**:
-
-1. Calculate milestones for a new location: `onsendo system calculate-milestones "New Area"`
-2. Get recommendations with the new distance categories
-3. Record visits to build your personal database
-
-**Managing Database Artifacts**:
-
-1. Update presentation artifacts: `onsendo system update-artifacts`
-2. Generate empty database templates for distribution
-3. Create sample databases with onsen data and locations
-4. Maintain current database state snapshots for documentation
-
-**Exercise Tracking and Management**:
+#### Exercise Tracking and Management
 
 The exercise tracking system allows you to import, store, and analyze workout data from various fitness devices and apps. This enables comprehensive tracking of running, cycling, hiking, gym sessions, and other activities as part of the Onsendo Challenge.
 
@@ -1108,6 +1081,35 @@ make exercise-list
 make exercise-link EXERCISE_ID=123 AUTO_MATCH=true
 make exercise-stats WEEK_START=2025-11-10
 ```
+
+#### Tips for Effective Use
+
+1. **Start with Locations**: Add your main locations first so the system can provide accurate distance calculations
+2. **Use Interactive Mode**: For visits and complex operations, the interactive mode guides you through all options
+3. **Record Consistently**: The more visit data you record, the better the system can understand your preferences
+4. **Update Regularly**: Use the scraping commands to keep onsen data current
+5. **Experiment with Filters**: Try different distance categories and time windows to discover new options
+
+#### Example Workflows
+
+**Planning a Day Trip**:
+
+1. Check recommendations from your hotel: `onsendo onsen recommend --location "Hotel" --distance "medium"`
+2. Record your visit: `onsendo visit add`
+3. Update your location if you move: `onsendo location add`
+
+**Discovering New Areas**:
+
+1. Calculate milestones for a new location: `onsendo system calculate-milestones "New Area"`
+2. Get recommendations with the new distance categories
+3. Record visits to build your personal database
+
+**Managing Database Artifacts**:
+
+1. Update presentation artifacts: `onsendo system update-artifacts`
+2. Generate empty database templates for distribution
+3. Create sample databases with onsen data and locations
+4. Maintain current database state snapshots for documentation
 
 **Health Tracking**:
 
