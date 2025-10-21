@@ -1,0 +1,2 @@
+type,exercise_type,activity_name,start_time,end_time,distance_km,calories_burned,avg_heart_rate
+metadata,gym,Leg Day - Squats & Deadlifts,2025-11-03T18:00:00,2025-11-03T19:30:00,,450,135

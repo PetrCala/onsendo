@@ -132,6 +132,56 @@ hr-manager: ## Launch interactive heart rate manager
 	@echo "$(BLUE)[INFO]$(NC) Launching heart rate manager..."
 	@./scripts/heart_rate_manager.sh
 
+##@ Exercise Management
+
+exercise-import: ## Import single exercise file (Usage: make exercise-import FILE=path/to/file.gpx [FORMAT=gpx] [NOTES="notes"])
+	@if [ -z "$(FILE)" ]; then \
+		echo "$(RED)[ERROR]$(NC) FILE not specified. Usage: make exercise-import FILE=path/to/file.gpx"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[INFO]$(NC) Importing exercise file: $(FILE)"
+	@poetry run onsendo exercise import "$(FILE)" $(if $(FORMAT),--format $(FORMAT),) $(if $(NOTES),--notes "$(NOTES)",)
+
+exercise-batch: ## Batch import exercise files (Usage: make exercise-batch DIR=path/to/dir [RECURSIVE=true] [FORMAT=gpx])
+	@if [ -z "$(DIR)" ]; then \
+		echo "$(RED)[ERROR]$(NC) DIR not specified. Usage: make exercise-batch DIR=path/to/directory"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[INFO]$(NC) Batch importing from: $(DIR)"
+	@poetry run onsendo exercise batch-import "$(DIR)" \
+		$(if $(RECURSIVE),--recursive,) \
+		$(if $(FORMAT),--format $(FORMAT),) \
+		$(if $(NOTES),--notes "$(NOTES)",) \
+		$(if $(DRY_RUN),--dry-run,)
+
+exercise-list: ## List exercise sessions (Usage: make exercise-list [TYPE=running] [DATE_RANGE=2025-11-01,2025-11-30])
+	@echo "$(BLUE)[INFO]$(NC) Listing exercise sessions..."
+	@poetry run onsendo exercise list \
+		$(if $(TYPE),--type $(TYPE),) \
+		$(if $(DATE_RANGE),--date-range $(DATE_RANGE),) \
+		$(if $(UNLINKED),--unlinked-only,) \
+		$(if $(VISIT_ID),--visit-id $(VISIT_ID),) \
+		$(if $(LIMIT),--limit $(LIMIT),)
+
+exercise-link: ## Link exercise to visit (Usage: make exercise-link EXERCISE_ID=1 VISIT_ID=42)
+	@if [ -z "$(EXERCISE_ID)" ]; then \
+		echo "$(RED)[ERROR]$(NC) EXERCISE_ID not specified"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[INFO]$(NC) Linking exercise $(EXERCISE_ID)..."
+	@poetry run onsendo exercise link $(EXERCISE_ID) \
+		$(if $(VISIT_ID),--visit $(VISIT_ID),) \
+		$(if $(HR_ID),--heart-rate $(HR_ID),) \
+		$(if $(AUTO_MATCH),--auto-match,)
+
+exercise-stats: ## Show exercise statistics (Usage: make exercise-stats WEEK=2025-11-03 or MONTH=11 YEAR=2025)
+	@echo "$(BLUE)[INFO]$(NC) Fetching exercise statistics..."
+	@poetry run onsendo exercise stats \
+		$(if $(WEEK),--week $(WEEK),) \
+		$(if $(MONTH),--month $(MONTH),) \
+		$(if $(YEAR),--year $(YEAR),) \
+		$(if $(TYPE),--type $(TYPE),)
+
 ##@ Backup Operations
 
 backup: ## Create local database backup with timestamp
