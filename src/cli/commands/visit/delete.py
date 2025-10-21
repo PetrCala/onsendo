@@ -7,16 +7,34 @@ import argparse
 
 from src.db.conn import get_db
 from src.db.models import OnsenVisit, Onsen
-from src.const import CONST
+from src.config import get_database_config
+from src.lib.cli_display import show_database_banner, confirm_destructive_operation
 
 
 def delete_visit(args: argparse.Namespace) -> None:
     """Delete a visit from the database."""
     if not hasattr(args, "no_interactive") or not args.no_interactive:
-        delete_visit_interactive()
+        delete_visit_interactive(args)
         return
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Delete visit")
+
+    # Confirm production operation
+    force = getattr(args, "force", False)
+    try:
+        confirm_destructive_operation(config, "delete visit", force=force)
+    except ValueError as e:
+        print(str(e))
+        return
+
+    with get_db(url=config.url) as db:
         # Find visit by ID
         visit = db.query(OnsenVisit).filter(OnsenVisit.id == args.visit_id).first()
         if not visit:
@@ -40,11 +58,27 @@ def delete_visit(args: argparse.Namespace) -> None:
         print(f"Successfully deleted visit to '{onsen.name}' (Visit ID: {visit.id})")
 
 
-def delete_visit_interactive() -> None:
+def delete_visit_interactive(args: argparse.Namespace) -> None:
     """Delete a visit using interactive prompts."""
     print("=== Delete Visit ===")
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Delete visit")
+
+    # Confirm production operation
+    try:
+        confirm_destructive_operation(config, "delete visit", force=False)
+    except ValueError as e:
+        print(str(e))
+        return
+
+    with get_db(url=config.url) as db:
         # List available visits
         visits = (
             db.query(OnsenVisit, Onsen)

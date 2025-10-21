@@ -8,7 +8,7 @@ import csv
 import os
 from src.db.conn import get_db
 from src.db.models import RuleRevision
-from src.const import CONST
+from src.config import get_database_config
 from src.paths import PATHS
 
 
@@ -24,7 +24,13 @@ def export_revisions(args: argparse.Namespace) -> None:
             - include_weekly_reviews: Include full weekly review data
     """
     # Get revisions to export
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         if hasattr(args, "version") and args.version:
             revisions = [
                 db.query(RuleRevision)

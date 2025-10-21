@@ -82,8 +82,13 @@ def get_db(url: str) -> Generator[Session]:
     Usage:
     ```python
     from src.db.conn import get_db
+    from src.config import get_database_config
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+    with get_db(url=config.url) as db:
         # Use the db object here
     ```
     """

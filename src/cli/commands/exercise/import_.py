@@ -10,11 +10,21 @@ from src.lib.exercise_manager import (
     ExerciseDataManager,
 )
 from src.db.conn import get_db
-from src.const import CONST
+from src.config import get_database_config
+from src.lib.cli_display import show_database_banner
 
 
 def import_exercise_data(args: argparse.Namespace) -> int:
     """Import exercise data from a file."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Import exercise data")
+
     try:
         # Positional arguments keep hyphens, optional arguments use underscores
         file_path = getattr(args, 'file-path', None)
@@ -77,7 +87,7 @@ def import_exercise_data(args: argparse.Namespace) -> int:
         if notes:
             session.notes = notes
 
-        with get_db(CONST.DATABASE_URL) as db:
+        with get_db(url=config.url) as db:
             manager = ExerciseDataManager(db)
             record = manager.store_session(
                 session, visit_id=link_visit, heart_rate_id=link_heart_rate

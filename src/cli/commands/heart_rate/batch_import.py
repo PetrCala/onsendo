@@ -13,7 +13,8 @@ from src.lib.heart_rate_manager import (
     HeartRateDataManager,
 )
 from src.db.conn import get_db
-from src.const import CONST
+from src.config import get_database_config
+from src.lib.cli_display import show_database_banner
 
 
 def get_heart_rate_files(directory: str, recursive: bool = False) -> list[Path]:
@@ -47,6 +48,7 @@ def get_heart_rate_files(directory: str, recursive: bool = False) -> list[Path]:
 
 def import_single_file(
     file_path: Path,
+    database_url: str,
     format_hint: Optional[str] = None,
     notes: Optional[str] = None,
     dry_run: bool = False,
@@ -82,7 +84,7 @@ def import_single_file(
 
         if not dry_run and is_valid:
             # Store in database
-            with get_db(CONST.DATABASE_URL) as db:
+            with get_db(url=database_url) as db:
                 manager = HeartRateDataManager(db)
                 if notes:
                     session.notes = notes
@@ -102,6 +104,15 @@ def import_single_file(
 
 def batch_import_heart_rate_data(args: argparse.Namespace) -> int:
     """Batch import heart rate data from a directory."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Batch import heart rate data")
+
     try:
         directory = args.directory
         recursive = args.recursive
@@ -138,7 +149,7 @@ def batch_import_heart_rate_data(args: argparse.Namespace) -> int:
                 # Submit all import tasks
                 future_to_file = {
                     executor.submit(
-                        import_single_file, file_path, format_hint, notes, dry_run
+                        import_single_file, file_path, config.url, format_hint, notes, dry_run
                     ): file_path
                     for file_path in files
                 }
@@ -164,7 +175,7 @@ def batch_import_heart_rate_data(args: argparse.Namespace) -> int:
         else:
             # Sequential processing
             for file_path in files:
-                result = import_single_file(file_path, format_hint, notes, dry_run)
+                result = import_single_file(file_path, config.url, format_hint, notes, dry_run)
                 _print_import_result(result, file_path)
 
                 if result["success"]:

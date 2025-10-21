@@ -8,18 +8,24 @@ from datetime import datetime, timedelta
 from src.lib.exercise_manager import ExerciseDataManager
 from src.types.exercise import ExerciseType
 from src.db.conn import get_db
-from src.const import CONST
+from src.config import get_database_config
 
 
 def show_exercise_stats(args: argparse.Namespace) -> int:
     """Show exercise statistics for a time period."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
     try:
         week = args.week
         month = args.month
         year = args.year or datetime.now().year
         exercise_type = args.type
 
-        with get_db(CONST.DATABASE_URL) as db:
+        with get_db(url=config.url) as db:
             manager = ExerciseDataManager(db)
 
             # Determine date range

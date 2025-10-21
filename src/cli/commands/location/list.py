@@ -5,12 +5,18 @@ List locations command.
 import argparse
 from src.db.conn import get_db
 from src.db.models import Location
-from src.const import CONST
+from src.config import get_database_config
 
 
 def list_locations(args: argparse.Namespace) -> None:
     """List all locations in the database."""
-    with get_db(url=CONST.DATABASE_URL) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         locations = db.query(Location).order_by(Location.name).all()
 
         if not locations:

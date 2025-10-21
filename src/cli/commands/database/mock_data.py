@@ -19,7 +19,7 @@ from src.testing.mocks.mock_visit_data import (
     create_realistic_visit_scenario,
     create_seasonal_visits,
 )
-from src.const import CONST
+from src.config import get_database_config
 
 
 def insert_mock_visits(args: argparse.Namespace) -> None:
@@ -28,13 +28,22 @@ def insert_mock_visits(args: argparse.Namespace) -> None:
 
     DEPRECATED: For realistic data with econometric relationships, use:
     'onsendo database generate-realistic-data' instead.
+
+    NOTE: This command is blocked from production database access for safety.
     """
     logger.warning(
         "DEPRECATED: 'insert-mock-visits' generates simple random data. "
         "For realistic data with correlations, use 'database generate-realistic-data'"
     )
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+    # Get database configuration - BLOCK PRODUCTION ACCESS
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None),
+        allow_prod=False  # Mock data should never touch production
+    )
+
+    with get_db(url=config.url) as db:
         # Check if there are any onsens in the database
         onsen_count = db.query(Onsen).count()
         if onsen_count == 0:

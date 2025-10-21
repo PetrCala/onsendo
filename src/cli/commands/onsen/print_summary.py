@@ -10,7 +10,7 @@ from typing import Optional
 
 from loguru import logger
 
-from src.const import CONST
+from src.config import get_database_config
 from src.db.conn import get_db
 from src.db.models import Onsen, OnsenVisit
 from src.lib.utils import generate_google_maps_link
@@ -45,7 +45,13 @@ def print_summary(args: argparse.Namespace) -> None:
             "Multiple identifiers provided. Using priority: id > ban > name."
         )
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         query = db.query(Onsen)
         if onsen_id:
             onsen = query.filter(Onsen.id == onsen_id).first()

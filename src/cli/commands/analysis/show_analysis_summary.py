@@ -8,7 +8,7 @@ import argparse
 
 from loguru import logger
 
-from src.const import CONST
+from src.config import get_database_config
 from src.db.conn import get_db
 from src.analysis.engine import AnalysisEngine
 
@@ -16,7 +16,7 @@ from src.analysis.engine import AnalysisEngine
 def show_analysis_summary(args: argparse.Namespace) -> None:
     """Show summary of all analyses performed."""
     try:
-        with get_db(url=CONST.DATABASE_URL) as session:
+        with get_db(url=config.url) as session:
             engine = AnalysisEngine(session, args.output_dir)
             summary = engine.get_analysis_summary()
 

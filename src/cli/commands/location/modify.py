@@ -5,16 +5,34 @@ Modify location command with interactive support.
 import argparse
 from src.db.conn import get_db
 from src.db.models import Location
-from src.const import CONST
+from src.config import get_database_config
+from src.lib.cli_display import show_database_banner, confirm_destructive_operation
 
 
 def modify_location(args: argparse.Namespace) -> None:
     """Modify an existing location."""
     if not hasattr(args, "no_interactive") or args.no_interactive is False:
-        modify_location_interactive()
+        modify_location_interactive(args)
         return
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Modify location")
+
+    # Confirm production operation
+    force = getattr(args, "force", False)
+    try:
+        confirm_destructive_operation(config, "modify location", force=force)
+    except ValueError as e:
+        print(str(e))
+        return
+
+    with get_db(url=config.url) as db:
         # Find location by ID or name
         location = None
         try:
@@ -45,11 +63,28 @@ def modify_location(args: argparse.Namespace) -> None:
         print(f"Successfully updated location '{location.name}' (ID: {location.id})")
 
 
-def modify_location_interactive() -> None:
+def modify_location_interactive(args: argparse.Namespace) -> None:
     """Modify a location using interactive prompts."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Modify location")
+
+    # Confirm production operation
+    force = getattr(args, "force", False)
+    try:
+        confirm_destructive_operation(config, "modify location", force=force)
+    except ValueError as e:
+        print(str(e))
+        return
+
     print("=== Modify Location ===")
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+    with get_db(url=config.url) as db:
         # List available locations
         locations = db.query(Location).order_by(Location.name).all()
 

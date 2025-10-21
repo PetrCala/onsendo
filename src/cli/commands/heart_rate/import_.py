@@ -10,11 +10,21 @@ from src.lib.heart_rate_manager import (
     HeartRateDataManager,
 )
 from src.db.conn import get_db
-from src.const import CONST
+from src.config import get_database_config
+from src.lib.cli_display import show_database_banner
 
 
 def import_heart_rate_data(args: argparse.Namespace) -> int:
     """Import heart rate data from a file."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Import heart rate data")
+
     try:
         file_path = args.file_path
         format_hint = args.format
@@ -63,7 +73,7 @@ def import_heart_rate_data(args: argparse.Namespace) -> int:
         if notes:
             session.notes = notes
 
-        with get_db(CONST.DATABASE_URL) as db:
+        with get_db(url=config.url) as db:
             manager = HeartRateDataManager(db)
             record = manager.store_session(session)
 

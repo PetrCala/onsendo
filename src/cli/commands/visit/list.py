@@ -5,12 +5,18 @@ List visits command.
 import argparse
 from src.db.conn import get_db
 from src.db.models import OnsenVisit, Onsen
-from src.const import CONST
+from src.config import get_database_config
 
 
-def list_visits(args: argparse.Namespace) -> None:  # pylint: disable=unused-argument
+def list_visits(args: argparse.Namespace) -> None:
     """List all visits in the database."""
-    with get_db(url=CONST.DATABASE_URL) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         # Get visits with onsen information
         visits = (
             db.query(OnsenVisit, Onsen)

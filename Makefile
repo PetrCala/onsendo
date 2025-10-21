@@ -11,12 +11,15 @@ YELLOW := \033[1;33m
 RED := \033[0;31m
 NC := \033[0m # No Color
 
+# Database environment configuration
+ENV ?= dev
+DB_FILE := data/db/onsen.$(ENV).db
+
 # Backup configuration
 KEEP_BACKUPS ?= 50
 BACKUP_DIR := artifacts/db/backups
-DB_FILE := data/db/onsen.db
 TIMESTAMP := $(shell date +%Y%m%d_%H%M%S)
-BACKUP_FILE := $(BACKUP_DIR)/onsen_backup_$(TIMESTAMP).db
+BACKUP_FILE := $(BACKUP_DIR)/onsen_backup_$(ENV)_$(TIMESTAMP).db
 
 # Google Drive configuration (can be overridden via environment)
 GDRIVE_CREDENTIALS ?= local/gdrive/credentials.json
@@ -77,21 +80,22 @@ clean: ## Clean up temporary files and caches
 
 ##@ Database Operations
 
-db-init: ## Initialize a new database
-	@echo "$(BLUE)[INFO]$(NC) Initializing database..."
-	poetry run onsendo system init-db
-	@echo "$(GREEN)[SUCCESS]$(NC) Database initialized"
+db-init: ## Initialize a new database (Usage: make db-init [ENV=dev|prod])
+	@echo "$(BLUE)[INFO]$(NC) Initializing $(ENV) database..."
+	poetry run onsendo --env $(ENV) system init-db
+	@echo "$(GREEN)[SUCCESS]$(NC) $(ENV) database initialized at $(DB_FILE)"
 
-db-fill: ## Fill database from data.json (requires data.json argument)
+db-fill: ## Fill database from data.json (Usage: make db-fill DATA_FILE=path/to/data.json [ENV=dev|prod])
 	@if [ -z "$(DATA_FILE)" ]; then \
 		echo "$(RED)[ERROR]$(NC) DATA_FILE not specified. Usage: make db-fill DATA_FILE=path/to/data.json"; \
 		exit 1; \
 	fi
-	@echo "$(BLUE)[INFO]$(NC) Filling database from $(DATA_FILE)..."
-	poetry run onsendo system fill-db "$(DATA_FILE)"
-	@echo "$(GREEN)[SUCCESS]$(NC) Database filled"
+	@echo "$(BLUE)[INFO]$(NC) Filling $(ENV) database from $(DATA_FILE)..."
+	poetry run onsendo --env $(ENV) system fill-db "$(DATA_FILE)"
+	@echo "$(GREEN)[SUCCESS]$(NC) $(ENV) database filled"
 
-db-path: ## Show database path
+db-path: ## Show database path for current environment
+	@echo "$(BLUE)Environment:$(NC) $(ENV)"
 	@echo "$(BLUE)Database path:$(NC) $(DB_FILE)"
 
 ##@ Heart Rate Management
@@ -134,49 +138,49 @@ hr-manager: ## Launch interactive heart rate manager
 
 ##@ Exercise Management
 
-exercise-import: ## Import single exercise file (Usage: make exercise-import FILE=path/to/file.gpx [FORMAT=gpx] [NOTES="notes"])
+exercise-import: ## Import single exercise file (Usage: make exercise-import FILE=path/to/file.gpx [ENV=dev|prod] [FORMAT=gpx] [NOTES="notes"])
 	@if [ -z "$(FILE)" ]; then \
 		echo "$(RED)[ERROR]$(NC) FILE not specified. Usage: make exercise-import FILE=path/to/file.gpx"; \
 		exit 1; \
 	fi
-	@echo "$(BLUE)[INFO]$(NC) Importing exercise file: $(FILE)"
-	@poetry run onsendo exercise import "$(FILE)" $(if $(FORMAT),--format $(FORMAT),) $(if $(NOTES),--notes "$(NOTES)",)
+	@echo "$(BLUE)[INFO]$(NC) Importing exercise file to $(ENV) database: $(FILE)"
+	@poetry run onsendo --env $(ENV) exercise import "$(FILE)" $(if $(FORMAT),--format $(FORMAT),) $(if $(NOTES),--notes "$(NOTES)",)
 
-exercise-batch: ## Batch import exercise files (Usage: make exercise-batch DIR=path/to/dir [RECURSIVE=true] [FORMAT=gpx])
+exercise-batch: ## Batch import exercise files (Usage: make exercise-batch DIR=path/to/dir [ENV=dev|prod] [RECURSIVE=true] [FORMAT=gpx])
 	@if [ -z "$(DIR)" ]; then \
 		echo "$(RED)[ERROR]$(NC) DIR not specified. Usage: make exercise-batch DIR=path/to/directory"; \
 		exit 1; \
 	fi
-	@echo "$(BLUE)[INFO]$(NC) Batch importing from: $(DIR)"
-	@poetry run onsendo exercise batch-import "$(DIR)" \
+	@echo "$(BLUE)[INFO]$(NC) Batch importing to $(ENV) database from: $(DIR)"
+	@poetry run onsendo --env $(ENV) exercise batch-import "$(DIR)" \
 		$(if $(RECURSIVE),--recursive,) \
 		$(if $(FORMAT),--format $(FORMAT),) \
 		$(if $(NOTES),--notes "$(NOTES)",) \
 		$(if $(DRY_RUN),--dry-run,)
 
-exercise-list: ## List exercise sessions (Usage: make exercise-list [TYPE=running] [DATE_RANGE=2025-11-01,2025-11-30])
-	@echo "$(BLUE)[INFO]$(NC) Listing exercise sessions..."
-	@poetry run onsendo exercise list \
+exercise-list: ## List exercise sessions (Usage: make exercise-list [ENV=dev|prod] [TYPE=running] [DATE_RANGE=2025-11-01,2025-11-30])
+	@echo "$(BLUE)[INFO]$(NC) Listing exercise sessions from $(ENV) database..."
+	@poetry run onsendo --env $(ENV) exercise list \
 		$(if $(TYPE),--type $(TYPE),) \
 		$(if $(DATE_RANGE),--date-range $(DATE_RANGE),) \
 		$(if $(UNLINKED),--unlinked-only,) \
 		$(if $(VISIT_ID),--visit-id $(VISIT_ID),) \
 		$(if $(LIMIT),--limit $(LIMIT),)
 
-exercise-link: ## Link exercise to visit (Usage: make exercise-link EXERCISE_ID=1 VISIT_ID=42)
+exercise-link: ## Link exercise to visit (Usage: make exercise-link EXERCISE_ID=1 VISIT_ID=42 [ENV=dev|prod])
 	@if [ -z "$(EXERCISE_ID)" ]; then \
 		echo "$(RED)[ERROR]$(NC) EXERCISE_ID not specified"; \
 		exit 1; \
 	fi
-	@echo "$(BLUE)[INFO]$(NC) Linking exercise $(EXERCISE_ID)..."
-	@poetry run onsendo exercise link $(EXERCISE_ID) \
+	@echo "$(BLUE)[INFO]$(NC) Linking exercise $(EXERCISE_ID) in $(ENV) database..."
+	@poetry run onsendo --env $(ENV) exercise link $(EXERCISE_ID) \
 		$(if $(VISIT_ID),--visit $(VISIT_ID),) \
 		$(if $(HR_ID),--heart-rate $(HR_ID),) \
 		$(if $(AUTO_MATCH),--auto-match,)
 
-exercise-stats: ## Show exercise statistics (Usage: make exercise-stats WEEK=2025-11-03 or MONTH=11 YEAR=2025)
-	@echo "$(BLUE)[INFO]$(NC) Fetching exercise statistics..."
-	@poetry run onsendo exercise stats \
+exercise-stats: ## Show exercise statistics (Usage: make exercise-stats WEEK=2025-11-03 [ENV=dev|prod] or MONTH=11 YEAR=2025)
+	@echo "$(BLUE)[INFO]$(NC) Fetching exercise statistics from $(ENV) database..."
+	@poetry run onsendo --env $(ENV) exercise stats \
 		$(if $(WEEK),--week $(WEEK),) \
 		$(if $(MONTH),--month $(MONTH),) \
 		$(if $(YEAR),--year $(YEAR),) \
@@ -338,20 +342,25 @@ run-cli: ## Run onsendo CLI with arguments (Usage: make run-cli ARGS="visit list
 
 ##@ Convenience Shortcuts
 
-onsen-recommend: ## Get onsen recommendations (interactive)
-	poetry run onsendo onsen recommend
+onsen-recommend: ## Get onsen recommendations (Usage: make onsen-recommend [ENV=dev|prod])
+	@echo "$(BLUE)[INFO]$(NC) Getting recommendations from $(ENV) database..."
+	poetry run onsendo --env $(ENV) onsen recommend
 
-visit-add: ## Add a new visit (interactive)
-	poetry run onsendo visit add
+visit-add: ## Add a new visit (Usage: make visit-add [ENV=dev|prod])
+	@echo "$(BLUE)[INFO]$(NC) Adding visit to $(ENV) database..."
+	poetry run onsendo --env $(ENV) visit add
 
-visit-list: ## List all visits
-	poetry run onsendo visit list
+visit-list: ## List all visits (Usage: make visit-list [ENV=dev|prod])
+	@echo "$(BLUE)[INFO]$(NC) Listing visits from $(ENV) database..."
+	poetry run onsendo --env $(ENV) visit list
 
-location-add: ## Add a new location (interactive)
-	poetry run onsendo location add
+location-add: ## Add a new location (Usage: make location-add [ENV=dev|prod])
+	@echo "$(BLUE)[INFO]$(NC) Adding location to $(ENV) database..."
+	poetry run onsendo --env $(ENV) location add
 
-location-list: ## List all locations
-	poetry run onsendo location list
+location-list: ## List all locations (Usage: make location-list [ENV=dev|prod])
+	@echo "$(BLUE)[INFO]$(NC) Listing locations from $(ENV) database..."
+	poetry run onsendo --env $(ENV) location list
 
 ##@ Default
 

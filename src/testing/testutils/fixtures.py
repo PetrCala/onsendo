@@ -22,6 +22,20 @@ from src.testing.mocks.mock_onsen_data import (
     get_mock_onsen_detail_html,
     get_mock_onsen_list_html,
 )
+from src.config import ensure_not_prod_in_tests
+
+
+@pytest.fixture(autouse=True)
+def block_prod_in_tests():
+    """Automatically block production database access in all tests.
+
+    This fixture runs for every test to ensure production data cannot
+    be accidentally modified during test execution.
+
+    Raises:
+        RuntimeError: If ONSENDO_ENV=prod is set
+    """
+    ensure_not_prod_in_tests()
 
 
 @pytest.fixture

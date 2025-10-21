@@ -408,6 +408,21 @@ CLI_COMMANDS = {
             "force": ArgumentConfig(action="store_true"),
         },
     ),
+    "database-migrate-to-envs": CommandConfig(
+        func=lazy_command("src.cli.commands.database.migrate_to_envs", "migrate_to_environments"),
+        help="Migrate from single database to multi-environment setup (one-time migration).",
+        args={
+            "force": ArgumentConfig(
+                action="store_true",
+                help="Overwrite existing environment databases if they exist"
+            ),
+            "yes": ArgumentConfig(
+                short="y",
+                action="store_true",
+                help="Skip confirmation prompt"
+            ),
+        },
+    ),
     "database-fill": CommandConfig(
         func=lazy_command("src.cli.commands.database.fill_db", "fill_db"),
         help="Fill the database with onsen data. In interactive mode, will search for scraped data files.",

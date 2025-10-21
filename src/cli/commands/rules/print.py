@@ -76,10 +76,16 @@ def print_rules_at_version(version_number: int, args: argparse.Namespace) -> Non
     """
     from src.db.conn import get_db
     from src.db.models import RuleRevision
-    from src.const import CONST
+    from src.config import get_database_config
     import os
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         revision = (
             db.query(RuleRevision)
             .filter(RuleRevision.version_number == version_number)

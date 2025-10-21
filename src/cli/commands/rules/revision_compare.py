@@ -9,7 +9,7 @@ import os
 from typing import Optional
 from src.db.conn import get_db
 from src.db.models import RuleRevision
-from src.const import CONST
+from src.config import get_database_config
 from src.lib.rule_manager import RuleDiffer
 
 
@@ -37,7 +37,13 @@ def compare_revisions(args: argparse.Namespace) -> None:
         version_a, version_b = result
 
     # Get revisions from database
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         revision_a = (
             db.query(RuleRevision)
             .filter(RuleRevision.version_number == version_a)
@@ -80,7 +86,13 @@ def compare_revisions(args: argparse.Namespace) -> None:
 
 def select_revisions_interactively() -> Optional[tuple[int, int]]:
     """Interactively select two revisions to compare."""
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         revisions = db.query(RuleRevision).order_by(RuleRevision.version_number.desc()).all()
 
         if len(revisions) < 2:

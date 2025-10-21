@@ -6,11 +6,17 @@ import argparse
 
 from src.lib.exercise_manager import ExerciseDataManager
 from src.db.conn import get_db
-from src.const import CONST
+from src.config import get_database_config
 
 
 def link_exercise(args: argparse.Namespace) -> int:
     """Link exercise session to a visit or heart rate record."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
     try:
         exercise_id = args.exercise_id
         visit_id = args.visit
@@ -18,7 +24,7 @@ def link_exercise(args: argparse.Namespace) -> int:
         auto_match = args.auto_match
         unlink = args.unlink
 
-        with get_db(CONST.DATABASE_URL) as db:
+        with get_db(url=config.url) as db:
             manager = ExerciseDataManager(db)
 
             # Verify exercise exists

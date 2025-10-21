@@ -112,9 +112,12 @@ class RuleRevisionBuilder:
         """Initialize the builder."""
         self.parser = RuleParser()
 
-    def get_next_version_number(self) -> int:
+    def get_next_version_number(self, database_url: Optional[str] = None) -> int:
         """
         Get the next version number based on existing revisions in the database.
+
+        Args:
+            database_url: Optional database URL. If not provided, uses CONST.DATABASE_URL.
 
         Returns:
             Next sequential version number.
@@ -123,7 +126,8 @@ class RuleRevisionBuilder:
         from src.db.models import RuleRevision
         from src.const import CONST
 
-        with get_db(url=CONST.DATABASE_URL) as db:
+        url = database_url or CONST.DATABASE_URL
+        with get_db(url=url) as db:
             max_version = db.query(RuleRevision.version_number).order_by(
                 RuleRevision.version_number.desc()
             ).first()
@@ -173,6 +177,7 @@ class RuleDiffer:
         self,
         version_a: int,
         version_b: int,
+        database_url: Optional[str] = None,
     ) -> RulesDiff:
         """
         Generate a diff between two rule versions.
@@ -180,6 +185,7 @@ class RuleDiffer:
         Args:
             version_a: First version number
             version_b: Second version number
+            database_url: Optional database URL. If not provided, uses CONST.DATABASE_URL.
 
         Returns:
             RulesDiff object containing the differences
@@ -188,7 +194,8 @@ class RuleDiffer:
         from src.db.models import RuleRevision
         from src.const import CONST
 
-        with get_db(url=CONST.DATABASE_URL) as db:
+        url = database_url or CONST.DATABASE_URL
+        with get_db(url=url) as db:
             revision_a = (
                 db.query(RuleRevision)
                 .filter(RuleRevision.version_number == version_a)

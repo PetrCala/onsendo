@@ -7,15 +7,22 @@ Mass drop all onsen visits from the database.
 import argparse
 from loguru import logger
 from src.db.conn import get_db
+from src.lib.cli_display import show_database_banner
 from src.db.models import OnsenVisit
-from src.const import CONST
+from src.config import get_database_config
 
 
 def drop_all_visits(args: argparse.Namespace) -> None:
     """
     Drop all onsen visits from the database.
     """
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         # Count existing visits
         visit_count = db.query(OnsenVisit).count()
 
@@ -58,7 +65,13 @@ def drop_visits_by_criteria(args: argparse.Namespace) -> None:
     """
     Drop visits based on specific criteria.
     """
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         query = db.query(OnsenVisit)
 
         # Apply filters

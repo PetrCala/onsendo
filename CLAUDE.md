@@ -43,29 +43,87 @@ poetry run onsendo --help
 # OR: make run-cli ARGS="--help"
 ```
 
+### Database Environments
+
+The project supports multiple database environments (dev/prod) to separate development and production data.
+
+**Environment Selection Priority:**
+1. Explicit path: `--database /path/to/db.db`
+2. CLI flag: `--env prod`
+3. Environment variable: `ONSENDO_ENV=prod`
+4. Default: `dev`
+
+**Usage Examples:**
+
+```bash
+# Default (dev) - safe for testing
+make visit-list                          # Uses dev database
+poetry run onsendo visit add             # Adds to dev database
+
+# Production - requires explicit opt-in
+make visit-list ENV=prod                 # Uses prod database
+poetry run onsendo --env prod visit add  # Adds to prod database
+ONSENDO_ENV=prod poetry run onsendo visit list
+
+# Custom database path (overrides environment)
+poetry run onsendo --database /custom/path.db visit list
+
+# Check which database you're using
+make db-path           # Shows: data/db/onsen.dev.db
+make db-path ENV=prod  # Shows: data/db/onsen.prod.db
+```
+
+**Safety Features:**
+- Tests automatically blocked from accessing production (`ONSENDO_ENV=prod` fails tests)
+- Destructive operations show production warnings and require confirmation
+- Database banners displayed for production operations
+- Migrations show environment-specific warnings
+
+**Database Files:**
+- Dev: `data/db/onsen.dev.db`
+- Prod: `data/db/onsen.prod.db`
+- Test: In-memory (not persisted)
+
+**Makefile Integration:**
+
+All Makefile targets support `ENV=dev|prod`:
+
+```bash
+make db-init ENV=prod                    # Initialize prod database
+make backup ENV=prod                     # Backup prod database
+make exercise-stats WEEK=2025-11-03 ENV=prod
+```
+
 ### Database Operations
 
 ```bash
-# Initialize database
+# Initialize database (defaults to dev)
 make db-init
+make db-init ENV=prod  # Initialize production database
 
 # Import onsen data
 make db-fill DATA_FILE=path/to/data.json
+make db-fill DATA_FILE=path/to/data.json ENV=prod
 
 # Show database path
-make db-path
+make db-path           # Shows dev database path
+make db-path ENV=prod  # Shows prod database path
 ```
 
 ### Database Migrations
 
 The project uses Alembic for database schema migrations. This allows you to add new tables or columns to an existing database without recreating it from scratch.
 
+**Note:** Migrations are environment-aware and respect the `--env` flag and `ONSENDO_ENV` environment variable.
+
 ```bash
-# Apply migrations to update your database schema
+# Apply migrations (defaults to dev)
 poetry run onsendo database migrate-upgrade
+poetry run onsendo --env prod database migrate-upgrade  # Prod (shows warning)
 
 # Check current migration status
 poetry run onsendo database migrate-current
+poetry run onsendo --env prod database migrate-current
 
 # View migration history
 poetry run onsendo database migrate-history
@@ -76,7 +134,7 @@ poetry run onsendo database migrate-generate "Add new field to Visit"
 
 # Downgrade to previous migration (if needed)
 poetry run onsendo database migrate-downgrade -1
-poetry run onsendo database migrate-downgrade <revision_id>
+poetry run onsendo --env prod database migrate-downgrade <revision_id>
 
 # Mark existing database as up-to-date (for databases created before migrations)
 poetry run onsendo database migrate-stamp head

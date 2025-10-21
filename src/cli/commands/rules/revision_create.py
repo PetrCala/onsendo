@@ -10,8 +10,9 @@ from datetime import datetime
 from typing import Optional
 
 from src.db.conn import get_db
+from src.lib.cli_display import show_database_banner
 from src.db.models import RuleRevision
-from src.const import CONST
+from src.config import get_database_config
 from src.paths import PATHS
 from src.lib.rule_manager import (
     RuleParser,
@@ -151,7 +152,11 @@ def auto_fetch_week_statistics(week_start: str, week_end: str) -> Optional[Weekl
 
         metrics = WeeklyReviewMetrics()
 
-        with get_db(url=CONST.DATABASE_URL) as db:
+        # Use default dev database for auto-fetch (called from CLI context)
+        # When called from create_rule_revision, it will use the CLI's env
+        config = get_database_config()
+
+        with get_db(url=config.url) as db:
             # Query onsen visits
             onsen_visits = (
                 db.query(OnsenVisit)
@@ -710,7 +715,13 @@ def create_and_save_revision(
     print(f"Saved revision markdown: {markdown_file_path}")
 
     # Save to database
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         db_revision = RuleRevision(
             version_number=version_number,
             revision_date=revision_date,

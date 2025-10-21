@@ -59,6 +59,7 @@ See [rules/onsendo-rules.md](rules/onsendo-rules.md) for complete details.
 
 ### Key Features
 
+- **Multiple Database Environments**: Separate dev/prod databases with safety guardrails
 - **Location-Based Distance Calculations**: Haversine formula for accurate geographic distances
 - **Multi-Format Health Data Import**: CSV, JSON, GPX, TCX, Apple Health exports
 - **Intelligent Linking**: Auto-match exercises to visits via timestamps
@@ -100,19 +101,32 @@ See [rules/onsendo-rules.md](rules/onsendo-rules.md) for complete details.
 
 ### Database Setup
 
-Create a new database or use an existing one:
+The project uses **separate dev and prod databases** for safety:
 
 ```bash
-# Create new database
-poetry run python scripts/init_db.py
+# Initialize dev database (default - safe for testing)
+poetry run onsendo system init-db
+# Creates: data/db/onsen.dev.db
 
-# OR: Copy existing database to data/db/
-cp /path/to/onsen.db data/db/
+# Initialize production database (when ready for real data)
+poetry run onsendo --env prod system init-db
+# Creates: data/db/onsen.prod.db
+
+# Check which database you're using
+make db-path           # Shows: data/db/onsen.dev.db
+make db-path ENV=prod  # Shows: data/db/onsen.prod.db
 ```
+
+**Environment Selection:**
+- **Default:** All commands use `dev` database (safe for testing)
+- **Production:** Use `--env prod` flag or `ENV=prod` with Makefile
+- **Custom:** Use `--database /path/to/db.db` to specify exact path
 
 ### Your First Commands
 
 ```bash
+# All commands default to dev database (safe to experiment!)
+
 # 1. Add your location (hotel, home, etc.)
 poetry run onsendo location add
 
@@ -124,6 +138,9 @@ poetry run onsendo visit add
 
 # 4. List your visits
 poetry run onsendo visit list
+
+# When ready for production:
+poetry run onsendo --env prod visit add  # Adds to production database
 ```
 
 ---

@@ -6,7 +6,8 @@ import argparse
 from loguru import logger
 from src.db.conn import get_db
 from src.db.models import Onsen, OnsenVisit
-from src.const import CONST
+from src.config import get_database_config
+from src.lib.cli_display import show_database_banner
 from .interactive import add_visit_interactive
 
 
@@ -15,10 +16,19 @@ def add_visit(args: argparse.Namespace) -> None:
     Add a new onsen visit to the database.
     """
     if not hasattr(args, "no_interactive") or not args.no_interactive:
-        add_visit_interactive()
+        add_visit_interactive(args)
         return
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Add visit")
+
+    with get_db(url=config.url) as db:
         if not hasattr(args, "onsen_id") or args.onsen_id is None:
             logger.error("onsen_id is required!")
             return

@@ -3,12 +3,14 @@ Interactive visit commands.
 """
 
 import sys
+import argparse
 from collections.abc import Callable
 from datetime import datetime
 from typing import Any, Optional
 from src.db.conn import get_db
 from src.db.models import Onsen, OnsenVisit
-from src.const import CONST
+from src.config import get_database_config
+from src.lib.cli_display import show_database_banner
 
 
 class InteractiveSession:
@@ -151,11 +153,20 @@ class InteractiveSession:
                 print("This field cannot be empty. Please provide a value.")
 
 
-def add_visit_interactive() -> None:
+def add_visit_interactive(args: argparse.Namespace) -> None:
     """
     Interactive version of add_visit that guides users through a series of questions.
     Supports navigation back to previous answers.
     """
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Add visit")
+
     print("🌊 Welcome to the Interactive Onsen Visit Recorder! 🌊")
     print("I'll guide you through recording your onsen visit experience.")
     print("💡 Tip: Type 'back' to go back one step, or 'back N' to go back N steps.\n")
@@ -168,7 +179,7 @@ def add_visit_interactive() -> None:
         try:
             onsen_id = int(input_str)
             # Check if onsen exists
-            with get_db(url=CONST.DATABASE_URL) as db:
+            with get_db(url=config.url) as db:
                 onsen = db.query(Onsen).filter(Onsen.id == onsen_id).first()
                 if not onsen:
                     print(f"No onsen found with ID {onsen_id}")
@@ -730,7 +741,7 @@ def add_visit_interactive() -> None:
 
     # Save the visit
     print("\nSaving visit data...")
-    with get_db(url=CONST.DATABASE_URL) as db:
+    with get_db(url=config.url) as db:
         onsen = (
             db.query(Onsen).filter(Onsen.id == session.visit_data["onsen_id"]).first()
         )

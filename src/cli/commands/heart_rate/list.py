@@ -7,18 +7,24 @@ import argparse
 from src.lib.heart_rate_manager import HeartRateDataManager
 from src.db.conn import get_db
 from src.db.models import HeartRateData, OnsenVisit
-from src.const import CONST
+from src.config import get_database_config
 
 
 def list_heart_rate_data(args: argparse.Namespace) -> int:
     """List heart rate data records."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
     try:
         linked_only = args.linked_only
         unlinked_only = args.unlinked_only
         visit_id = args.visit_id
         show_details = args.details
 
-        with get_db(CONST.DATABASE_URL) as db:
+        with get_db(url=config.url) as db:
             manager = HeartRateDataManager(db)
 
             if visit_id:
@@ -92,13 +98,19 @@ def list_heart_rate_data(args: argparse.Namespace) -> int:
 
 def link_heart_rate_to_visit(args: argparse.Namespace) -> int:
     """Link heart rate data to an onsen visit."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
     try:
         heart_rate_id = args.heart_rate_id
         visit_id = args.visit_id_link
 
         print(f"🔗 Linking heart rate data {heart_rate_id} to visit {visit_id}...")
 
-        with get_db(CONST.DATABASE_URL) as db:
+        with get_db(url=config.url) as db:
             # Check if heart rate record exists
             heart_rate_record = (
                 db.query(HeartRateData).filter_by(id=heart_rate_id).first()
@@ -126,12 +138,18 @@ def link_heart_rate_to_visit(args: argparse.Namespace) -> int:
 
 def unlink_heart_rate_from_visit(args: argparse.Namespace) -> int:
     """Unlink heart rate data from its visit."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
     try:
         heart_rate_id = args.heart_rate_id
 
         print(f"🔓 Unlinking heart rate data {heart_rate_id} from visit...")
 
-        with get_db(CONST.DATABASE_URL) as db:
+        with get_db(url=config.url) as db:
             # Check if heart rate record exists
             heart_rate_record = (
                 db.query(HeartRateData).filter_by(id=heart_rate_id).first()
@@ -159,12 +177,18 @@ def unlink_heart_rate_from_visit(args: argparse.Namespace) -> int:
 
 def delete_heart_rate_record(args: argparse.Namespace) -> int:
     """Delete a heart rate record."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
     try:
         heart_rate_id = args.heart_rate_id
         force = args.force
 
         # Get record details
-        with get_db(CONST.DATABASE_URL) as db:
+        with get_db(url=config.url) as db:
             record = db.query(HeartRateData).filter_by(id=heart_rate_id).first()
 
         if not record:
@@ -190,7 +214,7 @@ def delete_heart_rate_record(args: argparse.Namespace) -> int:
                 return 0
 
         # Delete the record using the manager
-        with get_db(CONST.DATABASE_URL) as db:
+        with get_db(url=config.url) as db:
             manager = HeartRateDataManager(db)
             if manager.delete_record(heart_rate_id):
                 print("✅ Successfully deleted heart rate record")

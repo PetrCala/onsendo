@@ -5,16 +5,26 @@ Add location command with interactive support.
 import argparse
 from src.db.conn import get_db
 from src.db.models import Location
-from src.const import CONST
+from src.config import get_database_config
+from src.lib.cli_display import show_database_banner
 
 
 def add_location(args: argparse.Namespace) -> None:
     """Add a new location to the database."""
     if not hasattr(args, "no_interactive") or not args.no_interactive:
-        add_location_interactive()
+        add_location_interactive(args)
         return
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Add location")
+
+    with get_db(url=config.url) as db:
         # Check if location with this name already exists
         existing = db.query(Location).filter(Location.name == args.name).first()
         if existing:
@@ -38,8 +48,17 @@ def add_location(args: argparse.Namespace) -> None:
             print(f"  Description: {args.description}")
 
 
-def add_location_interactive() -> None:
+def add_location_interactive(args: argparse.Namespace) -> None:
     """Add a new location using interactive prompts."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Add location")
+
     print("=== Add New Location ===")
 
     # Get location name

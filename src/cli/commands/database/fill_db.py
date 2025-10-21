@@ -10,7 +10,7 @@ from pathlib import Path
 from loguru import logger
 from src.db.conn import get_db
 from src.db.import_data import import_onsen_data
-from src.const import CONST
+from src.config import get_database_config
 
 
 def find_scraped_data_files() -> list[str]:
@@ -94,7 +94,7 @@ def fill_db(args: argparse.Namespace) -> None:
     """
     Fill the database with onsen data from JSON files.
     """
-    database_path = CONST.DATABASE_URL.replace("sqlite:///", "")
+    database_path = config.url.replace("sqlite:///", "")
     if not os.path.exists(database_path):
         logger.error(
             f"Database file {database_path} does not exist! Run `database init` first to create it."
@@ -124,10 +124,10 @@ def fill_db(args: argparse.Namespace) -> None:
         return
 
     logger.info(
-        f"Importing onsen data from JSON at {json_path} into {CONST.DATABASE_URL}..."
+        f"Importing onsen data from JSON at {json_path} into {config.url}..."
     )
 
-    database_url = CONST.DATABASE_URL
+    database_url = config.url
     with get_db(url=database_url) as db:
         summary = import_onsen_data(db, json_path)
         logger.info(

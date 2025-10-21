@@ -21,9 +21,15 @@ def calculate_milestones(args):
     show_recommendations = args.show_recommendations
 
     from src.db.conn import get_db
-    from src.const import CONST
+    from src.config import get_database_config
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         # Find the location
         location = _get_location_by_identifier(db, location_identifier)
         if not location:

@@ -22,7 +22,12 @@ class PATHS(CustomStrEnum):
     RULES_REVISIONS_DIR = os.path.join(RULES_DIR, "revisions")
 
     # Files
+    # Legacy database path (deprecated - use environment-specific paths)
     DB_PATH = os.path.join(DB_DIR, "onsen.db")
+
+    # Environment-specific database paths
+    DB_PATH_DEV = os.path.join(DB_DIR, "onsen.dev.db")
+    DB_PATH_PROD = os.path.join(DB_DIR, "onsen.prod.db")
     RECOMMENDATION_CACHE_DB = os.path.join(CACHE_DIR, "recommendation_cache.sqlite3")
     SCRAPED_ONSEN_DATA_FILE = os.path.join(OUTPUT_DIR, "scraped_onsen_data.json")
     ONSEN_MAPPING_FILE = os.path.join(OUTPUT_DIR, "onsen_mapping.json")

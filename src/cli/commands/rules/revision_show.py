@@ -10,7 +10,7 @@ import subprocess
 from typing import Optional
 from src.db.conn import get_db
 from src.db.models import RuleRevision
-from src.const import CONST
+from src.config import get_database_config
 
 
 def show_revision(args: argparse.Namespace) -> None:
@@ -57,7 +57,13 @@ def show_revision(args: argparse.Namespace) -> None:
 
 def get_revision_by_version(version_number: int) -> Optional[RuleRevision]:
     """Get a revision by version number."""
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         revision = (
             db.query(RuleRevision)
             .filter(RuleRevision.version_number == version_number)
@@ -81,7 +87,13 @@ def get_revision_by_date(date_str: str) -> Optional[RuleRevision]:
         print(f"Error: Invalid date format '{date_str}'. Use YYYY-MM-DD.")
         return None
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         # Find revision closest to the target date
         revision = (
             db.query(RuleRevision)
@@ -108,7 +120,13 @@ def get_revision_by_date(date_str: str) -> Optional[RuleRevision]:
 
 def select_revision_interactively() -> Optional[RuleRevision]:
     """Interactively select a revision from a list."""
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         revisions = db.query(RuleRevision).order_by(RuleRevision.version_number.desc()).all()
 
         if not revisions:

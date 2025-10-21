@@ -16,16 +16,16 @@ def init_db(args: argparse.Namespace) -> None:
     """
     Initialize the database.
     """
-    if not args.force and os.path.exists(CONST.DATABASE_URL):
+    if not args.force and os.path.exists(config.url):
         logger.error("Database already exists! Use --force to overwrite.")
         return
 
-    data_dir = os.path.dirname(CONST.DATABASE_URL.replace("sqlite:///", ""))
+    data_dir = os.path.dirname(config.url.replace("sqlite:///", ""))
     os.makedirs(data_dir, exist_ok=True)
 
     # Create engine and tables
-    engine = create_engine(CONST.DATABASE_URL)
+    engine = create_engine(config.url)
     Base.metadata.create_all(bind=engine)
 
-    logger.info(f"Database initialized at: {CONST.DATABASE_URL}")
+    logger.info(f"Database initialized at: {config.url}")
     logger.info("Tables created successfully!")

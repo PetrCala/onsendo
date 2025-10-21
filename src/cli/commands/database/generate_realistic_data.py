@@ -7,6 +7,8 @@ This command creates analysis-ready datasets with:
 - Econometric relationships for regression analysis
 - Optional heart rate data integration
 - Pre-configured scenarios for different analysis types
+
+NOTE: This command is blocked from production database access for safety.
 """
 
 import argparse
@@ -14,7 +16,7 @@ from loguru import logger
 
 from src.db.conn import get_db
 from src.db.models import OnsenVisit, Onsen, HeartRateData
-from src.const import CONST
+from src.config import get_database_config
 
 from src.testing.mocks.integrated_scenario import (
     create_integrated_dataset,
@@ -35,8 +37,17 @@ from src.testing.mocks.user_profiles import ALL_PROFILES
 def generate_realistic_data(args: argparse.Namespace) -> None:
     """
     Generate realistic mock data based on specified scenario.
+
+    NOTE: This command is blocked from production database access for safety.
     """
-    with get_db(url=CONST.DATABASE_URL) as db:
+    # Get database configuration - BLOCK PRODUCTION ACCESS
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None),
+        allow_prod=False  # Mock data should never touch production
+    )
+
+    with get_db(url=config.url) as db:
         # Get available onsens
         onsen_count = db.query(Onsen).count()
         if onsen_count == 0:

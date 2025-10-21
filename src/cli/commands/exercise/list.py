@@ -9,11 +9,17 @@ from typing import Optional
 from src.lib.exercise_manager import ExerciseDataManager
 from src.types.exercise import ExerciseType
 from src.db.conn import get_db
-from src.const import CONST
+from src.config import get_database_config
 
 
 def list_exercise_sessions(args: argparse.Namespace) -> int:
     """List exercise sessions with optional filtering."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
     try:
         exercise_type = args.type
         unlinked_only = args.unlinked_only
@@ -21,7 +27,7 @@ def list_exercise_sessions(args: argparse.Namespace) -> int:
         date_range = args.date_range
         limit = args.limit
 
-        with get_db(CONST.DATABASE_URL) as db:
+        with get_db(url=config.url) as db:
             manager = ExerciseDataManager(db)
 
             # Get sessions based on filters

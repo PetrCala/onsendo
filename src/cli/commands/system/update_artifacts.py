@@ -12,9 +12,11 @@ import tempfile
 from pathlib import Path
 from loguru import logger
 from src.db.conn import get_db
+from src.lib.cli_display import show_database_banner
 from src.db.import_data import import_onsen_data
-from src.const import CONST
+from src.config import get_database_config
 from src.paths import PATHS
+from src.const import CONST
 
 
 class ArtifactGenerator:
@@ -285,6 +287,12 @@ def update_artifacts(args: argparse.Namespace) -> None:
     """
     Update database artifacts in the artifacts/db folder.
     """
+    # Get database configuration (for display/validation, artifacts use CONST internally)
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
     generator = ArtifactGenerator()
 
     try:

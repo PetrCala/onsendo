@@ -91,6 +91,24 @@ def main() -> None:
     Main function for the CLI.
     """
     parser = argparse.ArgumentParser(description=f"{config.CLI_NAME}")
+
+    # Add global database environment flags
+    parser.add_argument(
+        "--env",
+        choices=["dev", "prod"],
+        help=(
+            "Database environment (default: dev). "
+            "Use 'prod' for production database. "
+            "Can also set ONSENDO_ENV environment variable."
+        ),
+    )
+    parser.add_argument(
+        "--database",
+        type=str,
+        metavar="PATH",
+        help="Explicit database file path (overrides --env)",
+    )
+
     subparsers = parser.add_subparsers(dest="command_group", help="Command groups")
 
     # Get command group configuration

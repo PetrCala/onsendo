@@ -7,14 +7,24 @@ from alembic import context
 
 # Import our models and configuration
 from src.db.models import Base
-from src.const import CONST
+from src.config import get_database_config, DatabaseEnvironment
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-# Override sqlalchemy.url with our database URL from CONST
-config.set_main_option("sqlalchemy.url", CONST.DATABASE_URL)
+# Get database URL from environment-aware config
+# Alembic respects ONSENDO_ENV environment variable
+db_config = get_database_config()
+config.set_main_option("sqlalchemy.url", db_config.url)
+
+# Warn if running migrations on production
+if db_config.env == DatabaseEnvironment.PROD:
+    print("━" * 60)
+    print("⚠️  WARNING: Running migrations on PRODUCTION database")
+    print(f"   Database: {db_config.path or db_config.url}")
+    print("━" * 60)
+    print()
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

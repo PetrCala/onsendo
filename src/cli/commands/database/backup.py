@@ -10,7 +10,7 @@ import shutil
 from datetime import datetime
 from loguru import logger
 from src.lib.utils import open_folder_dialog
-from src.const import CONST
+from src.config import get_database_config
 from src.paths import PATHS
 
 
@@ -25,7 +25,16 @@ def backup_db(args: argparse.Namespace) -> None:
 
     Use --to-latest-artifact (-a) to skip the prompt and backup directly to the artifact.
     """
-    database_path = CONST.DATABASE_URL.replace("sqlite:///", "")
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    database_path = config.path if config.path else None
+    if not database_path:
+        logger.error("Cannot backup in-memory database (test environment)")
+        return
     if not os.path.exists(database_path):
         logger.error(
             f"Database file {database_path} does not exist! Run `database init` first to create it."

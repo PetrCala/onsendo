@@ -5,12 +5,22 @@ Add onsen command.
 import argparse
 from src.db.conn import get_db
 from src.db.models import Onsen
-from src.const import CONST
+from src.config import get_database_config
+from src.lib.cli_display import show_database_banner
 
 
 def add_onsen(args: argparse.Namespace) -> None:
     """Add a new onsen to the database."""
-    with get_db(url=CONST.DATABASE_URL) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Add onsen")
+
+    with get_db(url=config.url) as db:
         # Check if onsen with this BAN number already exists
         existing = db.query(Onsen).filter(Onsen.ban_number == args.ban_number).first()
         if existing:

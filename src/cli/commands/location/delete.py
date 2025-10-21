@@ -5,16 +5,34 @@ Delete location command with interactive support.
 import argparse
 from src.db.conn import get_db
 from src.db.models import Location
-from src.const import CONST
+from src.config import get_database_config
+from src.lib.cli_display import show_database_banner, confirm_destructive_operation
 
 
 def delete_location(args: argparse.Namespace) -> None:
     """Delete a location from the database."""
     if not hasattr(args, "no_interactive") or args.no_interactive is False:
-        delete_location_interactive()
+        delete_location_interactive(args)
         return
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Delete location")
+
+    # Confirm production operation
+    force = getattr(args, "force", False)
+    try:
+        confirm_destructive_operation(config, "delete location", force=force)
+    except ValueError as e:
+        print(str(e))
+        return
+
+    with get_db(url=config.url) as db:
         # Find location by ID or name
         location = None
         try:
@@ -45,11 +63,28 @@ def delete_location(args: argparse.Namespace) -> None:
         print(f"Successfully deleted location '{location.name}' (ID: {location.id})")
 
 
-def delete_location_interactive() -> None:
+def delete_location_interactive(args: argparse.Namespace) -> None:
     """Delete a location using interactive prompts."""
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Delete location")
+
+    # Confirm production operation
+    force = getattr(args, "force", False)
+    try:
+        confirm_destructive_operation(config, "delete location", force=force)
+    except ValueError as e:
+        print(str(e))
+        return
+
     print("=== Delete Location ===")
 
-    with get_db(url=CONST.DATABASE_URL) as db:
+    with get_db(url=config.url) as db:
         # List available locations
         locations = db.query(Location).order_by(Location.name).all()
 

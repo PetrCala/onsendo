@@ -3,8 +3,11 @@ Database migration commands using Alembic.
 """
 
 import argparse
+import os
 import subprocess
 import sys
+
+from src.config import get_database_config
 
 
 def migrate_upgrade(args: argparse.Namespace) -> None:
@@ -14,13 +17,29 @@ def migrate_upgrade(args: argparse.Namespace) -> None:
     Args:
         args: Command-line arguments containing:
             - revision: Optional specific revision to upgrade to (default: "head")
+            - env: Optional environment override
+            - database: Optional database path override
     """
+    # Get database config to show which database will be migrated
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
     revision = "head"
     if hasattr(args, "revision") and args.revision:
         revision = args.revision
 
-    print(f"Upgrading database to revision: {revision}")
+    print(f"Upgrading {config.env.value} database to revision: {revision}")
+    print(f"Database: {config.path or config.url}")
     print()
+
+    # Set environment variable for Alembic to use
+    env = os.environ.copy()
+    if config.env:
+        env['ONSENDO_ENV'] = config.env.value
+    if config.path:
+        env['ONSENDO_DATABASE'] = config.path
 
     try:
         result = subprocess.run(
@@ -28,6 +47,7 @@ def migrate_upgrade(args: argparse.Namespace) -> None:
             check=True,
             capture_output=True,
             text=True,
+            env=env,
         )
         print(result.stdout)
         if result.stderr:

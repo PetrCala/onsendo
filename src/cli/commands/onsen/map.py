@@ -8,12 +8,18 @@ from pathlib import Path
 from src.db.conn import get_db
 from src.db.models import Onsen
 from src.lib.map_generator import generate_all_onsens_map
-from src.const import CONST
+from src.config import get_database_config
 
 
 def map_onsens(args: argparse.Namespace) -> None:
     """Generate an interactive map showing all onsens in the database."""
-    with get_db(url=CONST.DATABASE_URL) as db:
+# Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         # Get all onsens from the database
         onsens = db.query(Onsen).all()
 

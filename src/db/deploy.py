@@ -30,23 +30,37 @@ def main(action: Optional[str] = "create"):
         sys.exit(1)
 
 
-def drop_all():
-    logger.warning("Dropping all tables in the database.")
+def drop_all(database_url: Optional[str] = None):
+    """
+    Drop all tables in the database.
+
+    Args:
+        database_url: Optional database URL. If not provided, uses CONST.DATABASE_URL.
+    """
+    url = database_url or CONST.DATABASE_URL
+    logger.warning(f"Dropping all tables in the database: {url}")
     # Get the engine from db_manager
-    engine = db_manager.engines.get(CONST.DATABASE_URL)
+    engine = db_manager.engines.get(url)
     if engine is None:
-        db_manager.add_connection(CONST.DATABASE_URL)
-        engine = db_manager.engines[CONST.DATABASE_URL]
+        db_manager.add_connection(url)
+        engine = db_manager.engines[url]
     Base.metadata.drop_all(bind=engine)
 
 
-def create_all():
-    logger.info("Creating all tables in the database.")
+def create_all(database_url: Optional[str] = None):
+    """
+    Create all tables in the database.
+
+    Args:
+        database_url: Optional database URL. If not provided, uses CONST.DATABASE_URL.
+    """
+    url = database_url or CONST.DATABASE_URL
+    logger.info(f"Creating all tables in the database: {url}")
     # Get the engine from db_manager
-    engine = db_manager.engines.get(CONST.DATABASE_URL)
+    engine = db_manager.engines.get(url)
     if engine is None:
-        db_manager.add_connection(CONST.DATABASE_URL)
-        engine = db_manager.engines[CONST.DATABASE_URL]
+        db_manager.add_connection(url)
+        engine = db_manager.engines[url]
     Base.metadata.create_all(bind=engine)
 
 
