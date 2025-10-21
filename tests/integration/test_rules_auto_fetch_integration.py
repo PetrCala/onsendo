@@ -25,7 +25,7 @@ class TestAutoFetchWeekStatisticsIntegration:
         week_start = "2020-01-01"
         week_end = "2020-01-07"
 
-        metrics = auto_fetch_week_statistics(week_start, week_end)
+        metrics = auto_fetch_week_statistics(week_start, week_end, database_url=CONST.DATABASE_URL)
 
         assert metrics is not None
         assert metrics.onsen_visits_count == 0
@@ -33,7 +33,7 @@ class TestAutoFetchWeekStatisticsIntegration:
         assert metrics.total_soaking_hours is None
         assert metrics.running_distance_km is None
         assert metrics.gym_sessions_count is None
-        assert metrics.hike_completed is False
+        assert metrics.long_exercise_completed is False
         assert metrics.rest_days_count is None
 
     def test_auto_fetch_with_test_data(self):
@@ -115,7 +115,7 @@ class TestAutoFetchWeekStatisticsIntegration:
 
         try:
             # Test auto-fetch
-            metrics = auto_fetch_week_statistics(week_start, week_end)
+            metrics = auto_fetch_week_statistics(week_start, week_end, database_url=CONST.DATABASE_URL)
 
             assert metrics is not None
             assert metrics.onsen_visits_count == 3
@@ -123,7 +123,7 @@ class TestAutoFetchWeekStatisticsIntegration:
             assert metrics.total_soaking_hours == 3.0  # (60 + 45 + 75) / 60
             assert metrics.running_distance_km == 13.0  # 5 + 8
             assert metrics.gym_sessions_count == 1
-            assert metrics.hike_completed is True
+            assert metrics.long_exercise_completed is True
 
         finally:
             # Cleanup test data
@@ -184,7 +184,7 @@ class TestAutoFetchWeekStatisticsIntegration:
 
         try:
             # Test auto-fetch
-            metrics = auto_fetch_week_statistics(week_start, week_end)
+            metrics = auto_fetch_week_statistics(week_start, week_end, database_url=CONST.DATABASE_URL)
 
             assert metrics is not None
             assert metrics.onsen_visits_count == 1  # Only visit_within
@@ -224,7 +224,7 @@ class TestAutoFetchWeekStatisticsIntegration:
             db.commit()
 
         try:
-            metrics = auto_fetch_week_statistics(week_start, week_end)
+            metrics = auto_fetch_week_statistics(week_start, week_end, database_url=CONST.DATABASE_URL)
 
             assert metrics is not None
             assert metrics.onsen_visits_count == 1
@@ -243,7 +243,7 @@ class TestAutoFetchWeekStatisticsIntegration:
 
     def test_auto_fetch_with_invalid_date_format(self):
         """Test auto-fetch handles invalid date format gracefully."""
-        metrics = auto_fetch_week_statistics("invalid-date", "also-invalid")
+        metrics = auto_fetch_week_statistics("invalid-date", "also-invalid", database_url=CONST.DATABASE_URL)
 
         # Should return None due to error
         assert metrics is None

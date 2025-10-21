@@ -134,13 +134,18 @@ def create_revision(args: argparse.Namespace) -> None:
         traceback.print_exc()
 
 
-def auto_fetch_week_statistics(week_start: str, week_end: str) -> Optional[WeeklyReviewMetrics]:
+def auto_fetch_week_statistics(
+    week_start: str,
+    week_end: str,
+    database_url: Optional[str] = None
+) -> Optional[WeeklyReviewMetrics]:
     """
     Automatically fetch weekly statistics from the database.
 
     Args:
         week_start: Week start date in YYYY-MM-DD format
         week_end: Week end date in YYYY-MM-DD format
+        database_url: Optional database URL (for testing). If not provided, uses config.
 
     Returns:
         WeeklyReviewMetrics populated with database data, or None if fetch fails
@@ -152,11 +157,14 @@ def auto_fetch_week_statistics(week_start: str, week_end: str) -> Optional[Weekl
 
         metrics = WeeklyReviewMetrics()
 
-        # Use default dev database for auto-fetch (called from CLI context)
-        # When called from create_rule_revision, it will use the CLI's env
-        config = get_database_config()
+        # Use provided URL for testing, otherwise use default config
+        if database_url:
+            url = database_url
+        else:
+            config = get_database_config()
+            url = config.url
 
-        with get_db(url=config.url) as db:
+        with get_db(url=url) as db:
             # Query onsen visits
             onsen_visits = (
                 db.query(OnsenVisit)
