@@ -1,5 +1,5 @@
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: 20px; margin-bottom: 20px;">
-  <h1 style="color: #d2691e; font-size: 2.5em; font-weight: bold; margin-bottom: 0px;">温泉道️</h1>
+  <h1 style="color: #d2691e; font-size: 2.5em; font-weight: bold; margin-bottom: 0px;">別府八湯温泉道️</h1>
   <h5 style="margin-bottom: 20px; font-weight: normal;">♨️ 大なる温泉の道 ♨️</h5>
   <p style="font-weight: normal;">
     A Python application for tracking and analyzing onsen (hot spring) visits in Beppu, Japan. Combines database management, health tracking, exercise monitoring, and data analysis to support the 88 Onsen Challenge.
