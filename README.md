@@ -167,6 +167,7 @@ poetry run onsendo location --help
 poetry run onsendo onsen --help
 poetry run onsendo visit --help
 poetry run onsendo heart-rate --help
+poetry run onsendo exercise --help
 poetry run onsendo system --help
 poetry run onsendo database --help
 ```
@@ -179,6 +180,7 @@ The CLI is organized around five main concepts that reflect how you interact wit
 **♨️ Onsens** - Hot spring facilities you can visit
 **📝 Visits** - Your actual experiences at specific onsens
 **💓 Heart Rate** - Physiological data from fitness devices linked to visits
+**🏃 Exercise** - Workout and activity tracking with GPS routes and metrics
 **⚙️ System** - Database management and data processing
 
 #### Managing Your Locations
@@ -880,6 +882,223 @@ poetry run onsendo database drop-visits --force
 3. Create sample databases with onsen data and locations
 4. Maintain current database state snapshots for documentation
 
+**Exercise Tracking and Management**:
+
+The exercise tracking system allows you to import, store, and analyze workout data from various fitness devices and apps. This enables comprehensive tracking of running, cycling, hiking, gym sessions, and other activities as part of the Onsendo Challenge.
+
+**Key Features**:
+
+- **Multi-format Support**: Import from GPX, TCX, Apple Health, CSV, and JSON formats
+- **GPS Route Data**: Full GPS track parsing with distance, elevation, and route visualization
+- **Comprehensive Metrics**: Distance, duration, pace, heart rate, elevation gain, calories
+- **Smart Linking**: Automatically link exercises to onsen visits via timestamp matching
+- **Activity Validation**: Quality checks for pace, heart rate ranges, GPS consistency
+- **Weekly Statistics**: Track progress against Onsendo Challenge exercise targets
+- **File Integrity**: SHA-256 hashing ensures data hasn't been corrupted
+
+**Supported Activity Types**:
+
+- Running, Hiking, Cycling, Gym, Swimming, Walking, Yoga, and more
+- Automatic type detection from Apple Health workout types
+- Indoor/outdoor classification
+- Custom activity naming
+
+**Supported Data Formats**:
+
+*GPX (GPS Exchange Format)*:
+```xml
+<?xml version="1.0"?>
+<gpx version="1.1">
+  <trk>
+    <trkseg>
+      <trkpt lat="33.2794" lon="131.5006">
+        <ele>10.5</ele>
+        <time>2025-11-03T07:00:00Z</time>
+        <extensions><hr>155</hr></extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+```
+
+*Apple Health CSV*:
+```csv
+WorkoutType,StartTime,EndTime,Distance(km),Duration(min),AvgHeartRate
+HKWorkoutActivityTypeRunning,2025-11-03 07:00,2025-11-03 07:42,8.5,42,155
+```
+
+*Simple JSON*:
+```json
+{
+  "exercise_type": "running",
+  "start_time": "2025-11-03T07:00:00",
+  "end_time": "2025-11-03T07:42:30",
+  "distance_km": 8.5,
+  "avg_heart_rate": 155,
+  "elevation_gain_m": 120
+}
+```
+
+**Importing Exercise Data**:
+
+```bash
+# Import single file (auto-detect format)
+poetry run onsendo exercise import path/to/workout.gpx
+
+# Force specific format
+poetry run onsendo exercise import path/to/data.csv --format apple_health
+
+# Add notes
+poetry run onsendo exercise import path/to/run.gpx --notes "Morning run to Beppu Station"
+
+# Validate only (don't store)
+poetry run onsendo exercise import path/to/workout.tcx --validate-only
+
+# Batch import from directory
+poetry run onsendo exercise batch-import /path/to/workouts/ --recursive --max-workers 8
+```
+
+**Linking to Onsen Visits**:
+
+Exercise sessions can be automatically linked to visits based on timestamps:
+
+```bash
+# Auto-link exercise to nearby visit (2-hour window)
+poetry run onsendo exercise link --exercise-id 123 --auto-match
+
+# Manual link to specific visit
+poetry run onsendo exercise link --exercise-id 123 --visit-id 456
+
+# Unlink from visit
+poetry run onsendo exercise link --exercise-id 123 --unlink
+```
+
+**Managing Exercise Records**:
+
+```bash
+# List all exercises
+poetry run onsendo exercise list
+
+# Filter by type
+poetry run onsendo exercise list --type running --start-date 2025-11-01
+
+# Show only unlinked exercises
+poetry run onsendo exercise list --unlinked-only
+
+# Show weekly statistics
+poetry run onsendo exercise stats --week-start 2025-11-10
+```
+
+**Weekly Statistics for Onsendo Challenge**:
+
+Track your progress against the challenge exercise targets:
+
+```bash
+poetry run onsendo exercise stats --week-start 2025-11-10
+```
+
+Output shows:
+- **Running**: Total distance vs target (20-35km/week)
+- **Gym Sessions**: Count vs target (2-4 sessions/week)
+- **Hiking**: Completion status (1 hike/week required)
+- **Other Activities**: Swimming, cycling, etc.
+- **Warnings**: If limits are exceeded or targets not met
+
+**File Organization Best Practices**:
+
+```plain
+onsendo/
+├── data/
+│   ├── exercise/                       # Main exercise data directory
+│   │   ├── raw/                        # Original files from devices
+│   │   │   ├── garmin/                 # Garmin Connect exports (.gpx, .tcx)
+│   │   │   ├── strava/                 # Strava exports (.gpx)
+│   │   │   ├── apple_health/           # Apple Health exports (.csv)
+│   │   │   └── manual/                 # Manually created files
+│   │   ├── processed/                  # Cleaned/validated files
+│   │   └── archived/                   # Old files you want to keep
+```
+
+**Export Workflow Examples**:
+
+*From Apple Watch via Apple Health*:
+1. Open Health app on iPhone
+2. Tap your profile → Export All Health Data
+3. Save to Files app
+4. Extract `export.xml` from zip
+5. Convert to CSV or import directly:
+   ```bash
+   poetry run onsendo exercise import ~/Downloads/apple_health_export/export.xml --format apple_health
+   ```
+
+*From Garmin Connect*:
+1. Login to Garmin Connect web
+2. Select activity → Export → GPX or TCX
+3. Import directly:
+   ```bash
+   poetry run onsendo exercise import ~/Downloads/activity_123456.gpx
+   ```
+
+*From Strava*:
+1. Go to activity page
+2. Click menu (⋯) → Export GPX
+3. Import:
+   ```bash
+   poetry run onsendo exercise import ~/Downloads/Morning_Run.gpx --notes "Morning run with intervals"
+   ```
+
+**Integration with Onsendo Challenge**:
+
+The exercise system is designed to support the 88 Onsen Challenge exercise requirements:
+
+```bash
+# 1. Track your exercises throughout the week
+poetry run onsendo exercise import path/to/monday_run.gpx
+poetry run onsendo exercise import path/to/tuesday_gym.json
+poetry run onsendo exercise import path/to/saturday_hike.gpx
+
+# 2. Sunday: Review your week's exercise data
+poetry run onsendo exercise stats --week-start 2025-11-10
+# Output shows if you met targets: 20-35km running, 2-4 gym sessions, 1 hike
+
+# 3. Use stats in Rule Review Sunday
+poetry run onsendo rules revision-create
+# Enter the exercise metrics from your stats output
+
+# 4. Link exercises to onsen visits
+poetry run onsendo exercise list --unlinked-only
+poetry run onsendo exercise link --exercise-id 123 --auto-match
+# System suggests visits within 2-hour time window
+```
+
+**Data Quality Features**:
+
+- **Pace Validation**: Running pace within realistic bounds (2-12 min/km)
+- **Heart Rate Checks**: BPM within physiological limits (30-220)
+- **Elevation Consistency**: GPS elevation data validated against route
+- **Distance Calculation**: Haversine formula for accurate GPS-based distance
+- **Gap Detection**: Identifies suspicious gaps in GPS tracks
+- **Duration Limits**: 1 minute to 24 hours
+
+**Security and Privacy**:
+
+- **File Permissions**: `chmod 600` recommended for personal workout files
+- **No Cloud Storage**: All data stays local in your database
+- **SHA-256 Hashing**: File integrity verification
+- **Validation Before Import**: Use `--validate-only` to check files first
+
+**Makefile Shortcuts**:
+
+For convenience, use Makefile targets:
+
+```bash
+make exercise-import FILE=path/to/workout.gpx
+make exercise-batch DIR=path/to/workouts/ RECURSIVE=true
+make exercise-list
+make exercise-link EXERCISE_ID=123 AUTO_MATCH=true
+make exercise-stats WEEK_START=2025-11-10
+```
+
 **Health Tracking**:
 
 1. Record detailed visit data including energy levels and hydration
@@ -888,3 +1107,5 @@ poetry run onsendo database drop-visits --force
 4. **Import heart rate data** from fitness devices to correlate physiological responses with onsen experiences
 5. **Link heart rate sessions** to specific visits for comprehensive health analysis
 6. **Monitor recovery patterns** by tracking heart rate changes before, during, and after onsen visits
+7. **Track exercise activities** leading up to onsen visits to understand the relationship between physical activity and recovery
+8. **Analyze GPS routes** to see where you exercised before visiting specific onsens

@@ -31,7 +31,17 @@
 - Summaries should state intent, list local verification (`pytest`, `pylint`, optional `coverage`), and include CLI screenshots or transcripts for UX changes.
 - Keep branches rebased on `main`, avoid unrelated formatting churn, and request review only after checks pass.
 
+## Key Features & Systems
+
+- **Onsen Tracking**: Record visits with ratings, health metrics, logistics, and optional notes
+- **Heart Rate Monitoring**: Import from CSV, JSON, Apple Health; link to visits with SHA-256 integrity
+- **Exercise Tracking**: Import from GPX, TCX, Apple Health; GPS routes, pace/elevation validation, weekly stats for challenge targets
+- **Smart Recommendations**: Distance-based filtering using Haversine formula, availability checking, visit history personalization
+- **Rules Management**: Track Onsendo Challenge compliance with weekly review workflow and revision history
+- **Database Migrations**: Alembic-based schema evolution without data loss
+
 ## Data & Environment Notes
 
 - SQLite databases belong in `data/`; never commit secrets or large personal exports.
+- Organize exercise/heart rate files in `data/exercise/` and `data/heart_rate/` with format-specific subdirectories.
 - Confirm Python 3.12+ via `poetry env info`. For Selenium tasks, document driver requirements alongside the relevant script in `scripts/`.
