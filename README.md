@@ -115,12 +115,20 @@ poetry run onsendo --env prod system init-db
 # Check which database you're using
 make db-path           # Shows: data/db/onsen.dev.db
 make db-path ENV=prod  # Shows: data/db/onsen.prod.db
+
+# Set environment for current terminal session
+eval $(make use-prod)  # All subsequent commands use prod database
+make show-env          # Shows: Current environment: prod
+poetry run onsendo visit list  # Now uses prod database
+
+eval $(make use-dev)   # Switch back to dev
 ```
 
 **Environment Selection:**
 
 - **Default:** All commands use `dev` database (safe for testing)
-- **Production:** Use `--env prod` flag or `ENV=prod` with Makefile
+- **Per-command:** Use `--env prod` flag or `ENV=prod` with Makefile
+- **Terminal session:** Use `eval $(make use-prod)` to set for all commands in current shell
 - **Custom:** Use `--database /path/to/db.db` to specify exact path
 
 ### Your First Commands

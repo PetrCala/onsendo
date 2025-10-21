@@ -71,6 +71,14 @@ poetry run onsendo --database /custom/path.db visit list
 # Check which database you're using
 make db-path           # Shows: data/db/onsen.dev.db
 make db-path ENV=prod  # Shows: data/db/onsen.prod.db
+
+# Set environment for current terminal session
+eval $(make use-prod)  # All subsequent commands use prod database
+make show-env          # Shows: Current environment: prod
+poetry run onsendo visit list  # Uses prod database
+
+eval $(make use-dev)   # Switch back to dev
+make show-env          # Shows: Current environment: dev
 ```
 
 **Safety Features:**

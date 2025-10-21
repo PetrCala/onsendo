@@ -1,7 +1,7 @@
 .PHONY: help install test test-unit test-integration lint coverage clean
 .PHONY: hr-import hr-batch hr-status hr-maintenance
 .PHONY: backup backup-cloud backup-full backup-cleanup backup-restore backup-list backup-verify
-.PHONY: db-init db-fill db-path
+.PHONY: db-init db-fill db-path use-prod use-dev show-env
 .PHONY: run-cli
 
 # Color output
@@ -97,6 +97,19 @@ db-fill: ## Fill database from data.json (Usage: make db-fill DATA_FILE=path/to/
 db-path: ## Show database path for current environment
 	@echo "$(BLUE)Environment:$(NC) $(ENV)"
 	@echo "$(BLUE)Database path:$(NC) $(DB_FILE)"
+
+use-prod: ## Set ONSENDO_ENV=prod for current terminal session (Usage: eval $$(make use-prod))
+	@echo "export ONSENDO_ENV=prod"
+
+use-dev: ## Set ONSENDO_ENV=dev for current terminal session (Usage: eval $$(make use-dev))
+	@echo "export ONSENDO_ENV=dev"
+
+show-env: ## Show current database environment
+	@if [ -n "$$ONSENDO_ENV" ]; then \
+		echo "$(BLUE)Current environment:$(NC) $$ONSENDO_ENV (from environment variable)"; \
+	else \
+		echo "$(BLUE)Current environment:$(NC) dev (default)"; \
+	fi
 
 ##@ Heart Rate Management
 
