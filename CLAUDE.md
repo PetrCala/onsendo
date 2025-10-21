@@ -700,6 +700,7 @@ Closes #123
 2. Register in `src/cli/cmd_list.py` with proper group prefix
 3. Add business logic to `src/lib/` or relevant module
 4. Add tests in `tests/unit/` or `tests/integration/`
+5. **Update README.md** - Add command to appropriate section (see Documentation Maintenance Guidelines below)
 
 ### Adding a Database Column
 
@@ -723,3 +724,191 @@ Closes #123
 3. Update validation logic
 4. Add test cases with sample files
 5. Update documentation in `docs/heart_rate_system.md`
+
+## Documentation Maintenance Guidelines
+
+### README.md Structure Standards
+
+The README follows a **9-section hierarchy** with maximum depth of h3 (###) for major features:
+
+**Section Structure**:
+1. **Overview** - What/why/key features
+2. **Quick Start** - Installation → first commands
+3. **Core Concepts** - Six main entities explained concisely
+4. **Basic Usage** - Daily commands (locations, onsens, visits, recommendations)
+5. **Advanced Features** - Heart rate, exercise, rules, migrations, analysis
+6. **Data Management** - Mock data, backups, imports
+7. **Reference** - Command index, formats, file organization, workflows
+8. **Development** - Tests, quality, contributing
+9. **Additional Resources** - Links, troubleshooting, license
+
+**Header Depth Rules**:
+- h2 (`##`) for major sections (9 top-level sections)
+- h3 (`###`) for features and subsections
+- h4 (`####`) for specific commands or sub-features
+- **Never use h5 or h6** - restructure content if you need deeper nesting
+
+**Progressive Disclosure Principle**:
+- Essential information first (Quick Start, Core Concepts)
+- Daily-use commands in Basic Usage
+- Advanced features clearly separated
+- Detailed reference material at the end
+- Verbose examples and edge cases in Reference section
+
+### When to Update README vs Create Separate Docs
+
+**Add to README** when:
+- New CLI command in existing command group
+- New feature that fits existing section structure
+- Quick reference information (command syntax, flags)
+- Common workflows or examples
+
+**Create separate doc** when:
+- Comprehensive system documentation (like `docs/heart_rate_system.md`)
+- Architecture deep dives
+- Migration guides or tutorials
+- Detailed troubleshooting guides (>100 lines)
+- Developer-only documentation
+
+### Command Documentation Format
+
+When adding new commands to README, follow this structure:
+
+**In "Reference > Command Index" section**:
+```markdown
+**{Group} Commands**:
+- `{command} {subcommand}` - Brief description (5-10 words)
+```
+
+**In appropriate usage section** (Basic Usage or Advanced Features):
+```markdown
+#### {Feature Name}
+
+Brief description (1-2 sentences).
+
+```bash
+# Primary use case
+poetry run onsendo {command} {subcommand}
+
+# Common variant with flags
+poetry run onsendo {command} {subcommand} --flag value
+```
+
+**Output/behavior description** (if relevant):
+- Key point 1
+- Key point 2
+```
+
+**Example**:
+```markdown
+#### Importing Workouts
+
+Import exercise data from fitness devices.
+
+```bash
+# Auto-detect format
+poetry run onsendo exercise import path/to/workout.gpx
+
+# Force specific format
+poetry run onsendo exercise import workout.tcx --format tcx
+```
+
+**Supported formats**: GPX, TCX, Apple Health, JSON, CSV
+```
+
+### Content Organization Rules
+
+**Code Examples**:
+- Show the most common use case first
+- Limit to 3-5 variations per command
+- Use comments to explain non-obvious flags
+- Move exhaustive examples to Reference section
+
+**Tables**:
+- Use for structured reference data (formats, options, flags)
+- Keep in Reference section unless essential for Basic Usage
+- Maximum 5 columns for readability
+
+**Inline vs Block Content**:
+- Commands: Always use code blocks, never inline
+- File paths: Use inline code for paths in prose
+- Command names in headings: Plain text (no backticks)
+
+**Cross-References**:
+- Link to detailed docs for complex topics
+- Use relative paths: `[rules](rules/onsendo-rules.md)`
+- Reference other sections: `[Quick Start](#quick-start)`
+
+### Update Requirements When Adding Features
+
+**For new CLI command**:
+1. Add to Command Index in Reference section
+2. Add usage example in appropriate section (Basic vs Advanced)
+3. If new command group, add new subsection in Basic Usage or Advanced Features
+4. Update Table of Contents if new major section added
+5. Add to example workflows if it fits common patterns
+
+**For new data format**:
+1. Add to "Supported Data Formats" table in Reference
+2. Add import example in relevant feature section
+3. Update file organization best practices if new directory structure needed
+
+**For new feature**:
+1. Determine if Basic or Advanced (Advanced = heart rate, exercise, rules, migrations, analysis)
+2. Create h3 subsection in appropriate section
+3. Add to Core Concepts if it's a new entity (like Exercise, Heart Rate)
+4. Add commands to Command Index
+5. Add example workflow if common use case
+
+### Consistency Checks Before PR Submission
+
+Before submitting documentation changes, verify:
+
+- [ ] Table of Contents updated if section structure changed
+- [ ] All new commands added to Command Index
+- [ ] Code examples use `poetry run onsendo` (not bare `onsendo`)
+- [ ] No h5 or h6 headers (restructure if needed)
+- [ ] Cross-references use correct relative paths
+- [ ] File organization examples updated if new directories added
+- [ ] Troubleshooting section updated if new failure modes introduced
+- [ ] Consistent formatting (backticks for commands, **bold** for emphasis)
+
+### README Maintenance Examples
+
+**Good** - Adding a new command to existing feature:
+```markdown
+# In Advanced Features > Exercise Management > Querying and Statistics
+# Add new stats command variant:
+
+# Weekly statistics by activity type
+poetry run onsendo exercise stats --week 2025-11-10 --type running
+```
+
+**Bad** - Creating deep nesting:
+```markdown
+##### Specific Edge Case For Rare Scenario  # Too deep!
+```
+
+**Good** - Restructuring instead:
+```markdown
+#### Statistics Options
+
+**Weekly statistics**:
+```bash
+poetry run onsendo exercise stats --week 2025-11-10
+```
+
+**Filtered by type**:
+```bash
+poetry run onsendo exercise stats --week 2025-11-10 --type running
+```
+```
+
+**Good** - Separating verbose content:
+```markdown
+# In Advanced Features > Exercise Management
+See [File Organization Best Practices](#file-organization-best-practices) for recommended directory structure.
+
+# Then in Reference > File Organization Best Practices
+# (detailed 50+ line directory tree example)
+```
