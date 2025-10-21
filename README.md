@@ -118,6 +118,7 @@ make db-path ENV=prod  # Shows: data/db/onsen.prod.db
 ```
 
 **Environment Selection:**
+
 - **Default:** All commands use `dev` database (safe for testing)
 - **Production:** Use `--env prod` flag or `ENV=prod` with Makefile
 - **Custom:** Use `--database /path/to/db.db` to specify exact path
