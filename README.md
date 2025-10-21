@@ -906,6 +906,7 @@ The exercise tracking system allows you to import, store, and analyze workout da
 **Supported Data Formats**:
 
 *GPX (GPS Exchange Format)*:
+
 ```xml
 <?xml version="1.0"?>
 <gpx version="1.1">
@@ -922,12 +923,14 @@ The exercise tracking system allows you to import, store, and analyze workout da
 ```
 
 *Apple Health CSV*:
+
 ```csv
 WorkoutType,StartTime,EndTime,Distance(km),Duration(min),AvgHeartRate
 HKWorkoutActivityTypeRunning,2025-11-03 07:00,2025-11-03 07:42,8.5,42,155
 ```
 
 *Simple JSON*:
+
 ```json
 {
   "exercise_type": "running",
@@ -998,6 +1001,7 @@ poetry run onsendo exercise stats --week-start 2025-11-10
 ```
 
 Output shows:
+
 - **Running**: Total distance vs target (20-35km/week)
 - **Gym Sessions**: Count vs target (2-4 sessions/week)
 - **Hiking**: Completion status (1 hike/week required)
@@ -1022,27 +1026,33 @@ onsendo/
 **Export Workflow Examples**:
 
 *From Apple Watch via Apple Health*:
+
 1. Open Health app on iPhone
 2. Tap your profile → Export All Health Data
 3. Save to Files app
 4. Extract `export.xml` from zip
 5. Convert to CSV or import directly:
+
    ```bash
    poetry run onsendo exercise import ~/Downloads/apple_health_export/export.xml --format apple_health
    ```
 
 *From Garmin Connect*:
+
 1. Login to Garmin Connect web
 2. Select activity → Export → GPX or TCX
 3. Import directly:
+
    ```bash
    poetry run onsendo exercise import ~/Downloads/activity_123456.gpx
    ```
 
 *From Strava*:
+
 1. Go to activity page
 2. Click menu (⋯) → Export GPX
 3. Import:
+
    ```bash
    poetry run onsendo exercise import ~/Downloads/Morning_Run.gpx --notes "Morning run with intervals"
    ```
