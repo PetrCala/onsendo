@@ -61,29 +61,30 @@ The project supports multiple database environments (dev/prod) to separate devel
 **Usage Examples:**
 
 ```bash
-# Default (dev) - safe for testing
-make visit-list                          # Uses dev database
-poetry run onsendo visit add             # Adds to dev database
+# Method 1: Shell helpers (recommended for session-level switching)
+# Add to ~/.zshrc: source ~/code/onsendo/scripts/shell_helpers.sh
+use-prod              # Switch to production
+poetry run onsendo visit add  # Uses prod database
+make backup           # Backs up prod database
 
-# Production - requires explicit opt-in
-make visit-list ENV=prod                 # Uses prod database
-poetry run onsendo --env prod visit add  # Adds to prod database
-ONSENDO_ENV=prod poetry run onsendo visit list
+use-dev               # Switch back to dev
+onsendo-env           # Show current environment
 
-# Custom database path (overrides environment)
-poetry run onsendo --database /custom/path.db visit list
+# Method 2: Per-command override
+poetry run onsendo --env prod visit add  # CLI flag
+make backup ENV=prod                     # Makefile parameter
+
+# Method 3: Environment variable (advanced)
+export ONSENDO_ENV=prod
+poetry run onsendo visit list  # Uses prod
+make backup                    # Uses prod
 
 # Check which database you're using
 make db-path           # Shows: data/db/onsen.dev.db
-make db-path ENV=prod  # Shows: data/db/onsen.prod.db
+make show-env          # Shows current environment
 
-# Set environment for current terminal session
-eval $(make use-prod)  # All subsequent commands use prod database
-make show-env          # Shows: Current environment: prod
-poetry run onsendo visit list  # Uses prod database
-
-eval $(make use-dev)   # Switch back to dev
-make show-env          # Shows: Current environment: dev
+# Custom database path (overrides all)
+poetry run onsendo --database /custom/path.db visit list
 ```
 
 **Safety Features:**

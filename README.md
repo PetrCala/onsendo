@@ -111,25 +111,44 @@ poetry run onsendo system init-db
 # Initialize production database (when ready for real data)
 poetry run onsendo --env prod system init-db
 # Creates: data/db/onsen.prod.db
-
-# Check which database you're using
-make db-path           # Shows: data/db/onsen.dev.db
-make db-path ENV=prod  # Shows: data/db/onsen.prod.db
-
-# Set environment for current terminal session
-eval $(make use-prod)  # All subsequent commands use prod database
-make show-env          # Shows: Current environment: prod
-poetry run onsendo visit list  # Now uses prod database
-
-eval $(make use-dev)   # Switch back to dev
 ```
 
-**Environment Selection:**
+#### Environment Switching Methods
 
-- **Default:** All commands use `dev` database (safe for testing)
-- **Per-command:** Use `--env prod` flag or `ENV=prod` with Makefile
-- **Terminal session:** Use `eval $(make use-prod)` to set for all commands in current shell
-- **Custom:** Use `--database /path/to/db.db` to specify exact path
+**Method 1: Shell Helpers (Recommended - Simple & Persistent)**
+
+Add to your `~/.zshrc` or `~/.bashrc`:
+```bash
+source ~/code/onsendo/scripts/shell_helpers.sh
+```
+
+Then use simple commands:
+```bash
+use-prod      # Switch to production (all commands use prod)
+use-dev       # Switch back to development
+onsendo-env   # Show current environment
+```
+
+**Method 2: Per-Command Override**
+```bash
+# CLI commands
+poetry run onsendo --env prod visit list
+
+# Makefile commands
+make backup ENV=prod
+```
+
+**Method 3: Environment Variable (Advanced)**
+```bash
+# Set for entire session
+export ONSENDO_ENV=prod
+poetry run onsendo visit list  # Uses prod
+
+# Or per-command
+ONSENDO_ENV=prod make backup
+```
+
+**Priority:** Explicit path > `--env` flag > `ENV=` parameter > `ONSENDO_ENV` variable > default (dev)
 
 ### Your First Commands
 
