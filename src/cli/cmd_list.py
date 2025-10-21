@@ -806,6 +806,159 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    # Exercise commands
+    "exercise-import": CommandConfig(
+        func=lazy_command("src.cli.commands.exercise.import_", "import_exercise_data"),
+        help="Import exercise data from a file",
+        args={
+            "file-path": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Path to exercise data file",
+                positional=True,
+            ),
+            "format": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Force specific file format (csv, json, gpx, tcx, apple_health)",
+            ),
+            "notes": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Optional notes about the exercise session",
+            ),
+            "validate-only": ArgumentConfig(
+                action="store_true", help="Only validate data without importing"
+            ),
+            "link-visit": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Link to visit ID immediately after import",
+            ),
+            "link-heart-rate": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Link to heart rate ID immediately after import",
+            ),
+        },
+    ),
+    "exercise-batch-import": CommandConfig(
+        func=lazy_command("src.cli.commands.exercise.batch_import", "batch_import_exercise_data"),
+        help="Batch import exercise data from a directory",
+        args={
+            "directory": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Directory containing exercise data files",
+                positional=True,
+            ),
+            "recursive": ArgumentConfig(
+                action="store_true", help="Search subdirectories recursively"
+            ),
+            "format": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Force specific file format for all files",
+            ),
+            "notes": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Optional notes to add to all imported sessions",
+            ),
+            "dry-run": ArgumentConfig(
+                action="store_true",
+                help="Show what would be imported without storing data",
+            ),
+            "max-workers": ArgumentConfig(
+                type=int, default=4, help="Maximum number of parallel workers"
+            ),
+        },
+    ),
+    "exercise-list": CommandConfig(
+        func=lazy_command("src.cli.commands.exercise.list", "list_exercise_sessions"),
+        help="List and query exercise sessions",
+        args={
+            "type": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Filter by exercise type (running, gym, hiking, etc.)",
+            ),
+            "unlinked-only": ArgumentConfig(
+                action="store_true", help="Show only sessions not linked to visits"
+            ),
+            "visit-id": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Show exercise sessions for specific visit ID",
+            ),
+            "date-range": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Date range in format 'YYYY-MM-DD,YYYY-MM-DD'",
+            ),
+            "limit": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Limit number of results",
+            ),
+        },
+    ),
+    "exercise-link": CommandConfig(
+        func=lazy_command("src.cli.commands.exercise.link", "link_exercise"),
+        help="Link/unlink exercise sessions to visits or heart rate data",
+        args={
+            "exercise-id": ArgumentConfig(
+                type=int,
+                required=True,
+                help="Exercise session ID",
+                positional=True,
+            ),
+            "visit": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Visit ID to link to",
+            ),
+            "heart-rate": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Heart rate ID to link to",
+            ),
+            "auto-match": ArgumentConfig(
+                action="store_true",
+                help="Suggest visit links based on timestamps",
+            ),
+            "unlink": ArgumentConfig(
+                action="store_true",
+                help="Unlink from visit and/or heart rate",
+            ),
+        },
+    ),
+    "exercise-stats": CommandConfig(
+        func=lazy_command("src.cli.commands.exercise.stats", "show_exercise_stats"),
+        help="Show exercise statistics and summaries",
+        args={
+            "week": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Week start date (YYYY-MM-DD) for weekly summary",
+            ),
+            "month": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Month number (1-12) for monthly summary",
+            ),
+            "year": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Year for monthly summary (defaults to current year)",
+            ),
+            "type": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Show stats for specific exercise type",
+            ),
+        },
+    ),
     # Analysis commands
     "analysis-run": CommandConfig(
         func=lazy_command("src.cli.commands.analysis.run_analysis", "run_analysis"),

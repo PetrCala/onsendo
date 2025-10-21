@@ -28,6 +28,7 @@ def get_command_group_config() -> dict[str, str]:
         "system": "System management commands",
         "database": "Database management commands",
         "heart-rate": "Heart rate management commands",
+        "exercise": "Exercise tracking and management commands",
         "analysis": "Analysis and modeling commands",
         "rules": "Rules management commands",
     }
@@ -42,6 +43,7 @@ def get_command_group_mapping() -> dict[str, str]:
         "system-": "system",
         "database-": "database",
         "heart-rate-": "heart-rate",
+        "exercise-": "exercise",
         "analysis-": "analysis",
         "rules-": "rules",
     }

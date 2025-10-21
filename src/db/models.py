@@ -242,6 +242,71 @@ class HeartRateData(Base):
     visit = relationship("OnsenVisit")
 
 
+class ExerciseSession(Base):
+    """
+    Exercise session data recorded during various activities.
+
+    Comprehensive tracking of workout sessions from various sources
+    (Apple Watch, Garmin, manual entry) with support for GPS routes,
+    heart rate data, and linking to onsen visits.
+
+    Columns:
+    - id: primary key
+    - visit_id: optional foreign key to onsen visit (if exercise was before/after onsen)
+    - heart_rate_id: optional foreign key to heart rate data (if HR was recorded)
+    - recording_start: when the exercise started
+    - recording_end: when the exercise ended
+    - duration_minutes: total duration in minutes
+    - exercise_type: type of exercise (running, gym, hiking, cycling, etc.)
+    - activity_name: specific activity name (e.g., "Morning Run", "Leg Day")
+    - workout_type: Apple Health workout type (if from Apple Health)
+    - data_source: where the data came from (apple_health, garmin, manual, etc.)
+    - data_file_path: path to the original data file (if imported)
+    - data_hash: SHA-256 hash of the data file for integrity verification
+    - distance_km: distance covered in kilometers (for cardio activities)
+    - calories_burned: estimated calories burned
+    - elevation_gain_m: total elevation gain in meters (for running/hiking)
+    - avg_heart_rate: average heart rate during exercise
+    - min_heart_rate: minimum heart rate recorded
+    - max_heart_rate: maximum heart rate recorded
+    - indoor_outdoor: whether exercise was indoor or outdoor
+    - weather_conditions: weather during outdoor exercise
+    - route_data: JSON-encoded GPS route data (lat/lon points, timestamps)
+    - notes: optional notes about the exercise session
+    - created_at: when this record was created in the database
+    """
+
+    __tablename__ = "exercise_sessions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    visit_id = Column(Integer, ForeignKey("onsen_visits.id"), nullable=True)
+    heart_rate_id = Column(Integer, ForeignKey("heart_rate_data.id"), nullable=True)
+    recording_start = Column(DateTime, nullable=False, index=True)
+    recording_end = Column(DateTime, nullable=False)
+    duration_minutes = Column(Integer, nullable=False)
+    exercise_type = Column(String, nullable=False, index=True)
+    activity_name = Column(String)
+    workout_type = Column(String)
+    data_source = Column(String, nullable=False)
+    data_file_path = Column(String)
+    data_hash = Column(String)
+    distance_km = Column(Float)
+    calories_burned = Column(Integer)
+    elevation_gain_m = Column(Float)
+    avg_heart_rate = Column(Float)
+    min_heart_rate = Column(Float)
+    max_heart_rate = Column(Float)
+    indoor_outdoor = Column(String)
+    weather_conditions = Column(String)
+    route_data = Column(String)  # JSON string
+    notes = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    visit = relationship("OnsenVisit", foreign_keys=[visit_id])
+    heart_rate = relationship("HeartRateData", foreign_keys=[heart_rate_id])
+
+
 class RuleRevision(Base):
     """
     Rule revisions for the Onsendo challenge ruleset.
