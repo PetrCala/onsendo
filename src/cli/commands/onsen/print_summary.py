@@ -37,7 +37,7 @@ def print_summary(args: argparse.Namespace) -> None:
 
     provided = [v for v in [onsen_id, ban_number, name] if v]
     if not provided:
-        logger.error("You must provide one of --onsen_id, --ban_number, or --name")
+        logger.error("You must provide one of --onsen-id, --ban-number, or --name")
         return
 
     if len(provided) > 1:
@@ -45,10 +45,10 @@ def print_summary(args: argparse.Namespace) -> None:
             "Multiple identifiers provided. Using priority: id > ban > name."
         )
 
-# Get database configuration
+    # Get database configuration
     config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
+        env_override=getattr(args, "env", None),
+        path_override=getattr(args, "database", None),
     )
 
     with get_db(url=config.url) as db:

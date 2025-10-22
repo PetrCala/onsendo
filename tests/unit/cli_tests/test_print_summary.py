@@ -25,7 +25,7 @@ def test_error_when_no_identifier(mock_error, mock_get_db):
 
     mock_error.assert_called_once()
     assert (
-        "You must provide one of --onsen_id, --ban_number, or --name"
+        "You must provide one of --onsen-id, --ban-number, or --name"
         in mock_error.call_args[0][0]
     )
     mock_get_db.assert_not_called()
