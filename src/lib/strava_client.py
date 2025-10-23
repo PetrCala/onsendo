@@ -211,27 +211,22 @@ class StravaClient:
         timeout = 300
         start_time = time.time()
 
-        print("Waiting for authorization...")
-
         while True:
             # Check for auth code or error first (before checking thread state)
             if (
                 StravaOAuthCallbackHandler.auth_code
                 or StravaOAuthCallbackHandler.error
             ):
-                logger.debug("Auth code received, breaking from wait loop")
                 break
 
             # Check for timeout
             if time.time() - start_time > timeout:
-                server.shutdown()
                 raise StravaAuthenticationError(
                     "Authentication timeout - no response after 5 minutes"
                 )
 
             # Check if server thread died unexpectedly
             if not server_thread.is_alive():
-                logger.debug("Server thread died")
                 time.sleep(0.5)  # Give a moment for variables to be set
                 if not StravaOAuthCallbackHandler.auth_code and not StravaOAuthCallbackHandler.error:
                     raise StravaAuthenticationError(
