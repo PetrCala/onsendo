@@ -327,6 +327,92 @@ class ActivityFilter:
 
 
 @dataclass
+class StravaActivityDetail:
+    """
+    Detailed activity data including all available fields.
+
+    This is the data returned from GET /activities/{id} endpoint.
+    Contains comprehensive activity information including metrics,
+    performance data, and location information.
+    """
+
+    # Basic info
+    id: int
+    name: str
+    activity_type: str
+    sport_type: str
+    start_date: datetime
+    start_date_local: datetime
+    timezone: str
+
+    # Metrics
+    distance_m: Optional[float] = None
+    moving_time_s: int = 0
+    elapsed_time_s: int = 0
+    total_elevation_gain_m: Optional[float] = None
+    calories: Optional[int] = None
+
+    # Heart rate
+    has_heartrate: bool = False
+    average_heartrate: Optional[float] = None
+    max_heartrate: Optional[float] = None
+
+    # Location
+    start_latlng: Optional[tuple[float, float]] = None
+    end_latlng: Optional[tuple[float, float]] = None
+
+    # Performance
+    average_speed: Optional[float] = None
+    max_speed: Optional[float] = None
+    average_cadence: Optional[float] = None
+    average_watts: Optional[float] = None
+
+    # Weather (if available)
+    average_temp: Optional[float] = None
+
+    # Description
+    description: Optional[str] = None
+
+    # Gear
+    gear_id: Optional[str] = None
+
+    @property
+    def distance_km(self) -> Optional[float]:
+        """Get distance in kilometers."""
+        return self.distance_m / 1000 if self.distance_m else None
+
+    @property
+    def moving_time_minutes(self) -> int:
+        """Get moving time in minutes."""
+        return self.moving_time_s // 60
+
+    @property
+    def elapsed_time_minutes(self) -> int:
+        """Get elapsed time in minutes."""
+        return self.elapsed_time_s // 60
+
+
+@dataclass
+class StravaStream:
+    """
+    Time-series stream data from Strava.
+
+    Streams provide detailed time-series data like GPS coordinates,
+    heart rate, cadence, etc. Different stream types have different
+    data formats.
+    """
+
+    stream_type: str  # "latlng", "heartrate", "altitude", "cadence", "distance", etc.
+    data: list  # Type varies by stream_type
+    original_size: int
+    resolution: str  # "low", "medium", "high"
+
+    def __len__(self) -> int:
+        """Get number of data points in stream."""
+        return len(self.data) if self.data else 0
+
+
+@dataclass
 class StravaRateLimitStatus:
     """
     Rate limit tracking for Strava API.

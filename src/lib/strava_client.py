@@ -21,12 +21,14 @@ from loguru import logger
 
 from src.types.strava import (
     ActivityFilter,
+    StravaActivityDetail,
     StravaActivitySummary,
     StravaAuthenticationError,
     StravaCredentials,
     StravaNetworkError,
     StravaRateLimitError,
     StravaRateLimitStatus,
+    StravaStream,
     StravaToken,
 )
 
@@ -582,4 +584,169 @@ class StravaClient:
             has_heartrate=data.get("has_heartrate", False),
             average_heartrate=data.get("average_heartrate"),
             max_heartrate=data.get("max_heartrate"),
+        )
+
+    def get_activity(self, activity_id: int) -> StravaActivityDetail:
+        """
+        Get detailed information about a specific activity.
+
+        Args:
+            activity_id: Strava activity ID
+
+        Returns:
+            Detailed activity data
+
+        Raises:
+            StravaAuthenticationError: If not authenticated
+            StravaNetworkError: If network error or activity not found
+
+        Example:
+            >>> activity = client.get_activity(12345678)
+            >>> print(f"{activity.name}: {activity.distance_km}km")
+        """
+        logger.info(f"Fetching activity {activity_id}")
+
+        # Make API request
+        response_data = self._make_request("GET", f"/activities/{activity_id}")
+
+        # Parse activity details
+        activity = self._parse_activity_detail(response_data)
+
+        logger.info(f"Retrieved activity: {activity.name}")
+        return activity
+
+    def get_activity_streams(
+        self, activity_id: int, stream_types: Optional[list[str]] = None
+    ) -> dict[str, StravaStream]:
+        """
+        Get stream data for an activity.
+
+        Args:
+            activity_id: Strava activity ID
+            stream_types: Types of streams to fetch. Defaults to:
+                ["time", "latlng", "altitude", "heartrate", "cadence",
+                 "distance", "velocity_smooth"]
+
+        Returns:
+            Dictionary mapping stream type to StravaStream
+
+        Raises:
+            StravaAuthenticationError: If not authenticated
+            StravaNetworkError: If network error occurs
+
+        Example:
+            >>> streams = client.get_activity_streams(12345678)
+            >>> if "heartrate" in streams:
+            ...     hr_stream = streams["heartrate"]
+            ...     print(f"HR data points: {len(hr_stream)}")
+        """
+        if stream_types is None:
+            stream_types = [
+                "time",
+                "latlng",
+                "altitude",
+                "heartrate",
+                "cadence",
+                "distance",
+                "velocity_smooth",
+            ]
+
+        # Build stream keys parameter
+        keys = ",".join(stream_types)
+
+        logger.info(f"Fetching streams for activity {activity_id}: {keys}")
+
+        # Make API request
+        params = {"keys": keys, "key_by_type": "true"}
+        response_data = self._make_request(
+            "GET", f"/activities/{activity_id}/streams", params=params
+        )
+
+        # Parse streams
+        streams = {}
+        for stream_type, stream_data in response_data.items():
+            try:
+                stream = StravaStream(
+                    stream_type=stream_type,
+                    data=stream_data.get("data", []),
+                    original_size=stream_data.get("original_size", 0),
+                    resolution=stream_data.get("resolution", "high"),
+                )
+                streams[stream_type] = stream
+
+            except (KeyError, ValueError) as e:
+                logger.warning(f"Failed to parse stream {stream_type}: {e}")
+                continue
+
+        logger.info(f"Retrieved {len(streams)} streams")
+        return streams
+
+    def _parse_activity_detail(self, data: dict) -> StravaActivityDetail:
+        """
+        Parse detailed activity from Strava API response.
+
+        Args:
+            data: Activity data from API
+
+        Returns:
+            StravaActivityDetail instance
+
+        Raises:
+            KeyError: If required fields are missing
+            ValueError: If data format is invalid
+        """
+        # Parse dates
+        start_date_str = data["start_date"]
+        start_date_local_str = data.get("start_date_local", start_date_str)
+
+        try:
+            start_date = datetime.fromisoformat(start_date_str.replace("Z", "+00:00"))
+            start_date_local = datetime.fromisoformat(
+                start_date_local_str.replace("Z", "+00:00")
+            )
+        except ValueError:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%dT%H:%M:%SZ")
+            start_date_local = datetime.strptime(
+                start_date_local_str, "%Y-%m-%dT%H:%M:%SZ"
+            )
+
+        # Parse location tuples
+        start_latlng = None
+        end_latlng = None
+
+        if data.get("start_latlng"):
+            latlng = data["start_latlng"]
+            if len(latlng) >= 2:
+                start_latlng = (float(latlng[0]), float(latlng[1]))
+
+        if data.get("end_latlng"):
+            latlng = data["end_latlng"]
+            if len(latlng) >= 2:
+                end_latlng = (float(latlng[0]), float(latlng[1]))
+
+        return StravaActivityDetail(
+            id=data["id"],
+            name=data["name"],
+            activity_type=data.get("type", "Unknown"),
+            sport_type=data.get("sport_type", data.get("type", "Unknown")),
+            start_date=start_date,
+            start_date_local=start_date_local,
+            timezone=data.get("timezone", "UTC"),
+            distance_m=data.get("distance"),
+            moving_time_s=data.get("moving_time", 0),
+            elapsed_time_s=data.get("elapsed_time", 0),
+            total_elevation_gain_m=data.get("total_elevation_gain"),
+            calories=data.get("calories"),
+            has_heartrate=data.get("has_heartrate", False),
+            average_heartrate=data.get("average_heartrate"),
+            max_heartrate=data.get("max_heartrate"),
+            start_latlng=start_latlng,
+            end_latlng=end_latlng,
+            average_speed=data.get("average_speed"),
+            max_speed=data.get("max_speed"),
+            average_cadence=data.get("average_cadence"),
+            average_watts=data.get("average_watts"),
+            average_temp=data.get("average_temp"),
+            description=data.get("description"),
+            gear_id=data.get("gear_id"),
         )
