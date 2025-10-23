@@ -473,6 +473,111 @@ poetry run onsendo exercise stats --month 11 --year 2025
 - Haversine distance calculation
 - Duration limits (1 min to 24 hours)
 
+### Strava Integration
+
+Sync activities directly from Strava, download in multiple formats, and automatically link to onsen visits.
+
+#### Setup
+
+1. **Create Strava API application**:
+   - Visit <https://www.strava.com/settings/api>
+   - Create new application with callback domain: `localhost`
+
+2. **Configure credentials**:
+
+   ```bash
+   # Add to .env
+   STRAVA_CLIENT_ID=your_client_id
+   STRAVA_CLIENT_SECRET=your_client_secret
+   ```
+
+3. **Authenticate**:
+
+   ```bash
+   make strava-auth
+   # Browser opens for OAuth authorization
+   ```
+
+#### Quick Commands
+
+**Sync recent activities**:
+
+```bash
+# Preview sync (dry-run)
+make strava-sync DAYS=7 DRY_RUN=true
+
+# Download and import
+make strava-sync DAYS=7 IMPORT=true LINK=true
+
+# Filter by activity type
+make strava-sync DAYS=30 TYPE=Run IMPORT=true
+```
+
+**Download specific activity**:
+
+```bash
+# Download by ID
+make strava-download ACTIVITY_ID=12345678
+
+# Download and auto-link to visit
+make strava-download ACTIVITY_ID=12345678 IMPORT=true LINK=true
+```
+
+**Interactive browser**:
+
+```bash
+make strava-interactive
+# Full-featured terminal UI for browsing, filtering, and importing
+```
+
+#### Key Features
+
+- **Multiple formats**: GPX, JSON, HR CSV export
+- **Auto-linking**: Matches activities to visits within ±2 hour window
+- **Batch operations**: Sync multiple activities with progress reporting
+- **Deduplication**: Skips already-downloaded activities
+- **Rate limiting**: Automatic compliance with Strava API limits (100/15min, 1000/day)
+
+#### Visit Linking
+
+```bash
+# Auto-match based on timestamp
+make strava-link EXERCISE_ID=42 AUTO_MATCH=true
+
+# Manual link
+make strava-link EXERCISE_ID=42 VISIT_ID=15
+```
+
+**Auto-link algorithm**:
+
+- Searches visits within ±2 hours of activity start
+- Shows time difference for each suggestion
+- Uses closest match automatically
+
+#### Common Issues
+
+**Authentication failed**:
+
+```bash
+# Re-authenticate
+poetry run onsendo strava auth --reauth
+```
+
+**Rate limit exceeded**:
+
+- System automatically waits and retries
+- Check usage: `poetry run onsendo strava status -v`
+- Reduce sync frequency or use smaller date ranges
+
+**No nearby visits found**:
+
+- Auto-link only works within ±2 hour window
+- Use manual linking for activities outside this range
+
+**For detailed troubleshooting**: See [docs/STRAVA_TROUBLESHOOTING.md](docs/STRAVA_TROUBLESHOOTING.md)
+
+**For workflow examples**: See [docs/STRAVA_WORKFLOWS.md](docs/STRAVA_WORKFLOWS.md)
+
 ### Rules & Weekly Reviews
 
 Track challenge compliance and manage rule revisions.
