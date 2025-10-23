@@ -200,9 +200,7 @@ def _display_filter_settings(activity_filter: ActivityFilter) -> None:
     print("-" * 70)
 
 
-def _display_activities(
-    activities: list, page: int, page_size: int
-) -> None:
+def _display_activities(activities: list, page: int, page_size: int) -> None:
     """
     Display formatted activity list.
 
@@ -245,9 +243,7 @@ def _display_activities(
             elev_str = f"▲ {int(activity.total_elevation_gain_m)}m"
 
         # Display line 1: Index, name, date, distance, HR
-        print(
-            f"  {i:2}. {activity.name:<35} {date_str}  {dist_str:>8}  {hr_str}"
-        )
+        print(f"  {i:2}. {activity.name:<35} {date_str}  {dist_str:>8}  {hr_str}")
 
         # Display line 2: Time, duration, elevation
         time_info = f"{time_str} ({duration_str})"

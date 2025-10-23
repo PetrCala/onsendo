@@ -10,8 +10,8 @@ from pathlib import Path
 
 from loguru import logger
 
+from src.config import get_database_config
 from src.db.conn import get_db
-
 from src.db.models import OnsenVisit
 from src.lib.exercise_manager import ExerciseDataManager
 from src.lib.strava_client import StravaClient
@@ -151,8 +151,14 @@ def cmd_strava_sync(args):
     link_count = 0
     skip_count = 0
 
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
     # Use database session for imports and linking
-    with get_db() as db:
+    with get_db(url=config.url) as db:
         for i, activity_summary in enumerate(activities, 1):
             print(f"\n[{i}/{len(activities)}] {activity_summary.name}")
 
@@ -236,7 +242,9 @@ def cmd_strava_sync(args):
                     db.query(OnsenVisit)
                     .filter(OnsenVisit.visit_date >= search_start.date())
                     .filter(OnsenVisit.visit_date <= search_end.date())
-                    .order_by(OnsenVisit.visit_date.desc(), OnsenVisit.visit_time.desc())
+                    .order_by(
+                        OnsenVisit.visit_date.desc(), OnsenVisit.visit_time.desc()
+                    )
                     .limit(1)
                     .all()
                 )
@@ -247,7 +255,8 @@ def cmd_strava_sync(args):
                         visit.visit_date, visit.visit_time or datetime.min.time()
                     )
                     time_diff = abs(
-                        (visit_datetime - activity.start_date_local).total_seconds() / 60
+                        (visit_datetime - activity.start_date_local).total_seconds()
+                        / 60
                     )
 
                     try:
@@ -259,7 +268,9 @@ def cmd_strava_sync(args):
                         )
                         link_count += 1
                     except Exception as e:
-                        logger.exception(f"Failed to link activity {activity_summary.id}")
+                        logger.exception(
+                            f"Failed to link activity {activity_summary.id}"
+                        )
                         print(f"  ✗ Link failed: {e}")
 
         # Summary

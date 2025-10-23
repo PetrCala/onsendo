@@ -9,8 +9,8 @@ from datetime import datetime, timedelta
 
 from loguru import logger
 
+from src.config import get_database_config
 from src.db.conn import get_db
-
 from src.db.models import ExerciseSession, HeartRateData, OnsenVisit
 from src.lib.exercise_manager import ExerciseDataManager
 from src.lib.heart_rate_manager import HeartRateDataManager
@@ -65,17 +65,19 @@ def cmd_strava_link(args):
         print("Error: You must specify either --visit or --auto-match")
         return
 
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
     # Use database session for all operations
-    with get_db() as db:
+    with get_db(url=config.url) as db:
         # Handle exercise linking
         if exercise_id:
             # Fetch exercise session
             try:
-                exercise = (
-                    db.query(ExerciseSession)
-                    .filter_by(id=exercise_id)
-                    .first()
-                )
+                exercise = db.query(ExerciseSession).filter_by(id=exercise_id).first()
 
                 if not exercise:
                     print(f"Error: Exercise session {exercise_id} not found")
@@ -107,18 +109,16 @@ def cmd_strava_link(args):
                 print(f"\n✓ Linked exercise {exercise_id} to visit {visit_id}")
 
             except Exception as e:
-                logger.exception(f"Failed to link exercise {exercise_id} to visit {visit_id}")
+                logger.exception(
+                    f"Failed to link exercise {exercise_id} to visit {visit_id}"
+                )
                 print(f"Error: {e}")
 
         # Handle heart rate linking
         if hr_id:
             # Fetch heart rate record
             try:
-                hr_record = (
-                    db.query(HeartRateData)
-                    .filter_by(id=hr_id)
-                    .first()
-                )
+                hr_record = db.query(HeartRateData).filter_by(id=hr_id).first()
 
                 if not hr_record:
                     print(f"Error: Heart rate record {hr_id} not found")
@@ -150,7 +150,9 @@ def cmd_strava_link(args):
                 print(f"\n✓ Linked heart rate {hr_id} to visit {visit_id}")
 
             except Exception as e:
-                logger.exception(f"Failed to link heart rate {hr_id} to visit {visit_id}")
+                logger.exception(
+                    f"Failed to link heart rate {hr_id} to visit {visit_id}"
+                )
                 print(f"Error: {e}")
 
 

@@ -8,6 +8,7 @@ from pathlib import Path
 
 from loguru import logger
 
+from src.config import get_database_config
 from src.db.conn import get_db
 from src.lib.exercise_manager import ExerciseDataManager
 from src.lib.heart_rate_manager import HeartRateDataManager
@@ -154,8 +155,14 @@ def cmd_strava_download(args):
     exercise_id = None
     hr_id = None
 
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
     # Use database session for imports and linking
-    with get_db() as db:
+    with get_db(url=config.url) as db:
         if import_exercise:
             print("\nImporting as exercise session...")
             try:
@@ -187,7 +194,9 @@ def cmd_strava_download(args):
                 print("\n  ⚠ Activity does not have heart rate data")
 
         # Link if requested
-        link_visit = args.link_visit if hasattr(args, "link_visit") and args.link_visit else None
+        link_visit = (
+            args.link_visit if hasattr(args, "link_visit") and args.link_visit else None
+        )
         auto_link = args.auto_link if hasattr(args, "auto_link") else False
 
         if exercise_id and (link_visit or auto_link):
@@ -205,7 +214,9 @@ def cmd_strava_download(args):
                     db.query(OnsenVisit)
                     .filter(OnsenVisit.visit_date >= search_start.date())
                     .filter(OnsenVisit.visit_date <= search_end.date())
-                    .order_by(OnsenVisit.visit_date.desc(), OnsenVisit.visit_time.desc())
+                    .order_by(
+                        OnsenVisit.visit_date.desc(), OnsenVisit.visit_time.desc()
+                    )
                     .limit(5)
                     .all()
                 )
@@ -219,7 +230,8 @@ def cmd_strava_download(args):
                             visit.visit_date, visit.visit_time or datetime.min.time()
                         )
                         time_diff = abs(
-                            (visit_datetime - activity.start_date_local).total_seconds() / 60
+                            (visit_datetime - activity.start_date_local).total_seconds()
+                            / 60
                         )
                         print(
                             f"    {i}. [ID: {visit.id}] {visit.visit_date} "
