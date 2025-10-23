@@ -214,6 +214,119 @@ class StravaSettings:
 
 
 @dataclass
+class StravaActivitySummary:
+    """
+    Summary of a Strava activity (list view).
+
+    This is the data returned from the /athlete/activities endpoint.
+    Contains basic activity information without full details or streams.
+    """
+
+    id: int
+    name: str
+    activity_type: str
+    start_date: datetime
+    distance_m: Optional[float] = None
+    moving_time_s: int = 0
+    elapsed_time_s: int = 0
+    total_elevation_gain_m: Optional[float] = None
+    has_heartrate: bool = False
+    average_heartrate: Optional[float] = None
+    max_heartrate: Optional[float] = None
+
+    @property
+    def distance_km(self) -> Optional[float]:
+        """Get distance in kilometers."""
+        return self.distance_m / 1000 if self.distance_m else None
+
+    @property
+    def moving_time_minutes(self) -> int:
+        """Get moving time in minutes."""
+        return self.moving_time_s // 60
+
+    @property
+    def elapsed_time_minutes(self) -> int:
+        """Get elapsed time in minutes."""
+        return self.elapsed_time_s // 60
+
+    def __str__(self) -> str:
+        """String representation for display."""
+        date_str = self.start_date.strftime("%Y-%m-%d")
+        dist_str = f"{self.distance_km:.1f}km" if self.distance_km else "--"
+        hr_str = f"♥ {int(self.average_heartrate)}bpm" if self.average_heartrate else ""
+
+        return f"{self.name:<30} {date_str}  {dist_str:<8} {hr_str}"
+
+
+@dataclass
+class ActivityFilter:
+    """
+    Filter criteria for activity browsing.
+
+    Used to filter activities when calling list_activities().
+    """
+
+    date_from: Optional[datetime] = None
+    date_to: Optional[datetime] = None
+    activity_type: Optional[str] = None  # "Run", "Ride", etc.
+    name_contains: Optional[str] = None
+    has_heartrate: Optional[bool] = None
+    min_distance_km: Optional[float] = None
+    page: int = 1
+    page_size: int = 30  # Strava's default, max 200
+
+    def to_api_params(self) -> dict:
+        """
+        Convert filter to Strava API query parameters.
+
+        Returns:
+            Dictionary of query parameters for API request
+        """
+        params = {
+            "page": self.page,
+            "per_page": min(self.page_size, 200),  # Strava max is 200
+        }
+
+        # Date filters (Strava uses Unix timestamps)
+        if self.date_from:
+            params["after"] = int(self.date_from.timestamp())
+        if self.date_to:
+            params["before"] = int(self.date_to.timestamp())
+
+        return params
+
+    def matches_activity(self, activity: StravaActivitySummary) -> bool:
+        """
+        Check if an activity matches this filter (for client-side filtering).
+
+        Args:
+            activity: Activity to check
+
+        Returns:
+            True if activity matches all filter criteria
+        """
+        # Activity type filter
+        if self.activity_type and activity.activity_type != self.activity_type:
+            return False
+
+        # Name filter
+        if self.name_contains and self.name_contains.lower() not in activity.name.lower():
+            return False
+
+        # Heart rate filter
+        if self.has_heartrate is not None and activity.has_heartrate != self.has_heartrate:
+            return False
+
+        # Minimum distance filter
+        if self.min_distance_km and (
+            not activity.distance_km or activity.distance_km < self.min_distance_km
+        ):
+            return False
+
+        return True
+
+
+@dataclass
 class StravaRateLimitStatus:
     """
     Rate limit tracking for Strava API.

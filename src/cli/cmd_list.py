@@ -1355,6 +1355,53 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    "strava-browse": CommandConfig(
+        func=lazy_command("src.cli.commands.strava.browse", "cmd_strava_browse"),
+        help="Browse and list Strava activities with filtering.",
+        args={
+            "days": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Show activities from last N days",
+            ),
+            "type": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Filter by activity type (Run, Ride, Hike, etc.)",
+            ),
+            "date-from": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Start date (YYYY-MM-DD)",
+            ),
+            "date-to": ArgumentConfig(
+                type=str,
+                required=False,
+                help="End date (YYYY-MM-DD)",
+            ),
+            "has-hr": ArgumentConfig(
+                action="store_true",
+                help="Only show activities with heart rate data",
+            ),
+            "min-distance": ArgumentConfig(
+                type=float,
+                required=False,
+                help="Minimum distance in kilometers",
+            ),
+            "page": ArgumentConfig(
+                type=int,
+                required=False,
+                default=1,
+                help="Page number (default: 1)",
+            ),
+            "page-size": ArgumentConfig(
+                type=int,
+                required=False,
+                default=30,
+                help="Activities per page (default: 30, max: 200)",
+            ),
+        },
+    ),
 }
 
 

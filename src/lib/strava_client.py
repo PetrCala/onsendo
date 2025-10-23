@@ -20,6 +20,8 @@ import requests
 from loguru import logger
 
 from src.types.strava import (
+    ActivityFilter,
+    StravaActivitySummary,
     StravaAuthenticationError,
     StravaCredentials,
     StravaNetworkError,
@@ -485,3 +487,99 @@ class StravaClient:
             Dictionary with 15min and daily usage stats
         """
         return self.rate_limit.get_status_dict()
+
+    def list_activities(
+        self, activity_filter: Optional[ActivityFilter] = None
+    ) -> list[StravaActivitySummary]:
+        """
+        List athlete activities with optional filtering.
+
+        Args:
+            activity_filter: Optional filter criteria for activities.
+                           If None, returns last 30 activities.
+
+        Returns:
+            List of activity summaries
+
+        Raises:
+            StravaAuthenticationError: If not authenticated
+            StravaRateLimitError: If rate limit exceeded
+            StravaNetworkError: If network error occurs
+
+        Example:
+            >>> from datetime import datetime, timedelta
+            >>> from src.types.strava import ActivityFilter
+            >>> filter = ActivityFilter(
+            ...     date_from=datetime.now() - timedelta(days=7),
+            ...     activity_type="Run",
+            ...     has_heartrate=True
+            ... )
+            >>> activities = client.list_activities(filter)
+        """
+        # Use default filter if none provided
+        if activity_filter is None:
+            activity_filter = ActivityFilter()
+
+        # Convert filter to API parameters
+        params = activity_filter.to_api_params()
+
+        logger.info(
+            f"Fetching activities (page {params['page']}, per_page {params['per_page']})"
+        )
+
+        # Make API request
+        response_data = self._make_request("GET", "/athlete/activities", params=params)
+
+        # Parse activities from response
+        activities = []
+        for activity_data in response_data:
+            try:
+                activity = self._parse_activity_summary(activity_data)
+
+                # Apply client-side filters (for criteria not supported by API)
+                if activity_filter.matches_activity(activity):
+                    activities.append(activity)
+
+            except (KeyError, ValueError) as e:
+                logger.warning(f"Failed to parse activity {activity_data.get('id')}: {e}")
+                continue
+
+        logger.info(f"Retrieved {len(activities)} activities")
+        return activities
+
+    def _parse_activity_summary(self, data: dict) -> StravaActivitySummary:
+        """
+        Parse activity summary from Strava API response.
+
+        Args:
+            data: Activity data from API
+
+        Returns:
+            StravaActivitySummary instance
+
+        Raises:
+            KeyError: If required fields are missing
+            ValueError: If data format is invalid
+        """
+        # Parse start date
+        start_date_str = data["start_date"]
+        try:
+            # Strava returns ISO format with Z suffix
+            start_date = datetime.fromisoformat(start_date_str.replace("Z", "+00:00"))
+        except ValueError:
+            # Fallback for different formats
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%dT%H:%M:%SZ")
+
+        return StravaActivitySummary(
+            id=data["id"],
+            name=data["name"],
+            activity_type=data.get("type", "Unknown"),
+            start_date=start_date,
+            distance_m=data.get("distance"),
+            moving_time_s=data.get("moving_time", 0),
+            elapsed_time_s=data.get("elapsed_time", 0),
+            total_elevation_gain_m=data.get("total_elevation_gain"),
+            has_heartrate=data.get("has_heartrate", False),
+            average_heartrate=data.get("average_heartrate"),
+            max_heartrate=data.get("max_heartrate"),
+        )
