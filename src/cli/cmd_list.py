@@ -1333,6 +1333,28 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    # Strava commands
+    "strava-auth": CommandConfig(
+        func=lazy_command("src.cli.commands.strava.auth", "cmd_strava_auth"),
+        help="Authenticate with Strava API (OAuth2 flow).",
+        args={
+            "reauth": ArgumentConfig(
+                action="store_true",
+                help="Force re-authentication even if already authenticated",
+            ),
+        },
+    ),
+    "strava-status": CommandConfig(
+        func=lazy_command("src.cli.commands.strava.status", "cmd_strava_status"),
+        help="Check Strava API connection status and credentials.",
+        args={
+            "verbose": ArgumentConfig(
+                action="store_true",
+                short="v",
+                help="Show detailed configuration and rate limit info",
+            ),
+        },
+    ),
 }
 
 

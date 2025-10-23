@@ -31,6 +31,7 @@ def get_command_group_config() -> dict[str, str]:
         "exercise": "Exercise tracking and management commands",
         "analysis": "Analysis and modeling commands",
         "rules": "Rules management commands",
+        "strava": "Strava integration commands",
     }
 
 
@@ -46,6 +47,7 @@ def get_command_group_mapping() -> dict[str, str]:
         "exercise-": "exercise",
         "analysis-": "analysis",
         "rules-": "rules",
+        "strava-": "strava",
     }
 
 
