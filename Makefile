@@ -3,6 +3,7 @@
 .PHONY: backup backup-cloud backup-full backup-cleanup backup-restore backup-list backup-verify
 .PHONY: db-init db-fill db-path use-prod use-dev show-env
 .PHONY: run-cli
+.PHONY: strava-auth strava-status strava-browse strava-interactive strava-download strava-sync strava-link
 
 # Color output
 BLUE := \033[0;34m
@@ -375,6 +376,64 @@ location-add: ## Add a new location (Usage: make location-add [ENV=dev|prod])
 location-list: ## List all locations (Usage: make location-list [ENV=dev|prod])
 	@echo "$(BLUE)[INFO]$(NC) Listing locations from $(ENV) database..."
 	poetry run onsendo --env $(ENV) location list
+
+##@ Strava Integration
+
+strava-auth: ## Authenticate with Strava API (OAuth2 flow)
+	@echo "$(BLUE)[INFO]$(NC) Starting Strava authentication..."
+	poetry run onsendo strava auth
+	@echo "$(GREEN)[SUCCESS]$(NC) Strava authentication complete"
+
+strava-status: ## Check Strava API connection status
+	@echo "$(BLUE)[INFO]$(NC) Checking Strava connection status..."
+	poetry run onsendo strava status --verbose
+
+strava-browse: ## Browse Strava activities with filters (Usage: make strava-browse DAYS=7 TYPE=Run)
+	@echo "$(BLUE)[INFO]$(NC) Browsing Strava activities..."
+	poetry run onsendo strava browse $(if $(DAYS),--days $(DAYS),) $(if $(TYPE),--type $(TYPE),)
+
+strava-interactive: ## Launch interactive Strava browser
+	@echo "$(BLUE)[INFO]$(NC) Launching interactive Strava browser..."
+	poetry run onsendo strava interactive
+
+strava-download: ## Download specific Strava activity (Usage: make strava-download ACTIVITY_ID=12345678 [FORMAT=gpx] [IMPORT=true] [LINK=true])
+	@if [ -z "$(ACTIVITY_ID)" ]; then \
+		echo "$(RED)[ERROR]$(NC) ACTIVITY_ID is required"; \
+		echo "Usage: make strava-download ACTIVITY_ID=12345678 [FORMAT=gpx] [IMPORT=true] [LINK=true]"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[INFO]$(NC) Downloading Strava activity $(ACTIVITY_ID)..."
+	poetry run onsendo strava download $(ACTIVITY_ID) \
+		$(if $(FORMAT),--format $(FORMAT),) \
+		$(if $(IMPORT),--import,) \
+		$(if $(LINK),--auto-link,)
+
+strava-sync: ## Sync recent Strava activities (Usage: make strava-sync [DAYS=7] [TYPE=Run] [IMPORT=true] [LINK=true] [DRY_RUN=true])
+	@echo "$(BLUE)[INFO]$(NC) Syncing Strava activities..."
+	poetry run onsendo strava sync \
+		$(if $(DAYS),--days $(DAYS),) \
+		$(if $(TYPE),--type $(TYPE),) \
+		$(if $(IMPORT),--auto-import,) \
+		$(if $(LINK),--auto-link,) \
+		$(if $(DRY_RUN),--dry-run,)
+	@if [ -z "$(DRY_RUN)" ]; then \
+		echo "$(GREEN)[SUCCESS]$(NC) Strava sync complete"; \
+	fi
+
+strava-link: ## Link exercise/HR to visit (Usage: make strava-link EXERCISE_ID=42 VISIT_ID=123 or AUTO_MATCH=true)
+	@if [ -z "$(EXERCISE_ID)" ] && [ -z "$(HR_ID)" ]; then \
+		echo "$(RED)[ERROR]$(NC) Either EXERCISE_ID or HR_ID is required"; \
+		echo "Usage: make strava-link EXERCISE_ID=42 VISIT_ID=123"; \
+		echo "   or: make strava-link EXERCISE_ID=42 AUTO_MATCH=true"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[INFO]$(NC) Linking to visit..."
+	poetry run onsendo strava link \
+		$(if $(EXERCISE_ID),--exercise $(EXERCISE_ID),) \
+		$(if $(HR_ID),--heart-rate $(HR_ID),) \
+		$(if $(VISIT_ID),--visit $(VISIT_ID),) \
+		$(if $(AUTO_MATCH),--auto-match,)
+	@echo "$(GREEN)[SUCCESS]$(NC) Link complete"
 
 ##@ Default
 
