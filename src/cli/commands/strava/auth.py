@@ -14,7 +14,7 @@ from src.lib.strava_client import StravaClient
 from src.types.strava import StravaAuthenticationError, StravaSettings
 
 
-def cmd_strava_auth(args, db_session):
+def cmd_strava_auth(args):
     """
     Authenticate with Strava API.
 

@@ -10,6 +10,8 @@ from pathlib import Path
 
 from loguru import logger
 
+from src.db.conn import get_db
+
 from src.db.models import OnsenVisit
 from src.lib.exercise_manager import ExerciseDataManager
 from src.lib.strava_client import StravaClient
@@ -18,7 +20,7 @@ from src.paths import PATHS
 from src.types.strava import ActivityFilter, StravaSettings
 
 
-def cmd_strava_sync(args, db_session):
+def cmd_strava_sync(args):
     """
     Batch sync recent Strava activities.
 
@@ -149,127 +151,129 @@ def cmd_strava_sync(args, db_session):
     link_count = 0
     skip_count = 0
 
-    for i, activity_summary in enumerate(activities, 1):
-        print(f"\n[{i}/{len(activities)}] {activity_summary.name}")
+    # Use database session for imports and linking
+    with get_db() as db:
+        for i, activity_summary in enumerate(activities, 1):
+            print(f"\n[{i}/{len(activities)}] {activity_summary.name}")
 
-        # Check if already exists (simple check based on filename)
-        timestamp = activity_summary.start_date.strftime("%Y%m%d_%H%M%S")
-        safe_name = "".join(
-            c if c.isalnum() or c in (" ", "_", "-") else "_"
-            for c in activity_summary.name
-        )
-        safe_name = safe_name.strip()[:50]
-        base_filename = f"{timestamp}_{safe_name}_{activity_summary.id}"
+            # Check if already exists (simple check based on filename)
+            timestamp = activity_summary.start_date.strftime("%Y%m%d_%H%M%S")
+            safe_name = "".join(
+                c if c.isalnum() or c in (" ", "_", "-") else "_"
+                for c in activity_summary.name
+            )
+            safe_name = safe_name.strip()[:50]
+            base_filename = f"{timestamp}_{safe_name}_{activity_summary.id}"
 
-        # Check if GPX file already exists
-        gpx_path = Path(output_dir) / f"{base_filename}.gpx"
-        if gpx_path.exists() and not auto_import:
-            print(f"  ⊘ Already downloaded: {gpx_path.name}")
-            skip_count += 1
-            continue
-
-        # Fetch full activity data
-        try:
-            activity = client.get_activity(activity_summary.id)
-            streams = client.get_activity_streams(activity_summary.id)
-        except Exception as e:
-            logger.exception(f"Failed to fetch activity {activity_summary.id}")
-            print(f"  ✗ Fetch failed: {e}")
-            continue
-
-        # Download files
-        try:
-            file_paths = {}
-
-            if "gpx" in formats:
-                StravaFileExporter.export_to_gpx(activity, streams, gpx_path)
-                file_paths["gpx"] = str(gpx_path)
-                print(f"  ✓ Downloaded: {gpx_path.name}")
-
-            if "json" in formats:
-                json_path = Path(output_dir) / f"{base_filename}.json"
-                StravaFileExporter.export_to_json(activity, streams, json_path)
-                file_paths["json"] = str(json_path)
-                print(f"  ✓ Downloaded: {json_path.name}")
-
-            if "hr_csv" in formats and streams.get("heartrate"):
-                csv_path = Path(output_dir) / f"{base_filename}_hr.csv"
-                StravaFileExporter.export_hr_to_csv(
-                    activity, streams["heartrate"], streams.get("time"), csv_path
-                )
-                file_paths["hr_csv"] = str(csv_path)
-                print(f"  ✓ Downloaded: {csv_path.name}")
-
-            success_count += 1
-
-        except Exception as e:
-            logger.exception(f"Failed to export activity {activity_summary.id}")
-            print(f"  ✗ Export failed: {e}")
-            continue
-
-        # Auto-import if requested
-        exercise_id = None
-        if auto_import:
-            try:
-                session = StravaToExerciseConverter.convert(activity, streams)
-                manager = ExerciseDataManager(db_session)
-                stored = manager.store_session(session)
-                exercise_id = stored.id
-                print(f"  ✓ Imported (ID: {exercise_id})")
-                import_count += 1
-            except Exception as e:
-                logger.exception(f"Failed to import activity {activity_summary.id}")
-                print(f"  ✗ Import failed: {e}")
+            # Check if GPX file already exists
+            gpx_path = Path(output_dir) / f"{base_filename}.gpx"
+            if gpx_path.exists() and not auto_import:
+                print(f"  ⊘ Already downloaded: {gpx_path.name}")
+                skip_count += 1
                 continue
 
-        # Auto-link if requested
-        if auto_link and exercise_id:
-            # Find nearby visits
-            search_start = activity.start_date_local - timedelta(hours=2)
-            search_end = activity.start_date_local + timedelta(hours=2)
+            # Fetch full activity data
+            try:
+                activity = client.get_activity(activity_summary.id)
+                streams = client.get_activity_streams(activity_summary.id)
+            except Exception as e:
+                logger.exception(f"Failed to fetch activity {activity_summary.id}")
+                print(f"  ✗ Fetch failed: {e}")
+                continue
 
-            visits = (
-                db_session.query(OnsenVisit)
-                .filter(OnsenVisit.visit_date >= search_start.date())
-                .filter(OnsenVisit.visit_date <= search_end.date())
-                .order_by(OnsenVisit.visit_date.desc(), OnsenVisit.visit_time.desc())
-                .limit(1)
-                .all()
-            )
+            # Download files
+            try:
+                file_paths = {}
 
-            if visits:
-                visit = visits[0]
-                visit_datetime = datetime.combine(
-                    visit.visit_date, visit.visit_time or datetime.min.time()
-                )
-                time_diff = abs(
-                    (visit_datetime - activity.start_date_local).total_seconds() / 60
-                )
+                if "gpx" in formats:
+                    StravaFileExporter.export_to_gpx(activity, streams, gpx_path)
+                    file_paths["gpx"] = str(gpx_path)
+                    print(f"  ✓ Downloaded: {gpx_path.name}")
 
-                try:
-                    manager = ExerciseDataManager(db_session)
-                    manager.link_to_visit(exercise_id, visit.id)
-                    print(
-                        f"  ✓ Linked to visit {visit.id} "
-                        f"({time_diff:.0f} min from activity)"
+                if "json" in formats:
+                    json_path = Path(output_dir) / f"{base_filename}.json"
+                    StravaFileExporter.export_to_json(activity, streams, json_path)
+                    file_paths["json"] = str(json_path)
+                    print(f"  ✓ Downloaded: {json_path.name}")
+
+                if "hr_csv" in formats and streams.get("heartrate"):
+                    csv_path = Path(output_dir) / f"{base_filename}_hr.csv"
+                    StravaFileExporter.export_hr_to_csv(
+                        activity, streams["heartrate"], streams.get("time"), csv_path
                     )
-                    link_count += 1
-                except Exception as e:
-                    logger.exception(f"Failed to link activity {activity_summary.id}")
-                    print(f"  ✗ Link failed: {e}")
+                    file_paths["hr_csv"] = str(csv_path)
+                    print(f"  ✓ Downloaded: {csv_path.name}")
 
-    # Summary
-    print("\n" + "=" * 60)
-    print("Sync Complete")
-    print("=" * 60)
-    print(f"Total activities: {len(activities)}")
-    print(f"Downloaded: {success_count}")
-    print(f"Skipped (already exists): {skip_count}")
-    if auto_import:
-        print(f"Imported: {import_count}")
-    if auto_link:
-        print(f"Linked to visits: {link_count}")
-    print("=" * 60)
+                success_count += 1
+
+            except Exception as e:
+                logger.exception(f"Failed to export activity {activity_summary.id}")
+                print(f"  ✗ Export failed: {e}")
+                continue
+
+            # Auto-import if requested
+            exercise_id = None
+            if auto_import:
+                try:
+                    session = StravaToExerciseConverter.convert(activity, streams)
+                    manager = ExerciseDataManager(db)
+                    stored = manager.store_session(session)
+                    exercise_id = stored.id
+                    print(f"  ✓ Imported (ID: {exercise_id})")
+                    import_count += 1
+                except Exception as e:
+                    logger.exception(f"Failed to import activity {activity_summary.id}")
+                    print(f"  ✗ Import failed: {e}")
+                    continue
+
+            # Auto-link if requested
+            if auto_link and exercise_id:
+                # Find nearby visits
+                search_start = activity.start_date_local - timedelta(hours=2)
+                search_end = activity.start_date_local + timedelta(hours=2)
+
+                visits = (
+                    db.query(OnsenVisit)
+                    .filter(OnsenVisit.visit_date >= search_start.date())
+                    .filter(OnsenVisit.visit_date <= search_end.date())
+                    .order_by(OnsenVisit.visit_date.desc(), OnsenVisit.visit_time.desc())
+                    .limit(1)
+                    .all()
+                )
+
+                if visits:
+                    visit = visits[0]
+                    visit_datetime = datetime.combine(
+                        visit.visit_date, visit.visit_time or datetime.min.time()
+                    )
+                    time_diff = abs(
+                        (visit_datetime - activity.start_date_local).total_seconds() / 60
+                    )
+
+                    try:
+                        manager = ExerciseDataManager(db)
+                        manager.link_to_visit(exercise_id, visit.id)
+                        print(
+                            f"  ✓ Linked to visit {visit.id} "
+                            f"({time_diff:.0f} min from activity)"
+                        )
+                        link_count += 1
+                    except Exception as e:
+                        logger.exception(f"Failed to link activity {activity_summary.id}")
+                        print(f"  ✗ Link failed: {e}")
+
+        # Summary
+        print("\n" + "=" * 60)
+        print("Sync Complete")
+        print("=" * 60)
+        print(f"Total activities: {len(activities)}")
+        print(f"Downloaded: {success_count}")
+        print(f"Skipped (already exists): {skip_count}")
+        if auto_import:
+            print(f"Imported: {import_count}")
+        if auto_link:
+            print(f"Linked to visits: {link_count}")
+        print("=" * 60)
 
 
 def configure_args(parser):

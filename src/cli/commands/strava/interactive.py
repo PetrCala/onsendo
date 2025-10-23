@@ -12,7 +12,7 @@ from src.lib.strava_client import StravaClient
 from src.types.strava import StravaSettings
 
 
-def cmd_strava_interactive(args, db_session):
+def cmd_strava_interactive(args):
     """
     Launch interactive Strava activity browser.
 
@@ -85,16 +85,17 @@ def cmd_strava_interactive(args, db_session):
         return
 
     # Launch browser
-    try:
-        browser = StravaActivityBrowser(client, db_session)
-        browser.run()
-    except KeyboardInterrupt:
-        print("\n\nBrowser interrupted by user.")
-    except Exception as e:
-        print(f"\nError in browser: {e}")
-        import traceback
+    with get_db() as db:
+        try:
+            browser = StravaActivityBrowser(client, db)
+            browser.run()
+        except KeyboardInterrupt:
+            print("\n\nBrowser interrupted by user.")
+        except Exception as e:
+            print(f"\nError in browser: {e}")
+            import traceback
 
-        traceback.print_exc()
+            traceback.print_exc()
 
 
 def configure_args(parser):

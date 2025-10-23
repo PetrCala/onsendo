@@ -9,12 +9,14 @@ from datetime import datetime, timedelta
 
 from loguru import logger
 
+from src.db.conn import get_db
+
 from src.db.models import ExerciseSession, HeartRateData, OnsenVisit
 from src.lib.exercise_manager import ExerciseDataManager
 from src.lib.heart_rate_manager import HeartRateDataManager
 
 
-def cmd_strava_link(args, db_session):
+def cmd_strava_link(args):
     """
     Link already-imported Strava activity to visit.
 
@@ -63,99 +65,101 @@ def cmd_strava_link(args, db_session):
         print("Error: You must specify either --visit or --auto-match")
         return
 
-    # Handle exercise linking
-    if exercise_id:
-        # Fetch exercise session
-        try:
-            exercise = (
-                db_session.query(ExerciseSession)
-                .filter_by(id=exercise_id)
-                .first()
-            )
+    # Use database session for all operations
+    with get_db() as db:
+        # Handle exercise linking
+        if exercise_id:
+            # Fetch exercise session
+            try:
+                exercise = (
+                    db.query(ExerciseSession)
+                    .filter_by(id=exercise_id)
+                    .first()
+                )
 
-            if not exercise:
-                print(f"Error: Exercise session {exercise_id} not found")
+                if not exercise:
+                    print(f"Error: Exercise session {exercise_id} not found")
+                    return
+
+                print(f"Exercise Session: {exercise_id}")
+                print(f"  Type: {exercise.exercise_type}")
+                print(f"  Start: {exercise.start_time}")
+                print(f"  End: {exercise.end_time}")
+
+            except Exception as e:
+                logger.exception(f"Failed to fetch exercise {exercise_id}")
+                print(f"Error: {e}")
                 return
 
-            print(f"Exercise Session: {exercise_id}")
-            print(f"  Type: {exercise.exercise_type}")
-            print(f"  Start: {exercise.start_time}")
-            print(f"  End: {exercise.end_time}")
+            # Auto-match visits
+            if auto_match:
+                print("\nSearching for nearby visits...")
+                visit_id = _find_nearby_visit(db, exercise.start_time)
 
-        except Exception as e:
-            logger.exception(f"Failed to fetch exercise {exercise_id}")
-            print(f"Error: {e}")
-            return
+                if not visit_id:
+                    print("No nearby visits found (±2 hours)")
+                    return
 
-        # Auto-match visits
-        if auto_match:
-            print("\nSearching for nearby visits...")
-            visit_id = _find_nearby_visit(db_session, exercise.start_time)
+            # Link to visit
+            try:
+                manager = ExerciseDataManager(db)
+                manager.link_to_visit(exercise_id, visit_id)
+                print(f"\n✓ Linked exercise {exercise_id} to visit {visit_id}")
 
-            if not visit_id:
-                print("No nearby visits found (±2 hours)")
+            except Exception as e:
+                logger.exception(f"Failed to link exercise {exercise_id} to visit {visit_id}")
+                print(f"Error: {e}")
+
+        # Handle heart rate linking
+        if hr_id:
+            # Fetch heart rate record
+            try:
+                hr_record = (
+                    db.query(HeartRateData)
+                    .filter_by(id=hr_id)
+                    .first()
+                )
+
+                if not hr_record:
+                    print(f"Error: Heart rate record {hr_id} not found")
+                    return
+
+                print(f"Heart Rate Record: {hr_id}")
+                print(f"  Start: {hr_record.start_time}")
+                print(f"  End: {hr_record.end_time}")
+                print(f"  Source: {hr_record.data_source}")
+
+            except Exception as e:
+                logger.exception(f"Failed to fetch heart rate record {hr_id}")
+                print(f"Error: {e}")
                 return
 
-        # Link to visit
-        try:
-            manager = ExerciseDataManager(db_session)
-            manager.link_to_visit(exercise_id, visit_id)
-            print(f"\n✓ Linked exercise {exercise_id} to visit {visit_id}")
+            # Auto-match visits
+            if auto_match:
+                print("\nSearching for nearby visits...")
+                visit_id = _find_nearby_visit(db, hr_record.start_time)
 
-        except Exception as e:
-            logger.exception(f"Failed to link exercise {exercise_id} to visit {visit_id}")
-            print(f"Error: {e}")
+                if not visit_id:
+                    print("No nearby visits found (±2 hours)")
+                    return
 
-    # Handle heart rate linking
-    if hr_id:
-        # Fetch heart rate record
-        try:
-            hr_record = (
-                db_session.query(HeartRateData)
-                .filter_by(id=hr_id)
-                .first()
-            )
+            # Link to visit
+            try:
+                hr_manager = HeartRateDataManager(db)
+                hr_manager.link_to_visit(hr_id, visit_id)
+                print(f"\n✓ Linked heart rate {hr_id} to visit {visit_id}")
 
-            if not hr_record:
-                print(f"Error: Heart rate record {hr_id} not found")
-                return
-
-            print(f"Heart Rate Record: {hr_id}")
-            print(f"  Start: {hr_record.start_time}")
-            print(f"  End: {hr_record.end_time}")
-            print(f"  Source: {hr_record.data_source}")
-
-        except Exception as e:
-            logger.exception(f"Failed to fetch heart rate record {hr_id}")
-            print(f"Error: {e}")
-            return
-
-        # Auto-match visits
-        if auto_match:
-            print("\nSearching for nearby visits...")
-            visit_id = _find_nearby_visit(db_session, hr_record.start_time)
-
-            if not visit_id:
-                print("No nearby visits found (±2 hours)")
-                return
-
-        # Link to visit
-        try:
-            hr_manager = HeartRateDataManager(db_session)
-            hr_manager.link_to_visit(hr_id, visit_id)
-            print(f"\n✓ Linked heart rate {hr_id} to visit {visit_id}")
-
-        except Exception as e:
-            logger.exception(f"Failed to link heart rate {hr_id} to visit {visit_id}")
-            print(f"Error: {e}")
+            except Exception as e:
+                logger.exception(f"Failed to link heart rate {hr_id} to visit {visit_id}")
+                print(f"Error: {e}")
 
 
-def _find_nearby_visit(db_session, activity_time: datetime) -> int:
+def _find_nearby_visit(db, activity_time: datetime) -> int:
     """
     Find nearby visit within ±2 hours of activity time.
 
     Args:
-        db_session: Database session
+        db: Database session
         activity_time: Activity timestamp
 
     Returns:
@@ -165,7 +169,7 @@ def _find_nearby_visit(db_session, activity_time: datetime) -> int:
     search_end = activity_time + timedelta(hours=2)
 
     visits = (
-        db_session.query(OnsenVisit)
+        db.query(OnsenVisit)
         .filter(OnsenVisit.visit_date >= search_start.date())
         .filter(OnsenVisit.visit_date <= search_end.date())
         .order_by(OnsenVisit.visit_date.desc(), OnsenVisit.visit_time.desc())

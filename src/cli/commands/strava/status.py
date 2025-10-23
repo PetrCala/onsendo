@@ -12,7 +12,7 @@ from src.lib.strava_client import StravaClient
 from src.types.strava import StravaSettings
 
 
-def cmd_strava_status(args, db_session):
+def cmd_strava_status(args):
     """
     Check Strava API connection status.
 

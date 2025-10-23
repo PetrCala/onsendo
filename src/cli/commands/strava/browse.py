@@ -14,7 +14,7 @@ from src.lib.strava_client import StravaClient
 from src.types.strava import ActivityFilter, StravaSettings
 
 
-def cmd_strava_browse(args, db_session):
+def cmd_strava_browse(args):
     """
     Browse Strava activities with filtering.
 

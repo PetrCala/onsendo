@@ -8,6 +8,7 @@ from pathlib import Path
 
 from loguru import logger
 
+from src.db.conn import get_db
 from src.lib.exercise_manager import ExerciseDataManager
 from src.lib.heart_rate_manager import HeartRateDataManager
 from src.lib.strava_client import StravaClient
@@ -20,7 +21,7 @@ from src.paths import PATHS
 from src.types.strava import StravaSettings
 
 
-def cmd_strava_download(args, db_session):
+def cmd_strava_download(args):
     """
     Download specific Strava activity by ID.
 
@@ -153,92 +154,94 @@ def cmd_strava_download(args, db_session):
     exercise_id = None
     hr_id = None
 
-    if import_exercise:
-        print("\nImporting as exercise session...")
-        try:
-            session = StravaToExerciseConverter.convert(activity, streams)
-            manager = ExerciseDataManager(db_session)
-            stored = manager.store_session(session)
-            exercise_id = stored.id
-            print(f"  ✓ Imported exercise session (ID: {exercise_id})")
-        except Exception as e:
-            logger.exception("Failed to import as exercise")
-            print(f"  ✗ Import failed: {e}")
-            return
-
-    if import_hr:
-        if "heartrate" in streams:
-            print("\nImporting as heart rate data...")
+    # Use database session for imports and linking
+    with get_db() as db:
+        if import_exercise:
+            print("\nImporting as exercise session...")
             try:
-                hr_session = StravaToHeartRateConverter.convert(
-                    activity, streams["heartrate"]
-                )
-                hr_manager = HeartRateDataManager(db_session)
-                stored_hr = hr_manager.store_session(hr_session)
-                hr_id = stored_hr.id
-                print(f"  ✓ Imported heart rate data (ID: {hr_id})")
+                session = StravaToExerciseConverter.convert(activity, streams)
+                manager = ExerciseDataManager(db)
+                stored = manager.store_session(session)
+                exercise_id = stored.id
+                print(f"  ✓ Imported exercise session (ID: {exercise_id})")
             except Exception as e:
-                logger.exception("Failed to import as heart rate")
+                logger.exception("Failed to import as exercise")
                 print(f"  ✗ Import failed: {e}")
-        else:
-            print("\n  ⚠ Activity does not have heart rate data")
-
-    # Link if requested
-    link_visit = args.link_visit if hasattr(args, "link_visit") and args.link_visit else None
-    auto_link = args.auto_link if hasattr(args, "auto_link") else False
-
-    if exercise_id and (link_visit or auto_link):
-        print("\nLinking to visit...")
-
-        if auto_link:
-            # Auto-suggest visits
-            from src.db.models import OnsenVisit
-            from datetime import timedelta
-
-            search_start = activity.start_date_local - timedelta(hours=2)
-            search_end = activity.start_date_local + timedelta(hours=2)
-
-            visits = (
-                db_session.query(OnsenVisit)
-                .filter(OnsenVisit.visit_date >= search_start.date())
-                .filter(OnsenVisit.visit_date <= search_end.date())
-                .order_by(OnsenVisit.visit_date.desc(), OnsenVisit.visit_time.desc())
-                .limit(5)
-                .all()
-            )
-
-            if visits:
-                print("  Suggested visits:")
-                for i, visit in enumerate(visits, 1):
-                    from datetime import datetime
-
-                    visit_datetime = datetime.combine(
-                        visit.visit_date, visit.visit_time or datetime.min.time()
-                    )
-                    time_diff = abs(
-                        (visit_datetime - activity.start_date_local).total_seconds() / 60
-                    )
-                    print(
-                        f"    {i}. [ID: {visit.id}] {visit.visit_date} "
-                        f"at {visit.visit_time or 'N/A'} ({time_diff:.0f} min from activity)"
-                    )
-
-                # Use first suggestion
-                link_visit = visits[0].id
-                print(f"  Using suggestion: Visit ID {link_visit}")
-            else:
-                print("  No nearby visits found (±2 hours)")
                 return
 
-        # Link exercise to visit
-        if link_visit:
-            try:
-                manager = ExerciseDataManager(db_session)
-                manager.link_to_visit(exercise_id, link_visit)
-                print(f"  ✓ Linked exercise {exercise_id} to visit {link_visit}")
-            except Exception as e:
-                logger.exception("Failed to link to visit")
-                print(f"  ✗ Link failed: {e}")
+        if import_hr:
+            if "heartrate" in streams:
+                print("\nImporting as heart rate data...")
+                try:
+                    hr_session = StravaToHeartRateConverter.convert(
+                        activity, streams["heartrate"]
+                    )
+                    hr_manager = HeartRateDataManager(db)
+                    stored_hr = hr_manager.store_session(hr_session)
+                    hr_id = stored_hr.id
+                    print(f"  ✓ Imported heart rate data (ID: {hr_id})")
+                except Exception as e:
+                    logger.exception("Failed to import as heart rate")
+                    print(f"  ✗ Import failed: {e}")
+            else:
+                print("\n  ⚠ Activity does not have heart rate data")
+
+        # Link if requested
+        link_visit = args.link_visit if hasattr(args, "link_visit") and args.link_visit else None
+        auto_link = args.auto_link if hasattr(args, "auto_link") else False
+
+        if exercise_id and (link_visit or auto_link):
+            print("\nLinking to visit...")
+
+            if auto_link:
+                # Auto-suggest visits
+                from src.db.models import OnsenVisit
+                from datetime import timedelta
+
+                search_start = activity.start_date_local - timedelta(hours=2)
+                search_end = activity.start_date_local + timedelta(hours=2)
+
+                visits = (
+                    db.query(OnsenVisit)
+                    .filter(OnsenVisit.visit_date >= search_start.date())
+                    .filter(OnsenVisit.visit_date <= search_end.date())
+                    .order_by(OnsenVisit.visit_date.desc(), OnsenVisit.visit_time.desc())
+                    .limit(5)
+                    .all()
+                )
+
+                if visits:
+                    print("  Suggested visits:")
+                    for i, visit in enumerate(visits, 1):
+                        from datetime import datetime
+
+                        visit_datetime = datetime.combine(
+                            visit.visit_date, visit.visit_time or datetime.min.time()
+                        )
+                        time_diff = abs(
+                            (visit_datetime - activity.start_date_local).total_seconds() / 60
+                        )
+                        print(
+                            f"    {i}. [ID: {visit.id}] {visit.visit_date} "
+                            f"at {visit.visit_time or 'N/A'} ({time_diff:.0f} min from activity)"
+                        )
+
+                    # Use first suggestion
+                    link_visit = visits[0].id
+                    print(f"  Using suggestion: Visit ID {link_visit}")
+                else:
+                    print("  No nearby visits found (±2 hours)")
+                    return
+
+            # Link exercise to visit
+            if link_visit:
+                try:
+                    manager = ExerciseDataManager(db)
+                    manager.link_to_visit(exercise_id, link_visit)
+                    print(f"  ✓ Linked exercise {exercise_id} to visit {link_visit}")
+                except Exception as e:
+                    logger.exception("Failed to link to visit")
+                    print(f"  ✗ Link failed: {e}")
 
     print("\n✓ Download complete")
 
