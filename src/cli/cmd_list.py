@@ -1402,6 +1402,11 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    "strava-interactive": CommandConfig(
+        func=lazy_command("src.cli.commands.strava.interactive", "cmd_strava_interactive"),
+        help="Launch interactive browser for Strava activities (download, import, link).",
+        args={},
+    ),
 }
 
 
