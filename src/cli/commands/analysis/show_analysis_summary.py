@@ -8,8 +8,7 @@ import argparse
 
 from loguru import logger
 
-from src.config import get_database_config
-from src.db.conn import get_db
+from src.db.conn import get_db_from_args
 from src.analysis.engine import AnalysisEngine
 
 

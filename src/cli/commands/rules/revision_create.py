@@ -9,10 +9,9 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from src.db.conn import get_db
+from src.db.conn import get_db_from_args
 from src.lib.cli_display import show_database_banner
 from src.db.models import RuleRevision
-from src.config import get_database_config
 from src.paths import PATHS
 from src.lib.rule_manager import (
     RuleParser,
@@ -724,12 +723,7 @@ def create_and_save_revision(
 
     # Save to database
 # Get database configuration
-    config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
-    )
-
-    with get_db(url=config.url) as db:
+    with get_db_from_args(args) as db:
         db_revision = RuleRevision(
             version_number=version_number,
             revision_date=revision_date,

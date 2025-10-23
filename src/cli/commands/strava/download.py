@@ -8,8 +8,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from src.config import get_database_config
-from src.db.conn import get_db
+from src.db.conn import get_db_from_args
 from src.lib.exercise_manager import ExerciseDataManager
 from src.lib.heart_rate_manager import HeartRateDataManager
 from src.lib.strava_client import StravaClient
@@ -155,14 +154,8 @@ def cmd_strava_download(args):
     exercise_id = None
     hr_id = None
 
-    # Get database configuration
-    config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
-    )
-
-    # Use database session for imports and linking
-    with get_db(url=config.url) as db:
+    # Use database session
+    with get_db_from_args(args) as db:
         if import_exercise:
             print("\nImporting as exercise session...")
             try:

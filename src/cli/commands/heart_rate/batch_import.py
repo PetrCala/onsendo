@@ -12,8 +12,7 @@ from src.lib.heart_rate_manager import (
     HeartRateDataValidator,
     HeartRateDataManager,
 )
-from src.db.conn import get_db
-from src.config import get_database_config
+from src.db.conn import get_db_from_args
 from src.lib.cli_display import show_database_banner
 
 

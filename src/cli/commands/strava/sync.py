@@ -10,8 +10,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from src.config import get_database_config
-from src.db.conn import get_db
+from src.db.conn import get_db_from_args
 from src.db.models import OnsenVisit
 from src.lib.exercise_manager import ExerciseDataManager
 from src.lib.strava_client import StravaClient
@@ -151,14 +150,8 @@ def cmd_strava_sync(args):
     link_count = 0
     skip_count = 0
 
-    # Get database configuration
-    config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
-    )
-
-    # Use database session for imports and linking
-    with get_db(url=config.url) as db:
+    # Use database session
+    with get_db_from_args(args) as db:
         for i, activity_summary in enumerate(activities, 1):
             print(f"\n[{i}/{len(activities)}] {activity_summary.name}")
 

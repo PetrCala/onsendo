@@ -11,10 +11,9 @@ import shutil
 import tempfile
 from pathlib import Path
 from loguru import logger
-from src.db.conn import get_db
+from src.db.conn import get_db_from_args
 from src.lib.cli_display import show_database_banner
 from src.db.import_data import import_onsen_data
-from src.config import get_database_config
 from src.paths import PATHS
 from src.const import CONST
 

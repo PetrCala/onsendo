@@ -5,21 +5,15 @@ Generate interactive map of all onsens in the database.
 import argparse
 import webbrowser
 from pathlib import Path
-from src.db.conn import get_db
+from src.db.conn import get_db_from_args
 from src.db.models import Onsen
 from src.lib.map_generator import generate_all_onsens_map
-from src.config import get_database_config
 
 
 def map_onsens(args: argparse.Namespace) -> None:
     """Generate an interactive map showing all onsens in the database."""
 # Get database configuration
-    config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
-    )
-
-    with get_db(url=config.url) as db:
+    with get_db_from_args(args) as db:
         # Get all onsens from the database
         onsens = db.query(Onsen).all()
 

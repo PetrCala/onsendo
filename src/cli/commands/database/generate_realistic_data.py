@@ -14,9 +14,8 @@ NOTE: This command is blocked from production database access for safety.
 import argparse
 from loguru import logger
 
-from src.db.conn import get_db
+from src.db.conn import get_db_from_args
 from src.db.models import OnsenVisit, Onsen, HeartRateData
-from src.config import get_database_config
 
 from src.testing.mocks.integrated_scenario import (
     create_integrated_dataset,

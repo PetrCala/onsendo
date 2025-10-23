@@ -20,16 +20,10 @@ def calculate_milestones(args):
     update_engine = args.update_engine
     show_recommendations = args.show_recommendations
 
-    from src.db.conn import get_db
-    from src.config import get_database_config
-
+    from src.db.conn import get_db_from_args
+    
 # Get database configuration
-    config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
-    )
-
-    with get_db(url=config.url) as db:
+    with get_db_from_args(args) as db:
         # Find the location
         location = _get_location_by_identifier(db, location_identifier)
         if not location:
