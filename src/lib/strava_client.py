@@ -48,40 +48,48 @@ class StravaOAuthCallbackHandler(BaseHTTPRequestHandler):
         if "code" in query_params:
             # Success - got authorization code
             StravaOAuthCallbackHandler.auth_code = query_params["code"][0]
+            logger.info("Authorization code received successfully")
             self.send_response(200)
             self.send_header("Content-type", "text/html")
+            self.send_header("Content-Length", "261")
             self.end_headers()
-            self.wfile.write(
-                b"""
-                <html>
-                <head><title>Onsendo - Strava Authorization</title></head>
-                <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-                    <h1>&#10004; Authorization Successful!</h1>
-                    <p>You can close this window and return to the terminal.</p>
-                </body>
-                </html>
-                """
-            )
+            response = b"""<html>
+<head><title>Onsendo - Strava Authorization</title></head>
+<body style="font-family: sans-serif; text-align: center; padding: 50px;">
+<h1>&#10004; Authorization Successful!</h1>
+<p>You can close this window and return to the terminal.</p>
+</body>
+</html>"""
+            self.wfile.write(response)
+            self.wfile.flush()
         elif "error" in query_params:
             # Error - user denied or error occurred
             StravaOAuthCallbackHandler.error = query_params.get("error", ["unknown"])[0]
+            logger.warning(f"Authorization error: {StravaOAuthCallbackHandler.error}")
             self.send_response(400)
             self.send_header("Content-type", "text/html")
+            self.send_header("Content-Length", "269")
             self.end_headers()
-            self.wfile.write(
-                b"""
-                <html>
-                <head><title>Onsendo - Strava Authorization Failed</title></head>
-                <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-                    <h1>&#10060; Authorization Failed</h1>
-                    <p>Please try again or check your Strava application settings.</p>
-                </body>
-                </html>
-                """
-            )
+            response = b"""<html>
+<head><title>Onsendo - Strava Authorization Failed</title></head>
+<body style="font-family: sans-serif; text-align: center; padding: 50px;">
+<h1>&#10060; Authorization Failed</h1>
+<p>Please try again or check your Strava application settings.</p>
+</body>
+</html>"""
+            self.wfile.write(response)
+            self.wfile.flush()
+        else:
+            # Browser resource request (favicon, etc.) - silently ignore
+            self.send_response(404)
+            self.send_header("Content-type", "text/plain")
+            self.send_header("Content-Length", "9")
+            self.end_headers()
+            self.wfile.write(b"Not found")
+            self.wfile.flush()
 
     def log_message(self, format: str, *args) -> None:
-        """Suppress default logging."""
+        """Suppress default HTTP server logging."""
         pass
 
 
@@ -153,11 +161,43 @@ class StravaClient:
 
         # Start local server to receive callback
         port = int(urlparse(self.credentials.redirect_uri).port or 8080)
-        server = HTTPServer(("localhost", port), StravaOAuthCallbackHandler)
 
-        # Run server in background thread
-        server_thread = Thread(target=server.handle_request, daemon=True)
+        try:
+            # Bind to 127.0.0.1 explicitly (not just "localhost")
+            # This ensures compatibility across different systems
+            server = HTTPServer(("127.0.0.1", port), StravaOAuthCallbackHandler)
+            server.timeout = 1  # 1 second timeout for handle_request
+        except OSError as e:
+            if "Address already in use" in str(e):
+                raise StravaAuthenticationError(
+                    f"Port {port} is already in use. "
+                    f"Please close any application using this port and try again."
+                )
+            raise StravaAuthenticationError(f"Failed to start callback server: {e}")
+
+        # Run server in background thread to handle multiple requests
+        def serve_requests():
+            """Handle requests until we get the auth code or error.
+
+            The server continues handling requests (including browser resource
+            requests like favicon) until we receive the authorization code,
+            then exits after a short delay to ensure all responses are sent.
+            """
+            while not StravaOAuthCallbackHandler.auth_code and not StravaOAuthCallbackHandler.error:
+                try:
+                    server.handle_request()
+                except Exception as e:
+                    logger.debug(f"Error handling request: {e}")
+                    break
+
+            # Give a brief moment for any in-flight responses to complete
+            time.sleep(0.2)
+
+        server_thread = Thread(target=serve_requests, daemon=True)
         server_thread.start()
+
+        # Give server a moment to start accepting connections
+        time.sleep(0.5)
 
         # Open browser for user authorization
         print("\n" + "=" * 60)
@@ -185,6 +225,13 @@ class StravaClient:
                 break
 
             time.sleep(0.5)
+
+        # Clean up server
+        try:
+            server.shutdown()
+            server.server_close()
+        except Exception as e:
+            logger.debug(f"Error shutting down server: {e}")
 
         # Check for errors
         if StravaOAuthCallbackHandler.error:
