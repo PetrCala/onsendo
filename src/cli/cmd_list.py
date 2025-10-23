@@ -1407,6 +1407,98 @@ CLI_COMMANDS = {
         help="Launch interactive browser for Strava activities (download, import, link).",
         args={},
     ),
+    "strava-download": CommandConfig(
+        func=lazy_command("src.cli.commands.strava.download", "cmd_strava_download"),
+        help="Download specific Strava activity by ID.",
+        args={
+            "activity-id": ArgumentConfig(
+                type=int,
+                required=True,
+                help="Strava activity ID to download",
+                positional=True,
+            ),
+            "format": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output format: gpx, json, hr_csv, all (default: all)",
+            ),
+            "import": ArgumentConfig(
+                action="store_true",
+                help="Import as exercise session after downloading",
+            ),
+            "import-hr": ArgumentConfig(
+                action="store_true",
+                help="Import as heart rate data after downloading",
+            ),
+            "link-visit": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Link to specific visit ID after import",
+            ),
+            "auto-link": ArgumentConfig(
+                action="store_true",
+                help="Auto-link to nearby visit based on timestamp",
+            ),
+        },
+    ),
+    "strava-sync": CommandConfig(
+        func=lazy_command("src.cli.commands.strava.sync", "cmd_strava_sync"),
+        help="Batch sync recent Strava activities.",
+        args={
+            "days": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Sync activities from last N days (default: 7)",
+            ),
+            "type": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Only sync specific activity type (Run, Ride, Hike, etc.)",
+            ),
+            "auto-import": ArgumentConfig(
+                action="store_true",
+                help="Automatically import downloaded activities",
+            ),
+            "auto-link": ArgumentConfig(
+                action="store_true",
+                help="Automatically link imported activities to nearby visits",
+            ),
+            "dry-run": ArgumentConfig(
+                action="store_true",
+                help="Show what would be synced without downloading",
+            ),
+            "format": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Download format: gpx, json, hr_csv, all (default: gpx)",
+            ),
+        },
+    ),
+    "strava-link": CommandConfig(
+        func=lazy_command("src.cli.commands.strava.link", "cmd_strava_link"),
+        help="Link already-imported activity to visit.",
+        args={
+            "exercise": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Exercise session ID to link",
+            ),
+            "heart-rate": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Heart rate record ID to link",
+            ),
+            "visit": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Visit ID to link to",
+            ),
+            "auto-match": ArgumentConfig(
+                action="store_true",
+                help="Auto-suggest nearby visits based on timestamp",
+            ),
+        },
+    ),
 }
 
 
