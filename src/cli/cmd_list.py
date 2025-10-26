@@ -24,6 +24,8 @@ class ArgumentConfig:
     positional: bool = False
     short: Optional[str] = None
     nargs: Optional[str] = None
+    dest: Optional[str] = None
+    metavar: Optional[str] = None
 
 
 @dataclass
@@ -1424,6 +1426,7 @@ CLI_COMMANDS = {
             ),
             "import": ArgumentConfig(
                 action="store_true",
+                dest="import_flag",
                 help="Import as exercise session after downloading",
             ),
             "import-hr": ArgumentConfig(
@@ -1519,5 +1522,9 @@ def get_argument_kwargs(arg_config: ArgumentConfig) -> dict[str, Any]:
         kwargs["action"] = arg_config.action
     if arg_config.nargs is not None:
         kwargs["nargs"] = arg_config.nargs
+    if arg_config.metavar is not None:
+        kwargs["metavar"] = arg_config.metavar
+    if arg_config.dest is not None and not arg_config.positional:
+        kwargs["dest"] = arg_config.dest
 
     return kwargs
