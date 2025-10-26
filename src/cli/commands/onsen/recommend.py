@@ -6,9 +6,10 @@ import argparse
 import webbrowser
 from datetime import datetime
 from pathlib import Path
-from src.db.conn import get_db_from_args
+from src.db.conn import get_db
 from src.lib.recommendation import OnsenRecommendationEngine
 from src.lib.map_generator import generate_recommendation_map
+from src.config import get_database_config
 
 
 def recommend_onsen(args: argparse.Namespace) -> None:
@@ -17,8 +18,13 @@ def recommend_onsen(args: argparse.Namespace) -> None:
         recommend_onsen_interactive(args)
         return
 
-    # Use database session
-    with get_db_from_args(args) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         # Get the location first
         engine_temp = OnsenRecommendationEngine(db)
         location = engine_temp.get_location_by_name_or_id(args.location)
@@ -121,8 +127,13 @@ def recommend_onsen_interactive(args: argparse.Namespace) -> None:
     """Get onsen recommendations using interactive prompts."""
     print("=== Onsen Recommendation ===")
 
-    # Use database session
-    with get_db_from_args(args) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         engine_temp = OnsenRecommendationEngine(db)
 
         # List available locations

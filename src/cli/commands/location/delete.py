@@ -3,8 +3,9 @@ Delete location command with interactive support.
 """
 
 import argparse
-from src.db.conn import get_db_from_args
+from src.db.conn import get_db
 from src.db.models import Location
+from src.config import get_database_config
 from src.lib.cli_display import show_database_banner, confirm_destructive_operation
 
 

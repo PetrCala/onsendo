@@ -9,7 +9,8 @@ from datetime import datetime, timedelta
 
 from loguru import logger
 
-from src.db.conn import get_db_from_args
+from src.config import get_database_config
+from src.db.conn import get_db
 from src.db.models import ExerciseSession, HeartRateData, OnsenVisit
 from src.lib.exercise_manager import ExerciseDataManager
 from src.lib.heart_rate_manager import HeartRateDataManager
@@ -64,8 +65,14 @@ def cmd_strava_link(args):
         print("Error: You must specify either --visit or --auto-match")
         return
 
-    # Use database session
-    with get_db_from_args(args) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Use database session for all operations
+    with get_db(url=config.url) as db:
         # Handle exercise linking
         if exercise_id:
             # Fetch exercise session

@@ -5,8 +5,9 @@ Show chronological history of all rule changes.
 import argparse
 import json
 from datetime import datetime
-from src.db.conn import get_db_from_args
+from src.db.conn import get_db
 from src.db.models import RuleRevision
+from src.config import get_database_config
 
 
 def show_history(args: argparse.Namespace) -> None:
@@ -20,7 +21,12 @@ def show_history(args: argparse.Namespace) -> None:
             - visual: Generate visual timeline chart (default: False)
     """
 # Get database configuration
-    with get_db_from_args(args) as db:
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         query = db.query(RuleRevision).order_by(RuleRevision.revision_date.asc())
 
         # Apply section filter if specified

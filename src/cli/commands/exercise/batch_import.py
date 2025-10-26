@@ -12,7 +12,8 @@ from src.lib.exercise_manager import (
     ExerciseDataValidator,
     ExerciseDataManager,
 )
-from src.db.conn import get_db_from_args
+from src.db.conn import get_db
+from src.config import get_database_config
 from src.lib.cli_display import show_database_banner
 
 

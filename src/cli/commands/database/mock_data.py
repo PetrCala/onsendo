@@ -12,13 +12,14 @@ This command is maintained for backward compatibility and simple unit testing on
 
 import argparse
 from loguru import logger
-from src.db.conn import get_db_from_args
+from src.db.conn import get_db
 from src.db.models import OnsenVisit, Onsen
 from src.testing.mocks.mock_visit_data import (
     MockVisitDataGenerator,
     create_realistic_visit_scenario,
     create_seasonal_visits,
 )
+from src.config import get_database_config
 
 
 def insert_mock_visits(args: argparse.Namespace) -> None:

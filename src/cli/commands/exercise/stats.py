@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 
 from src.lib.exercise_manager import ExerciseDataManager
 from src.types.exercise import ExerciseType
-from src.db.conn import get_db_from_args
+from src.db.conn import get_db
+from src.config import get_database_config
 
 
 def show_exercise_stats(args: argparse.Namespace) -> int:

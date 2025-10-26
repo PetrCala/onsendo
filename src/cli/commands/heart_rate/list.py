@@ -5,8 +5,9 @@ List and manage heart rate data records.
 import argparse
 
 from src.lib.heart_rate_manager import HeartRateDataManager
-from src.db.conn import get_db_from_args
+from src.db.conn import get_db
 from src.db.models import HeartRateData, OnsenVisit
+from src.config import get_database_config
 
 
 def list_heart_rate_data(args: argparse.Namespace) -> int:

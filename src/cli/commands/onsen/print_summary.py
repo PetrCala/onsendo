@@ -10,7 +10,8 @@ from typing import Optional
 
 from loguru import logger
 
-from src.db.conn import get_db_from_args
+from src.config import get_database_config
+from src.db.conn import get_db
 from src.db.models import Onsen, OnsenVisit
 from src.lib.utils import generate_google_maps_link
 

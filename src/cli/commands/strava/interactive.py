@@ -7,7 +7,8 @@ and linking Strava activities.
 
 # pylint: disable=bad-builtin
 
-from src.db.conn import get_db_from_args
+from src.config import get_database_config
+from src.db.conn import get_db
 from src.lib.strava_browser import StravaActivityBrowser
 from src.lib.strava_client import StravaClient
 from src.types.strava import StravaSettings
@@ -85,8 +86,14 @@ def cmd_strava_interactive(args):
         print(f"Error initializing Strava client: {e}")
         return
 
-    # Use database session
-    with get_db_from_args(args) as db:
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Launch browser
+    with get_db(url=config.url) as db:
         try:
             browser = StravaActivityBrowser(client, db)
             browser.run()

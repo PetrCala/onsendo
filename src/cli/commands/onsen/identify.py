@@ -9,7 +9,8 @@ from typing import Optional
 
 from loguru import logger
 
-from src.db.conn import get_db_from_args
+from src.config import get_database_config
+from src.db.conn import get_db
 from src.lib.onsen_identifier import identify_onsen, OnsenMatch
 from src.cli.commands.onsen.print_summary import print_summary
 
@@ -104,7 +105,12 @@ def identify(args: argparse.Namespace) -> None:
 
     # Perform identification
 # Get database configuration
-    with get_db_from_args(args) as db:
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         logger.info("Searching for matching onsens...")
 
         matches = identify_onsen(

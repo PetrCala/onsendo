@@ -1,12 +1,8 @@
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Optional
-import argparse
 
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import sessionmaker, Session
-
-from src.config import get_database_config
 
 
 def is_valid_url(url: str) -> bool:
@@ -98,37 +94,4 @@ def get_db(url: str) -> Generator[Session]:
     """
     assert is_valid_url(url), "url must be provided and a valid SQLite URL"
     with db_manager.get_session(url) as session:
-        yield session
-
-
-@contextmanager
-def get_db_from_args(args: Optional[argparse.Namespace] = None) -> Generator[Session]:
-    """
-    Convenience function to get a database session from CLI args.
-
-    This is a DRY wrapper around get_db() that handles the common pattern
-    of extracting database configuration from argparse args.
-
-    Args:
-        args: Argparse namespace with optional 'env' and 'database' attributes.
-              If None, uses default database configuration.
-
-    Yields:
-        A SQLAlchemy session.
-
-    Usage:
-    ```python
-    from src.db.conn import get_db_from_args
-
-    def cmd_example(args):
-        with get_db_from_args(args) as db:
-            # Use the db object here
-            results = db.query(SomeModel).all()
-    ```
-    """
-    config = get_database_config(
-        env_override=getattr(args, 'env', None) if args else None,
-        path_override=getattr(args, 'database', None) if args else None
-    )
-    with get_db(url=config.url) as session:
         yield session

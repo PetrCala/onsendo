@@ -5,9 +5,10 @@ Modify an existing rule revision record (metadata only, not rules themselves).
 
 import argparse
 from typing import Optional
-from src.db.conn import get_db_from_args
+from src.db.conn import get_db
 from src.lib.cli_display import show_database_banner
 from src.db.models import RuleRevision
+from src.config import get_database_config
 
 
 def modify_revision(args: argparse.Namespace) -> None:
@@ -77,7 +78,12 @@ def modify_revision(args: argparse.Namespace) -> None:
 
     # Save changes
 # Get database configuration
-    with get_db_from_args(args) as db:
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         db.merge(revision)
         db.commit()
 
@@ -88,7 +94,12 @@ def modify_revision(args: argparse.Namespace) -> None:
 def get_revision_by_version(version_number: int) -> Optional[RuleRevision]:
     """Get a revision by version number."""
 # Get database configuration
-    with get_db_from_args(args) as db:
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         revision = (
             db.query(RuleRevision)
             .filter(RuleRevision.version_number == version_number)
@@ -105,7 +116,12 @@ def get_revision_by_version(version_number: int) -> Optional[RuleRevision]:
 def select_revision_interactively() -> Optional[RuleRevision]:
     """Interactively select a revision."""
 # Get database configuration
-    with get_db_from_args(args) as db:
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         revisions = db.query(RuleRevision).order_by(RuleRevision.version_number.desc()).all()
 
         if not revisions:

@@ -74,12 +74,18 @@ def print_rules_at_version(version_number: int, args: argparse.Namespace) -> Non
         version_number: The version number to retrieve
         args: Command-line arguments
     """
-    from src.db.conn import get_db_from_args
+    from src.db.conn import get_db
     from src.db.models import RuleRevision
-        import os
+    from src.config import get_database_config
+    import os
 
 # Get database configuration
-    with get_db_from_args(args) as db:
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         revision = (
             db.query(RuleRevision)
             .filter(RuleRevision.version_number == version_number)

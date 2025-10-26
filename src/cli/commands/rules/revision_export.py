@@ -6,8 +6,9 @@ import argparse
 import json
 import csv
 import os
-from src.db.conn import get_db_from_args
+from src.db.conn import get_db
 from src.db.models import RuleRevision
+from src.config import get_database_config
 from src.paths import PATHS
 
 
@@ -24,7 +25,12 @@ def export_revisions(args: argparse.Namespace) -> None:
     """
     # Get revisions to export
 # Get database configuration
-    with get_db_from_args(args) as db:
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    with get_db(url=config.url) as db:
         if hasattr(args, "version") and args.version:
             revisions = [
                 db.query(RuleRevision)
