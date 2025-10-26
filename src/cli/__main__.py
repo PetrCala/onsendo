@@ -64,17 +64,25 @@ def add_subcommands_to_group(
     # Add arguments to the command
     for arg_name, arg_config in command_config.args.items():
         kwargs = get_argument_kwargs(arg_config)
+        default_dest = arg_name.replace("-", "_")
 
+        if arg_config.positional:
+            positional_name = arg_config.dest or default_dest
+
+            # Preserve original hyphenated name in help output
+            if arg_name != positional_name and "metavar" not in kwargs:
+                kwargs["metavar"] = arg_name
+
+            parser_command.add_argument(positional_name, **kwargs)
+            continue
+
+        # Optional argument handling
+        option_strings = [f"--{arg_name}"]
         if hasattr(arg_config, "short") and arg_config.short:
-            parser_command.add_argument(
-                f"--{arg_name}", f"-{arg_config.short}", **kwargs
-            )
-        else:
-            # Add only long form
-            if arg_config.positional:
-                parser_command.add_argument(arg_name, **kwargs)
-            else:
-                parser_command.add_argument(f"--{arg_name}", **kwargs)
+            option_strings.append(f"-{arg_config.short}")
+
+        kwargs.setdefault("dest", arg_config.dest or default_dest)
+        parser_command.add_argument(*option_strings, **kwargs)
 
     parser_command.set_defaults(func=command_config.func)
     return parser_command
