@@ -10,7 +10,7 @@ import json
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Mapping, Optional
 
 from loguru import logger
 
@@ -323,6 +323,18 @@ class StravaToHeartRateConverter:
 
 class StravaFileExporter:
     """Exports Strava activities to standard file formats."""
+
+    @staticmethod
+    def has_gpx_support(streams: Mapping[str, StravaStream]) -> bool:
+        """Check whether provided streams contain enough data for GPX export."""
+
+        time_stream = streams.get("time")
+        latlng_stream = streams.get("latlng")
+
+        if not time_stream or not latlng_stream:
+            return False
+
+        return bool(time_stream.data and latlng_stream.data)
 
     @classmethod
     def export_to_gpx(  # pylint: disable=too-many-locals

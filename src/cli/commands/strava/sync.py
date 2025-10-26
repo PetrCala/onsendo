@@ -17,7 +17,7 @@ from src.lib.exercise_manager import ExerciseDataManager
 from src.lib.strava_client import StravaClient
 from src.lib.strava_converter import StravaFileExporter, StravaToExerciseConverter
 from src.paths import PATHS
-from src.types.strava import ActivityFilter, StravaSettings
+from src.types.strava import ActivityFilter, StravaConversionError, StravaSettings
 
 
 def cmd_strava_sync(args):
@@ -192,9 +192,28 @@ def cmd_strava_sync(args):
                 file_paths = {}
 
                 if "gpx" in formats:
-                    StravaFileExporter.export_to_gpx(activity, streams, gpx_path)
-                    file_paths["gpx"] = str(gpx_path)
-                    print(f"  ✓ Downloaded: {gpx_path.name}")
+                    if StravaFileExporter.has_gpx_support(streams):
+                        try:
+                            StravaFileExporter.export_to_gpx(
+                                activity, streams, gpx_path
+                            )
+                            file_paths["gpx"] = str(gpx_path)
+                            print(f"  ✓ Downloaded: {gpx_path.name}")
+                        except StravaConversionError as err:
+                            logger.warning(
+                                "Skipping GPX export for activity %s: %s",
+                                activity_summary.id,
+                                err,
+                            )
+                            print(f"  ⊘ Skipped GPX export: {err}")
+                    else:
+                        logger.info(
+                            "Skipping GPX export for activity %s due to missing streams",
+                            activity_summary.id,
+                        )
+                        print(
+                            "  ⊘ Skipped GPX export: Strava did not provide GPS/time streams"
+                        )
 
                 if "json" in formats:
                     json_path = Path(output_dir) / f"{base_filename}.json"
@@ -210,7 +229,10 @@ def cmd_strava_sync(args):
                     file_paths["hr_csv"] = str(csv_path)
                     print(f"  ✓ Downloaded: {csv_path.name}")
 
-                success_count += 1
+                if file_paths:
+                    success_count += 1
+                else:
+                    print("  ⚠️ No downloads created for this activity")
 
             except Exception as e:
                 logger.exception(f"Failed to export activity {activity_summary.id}")
