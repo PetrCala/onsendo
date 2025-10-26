@@ -3,12 +3,15 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, time, date
+import json
+import os
 import re
 from typing import Optional
 
 import requests
 
 from src.const import CONST
+from src.paths import PATHS
 
 
 # -------------------------------
@@ -54,6 +57,114 @@ class JapanHolidayService(HolidayService):
             return set()
 
 
+class CachedJapanHolidayService(HolidayService):
+    """Service to fetch Japanese holidays with local file caching.
+
+    Caches holiday data locally to minimize HTTP requests. Once a year's holidays
+    are fetched, they are stored in a JSON file and reused for subsequent calls.
+    """
+
+    def __init__(
+        self,
+        base_url: str = CONST.HOLIDAY_SERVICE_URL,
+        cache_file: str = PATHS.HOLIDAYS_CACHE_FILE
+    ):
+        self.base_url = base_url
+        self.cache_file = cache_file
+        self._memory_cache: dict[int, set[date]] = {}
+
+    def _load_cache(self) -> dict:
+        """Load cache from file. Returns empty dict if file doesn't exist or is invalid."""
+        if not os.path.exists(self.cache_file):
+            return {"years": {}, "metadata": {}}
+
+        try:
+            with open(self.cache_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            # If cache is corrupted, start fresh
+            print(f"Warning: Failed to load holiday cache: {e}")
+            return {"years": {}, "metadata": {}}
+
+    def _save_cache(self, cache_data: dict) -> None:
+        """Save cache to file with proper directory creation."""
+        try:
+            # Ensure cache directory exists
+            os.makedirs(os.path.dirname(self.cache_file), exist_ok=True)
+
+            with open(self.cache_file, 'w', encoding='utf-8') as f:
+                json.dump(cache_data, f, ensure_ascii=False, indent=2)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(f"Warning: Failed to save holiday cache: {e}")
+
+    def get_holidays(self, year: int) -> set[date]:
+        """Get Japanese holidays for the given year.
+
+        First checks memory cache, then file cache, and finally fetches from API
+        if not cached. Updates cache after successful fetch.
+        """
+        # Check memory cache first (fastest)
+        if year in self._memory_cache:
+            return self._memory_cache[year]
+
+        # Load file cache
+        cache_data = self._load_cache()
+        year_str = str(year)
+
+        # Check if year is in file cache
+        if year_str in cache_data.get("years", {}):
+            # Parse cached dates
+            holidays = set()
+            for date_str in cache_data["years"][year_str].keys():
+                try:
+                    holiday_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                    holidays.add(holiday_date)
+                except ValueError:
+                    continue
+
+            # Store in memory cache for future calls
+            self._memory_cache[year] = holidays
+            return holidays
+
+        # Not in cache - fetch from API
+        try:
+            url = f"{self.base_url}/{year}/date.json"
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+
+            holidays_data = response.json()
+            holidays = set()
+
+            for holiday_date_str in holidays_data.keys():
+                # Parse date string (format: "2025-01-01")
+                holiday_date = datetime.strptime(holiday_date_str, "%Y-%m-%d").date()
+                holidays.add(holiday_date)
+
+            # Update cache with new data
+            if "years" not in cache_data:
+                cache_data["years"] = {}
+            if "metadata" not in cache_data:
+                cache_data["metadata"] = {}
+
+            cache_data["years"][year_str] = holidays_data
+            cache_data["metadata"][year_str] = {
+                "fetched_at": datetime.now().isoformat()
+            }
+
+            self._save_cache(cache_data)
+
+            # Store in memory cache
+            self._memory_cache[year] = holidays
+
+            return holidays
+
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            # Broad exception handling is appropriate here - network/API errors are unpredictable
+            # Log error and return empty set as fallback
+            print(f"Warning: Failed to fetch holidays for {year}: {e}")
+            return set()
+
+
 class MockHolidayService(HolidayService):
     """Mock holiday service for testing."""
 
@@ -73,7 +184,7 @@ def get_holiday_service() -> HolidayService:
     """Get the global holiday service instance."""
     global _holiday_service  # pylint: disable=global-statement
     if _holiday_service is None:
-        _holiday_service = JapanHolidayService()
+        _holiday_service = CachedJapanHolidayService()
     return _holiday_service
 
 
@@ -672,6 +783,7 @@ __all__ = [
     "parse_usage_time",
     "HolidayService",
     "JapanHolidayService",
+    "CachedJapanHolidayService",
     "MockHolidayService",
     "get_holiday_service",
     "set_holiday_service",

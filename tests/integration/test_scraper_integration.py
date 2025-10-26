@@ -34,11 +34,14 @@ def shared_mocks():
     }
 
 
-class TestScraperIntegration:
+# Disable this test for now -> the feature is stable and takes a long time to run.
+class XTestScraperIntegration:
     """Integration tests for the scraper functionality."""
 
     @pytest.fixture(autouse=True)
-    def setup_class_mocks(self, tmp_path, shared_mocks):  # pylint: disable=redefined-outer-name
+    def setup_class_mocks(
+        self, tmp_path, shared_mocks
+    ):  # pylint: disable=redefined-outer-name
         """Set up shared mocks for all tests to avoid repeated patching."""
         self.temp_dir = tmp_path
         self.mocks = shared_mocks

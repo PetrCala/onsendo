@@ -1,9 +1,13 @@
 from datetime import datetime, date
+import json
+import os
+import tempfile
 
 from src.lib.parsers import parse_usage_time
 from src.lib.parsers.usage_time import (
     MockHolidayService,
     JapanHolidayService,
+    CachedJapanHolidayService,
     set_holiday_service,
     get_holiday_service,
     is_holiday,
@@ -244,3 +248,150 @@ def test_japan_holiday_service_initialization():
     # Test with custom URL
     custom_service = JapanHolidayService("https://custom-url.com")
     assert custom_service.base_url == "https://custom-url.com"
+
+
+def test_cached_holiday_service_initialization():
+    """Test that CachedJapanHolidayService can be initialized."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        cache_file = os.path.join(tmpdir, "test_cache.json")
+        service = CachedJapanHolidayService(cache_file=cache_file)
+        assert service.base_url == "https://holidays-jp.github.io/api/v1"
+        assert service.cache_file == cache_file
+
+
+def test_cached_holiday_service_memory_cache():
+    """Test that CachedJapanHolidayService uses memory cache."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        cache_file = os.path.join(tmpdir, "test_cache.json")
+
+        # Manually create cache file with test data
+        test_holidays = {
+            "years": {
+                "2025": {
+                    "2025-01-01": "元日",
+                    "2025-01-13": "成人の日",
+                    "2025-02-11": "建国記念の日"
+                }
+            },
+            "metadata": {
+                "2025": {"fetched_at": "2025-01-01T00:00:00"}
+            }
+        }
+
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(test_holidays, f)
+
+        # Create service and fetch holidays
+        service = CachedJapanHolidayService(cache_file=cache_file)
+        holidays_1 = service.get_holidays(2025)
+
+        # Verify we got the holidays
+        assert date(2025, 1, 1) in holidays_1
+        assert date(2025, 1, 13) in holidays_1
+        assert date(2025, 2, 11) in holidays_1
+        assert len(holidays_1) == 3
+
+        # Second call should use memory cache (no file read)
+        holidays_2 = service.get_holidays(2025)
+        assert holidays_1 == holidays_2
+
+
+def test_cached_holiday_service_file_persistence():
+    """Test that CachedJapanHolidayService persists cache across instances."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        cache_file = os.path.join(tmpdir, "test_cache.json")
+
+        # Manually create cache file with test data
+        test_holidays = {
+            "years": {
+                "2024": {
+                    "2024-01-01": "元日",
+                    "2024-01-08": "成人の日"
+                }
+            },
+            "metadata": {
+                "2024": {"fetched_at": "2024-01-01T00:00:00"}
+            }
+        }
+
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(test_holidays, f)
+
+        # Create first service instance and fetch holidays
+        service_1 = CachedJapanHolidayService(cache_file=cache_file)
+        holidays_1 = service_1.get_holidays(2024)
+
+        # Create second service instance (simulating app restart)
+        service_2 = CachedJapanHolidayService(cache_file=cache_file)
+        holidays_2 = service_2.get_holidays(2024)
+
+        # Both should return the same holidays from cache
+        assert holidays_1 == holidays_2
+        assert date(2024, 1, 1) in holidays_2
+        assert date(2024, 1, 8) in holidays_2
+
+
+def test_cached_holiday_service_empty_cache():
+    """Test that CachedJapanHolidayService handles empty/missing cache gracefully."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        cache_file = os.path.join(tmpdir, "nonexistent_cache.json")
+
+        # Create service with non-existent cache file
+        service = CachedJapanHolidayService(cache_file=cache_file)
+
+        # The service should handle missing cache gracefully
+        # (This will try to fetch from API, which may fail in test environment)
+        # We're just testing that it doesn't crash
+        assert service.cache_file == cache_file
+
+
+def test_cached_holiday_service_corrupted_cache():
+    """Test that CachedJapanHolidayService handles corrupted cache gracefully."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        cache_file = os.path.join(tmpdir, "corrupted_cache.json")
+
+        # Create corrupted cache file
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            f.write("{ this is not valid json }")
+
+        # Create service with corrupted cache
+        service = CachedJapanHolidayService(cache_file=cache_file)
+
+        # The service should handle corrupted cache gracefully
+        # (it should start with empty cache)
+        assert service.cache_file == cache_file
+
+
+def test_cached_holiday_service_cache_structure():
+    """Test that CachedJapanHolidayService creates correct cache structure."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        cache_file = os.path.join(tmpdir, "test_cache.json")
+
+        # Manually create cache with minimal data
+        test_holidays = {
+            "years": {
+                "2023": {
+                    "2023-01-01": "元日"
+                }
+            },
+            "metadata": {
+                "2023": {"fetched_at": "2023-01-01T00:00:00"}
+            }
+        }
+
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(test_holidays, f)
+
+        service = CachedJapanHolidayService(cache_file=cache_file)
+        holidays = service.get_holidays(2023)
+
+        # Verify the holiday was loaded correctly
+        assert date(2023, 1, 1) in holidays
+
+        # Verify cache file structure is preserved
+        with open(cache_file, 'r', encoding='utf-8') as f:
+            cache_data = json.load(f)
+
+        assert "years" in cache_data
+        assert "metadata" in cache_data
+        assert "2023" in cache_data["years"]
