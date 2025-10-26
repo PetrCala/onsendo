@@ -135,11 +135,11 @@ def cmd_strava_sync(args):
         print("\nRun without --dry-run to actually sync")
         return
 
-    # Determine format
+    # Determine requested formats
     if format_arg == "all":
-        formats = ["gpx", "json", "hr_csv"]
+        requested_formats = ["gpx", "json", "hr_csv"]
     else:
-        formats = [format_arg]
+        requested_formats = [format_arg]
 
     # Process each activity
     print(f"\n--- Syncing {len(activities)} Activities ---")
@@ -187,47 +187,46 @@ def cmd_strava_sync(args):
                 print(f"  ✗ Fetch failed: {e}")
                 continue
 
+            # Smart format selection based on available data
+            exportable_formats, skipped_formats = StravaFileExporter.recommend_formats(
+                streams, requested_formats
+            )
+
+            # Inform about skipped formats (only for first activity, to avoid spam)
+            if i == 1 and skipped_formats:
+                for fmt, reason in skipped_formats:
+                    logger.info(
+                        "Format %s will be skipped for activities: %s",
+                        fmt, reason
+                    )
+
             # Download files
             try:
                 file_paths = {}
 
-                if "gpx" in formats:
-                    if StravaFileExporter.has_gpx_support(streams):
-                        try:
-                            StravaFileExporter.export_to_gpx(
-                                activity, streams, gpx_path
-                            )
-                            file_paths["gpx"] = str(gpx_path)
-                            print(f"  ✓ Downloaded: {gpx_path.name}")
-                        except StravaConversionError as err:
-                            logger.warning(
-                                "Skipping GPX export for activity %s: %s",
-                                activity_summary.id,
-                                err,
-                            )
-                            print(f"  ⊘ Skipped GPX export: {err}")
-                    else:
-                        logger.info(
-                            "Skipping GPX export for activity %s due to missing streams",
-                            activity_summary.id,
-                        )
-                        print(
-                            "  ⊘ Skipped GPX export: Strava did not provide GPS/time streams"
-                        )
+                if "gpx" in exportable_formats:
+                    StravaFileExporter.export_to_gpx(activity, streams, gpx_path)
+                    file_paths["gpx"] = str(gpx_path)
+                    print(f"  ✓ Downloaded: {gpx_path.name}")
 
-                if "json" in formats:
+                if "json" in exportable_formats:
                     json_path = Path(output_dir) / f"{base_filename}.json"
                     StravaFileExporter.export_to_json(activity, streams, json_path)
                     file_paths["json"] = str(json_path)
                     print(f"  ✓ Downloaded: {json_path.name}")
 
-                if "hr_csv" in formats and streams.get("heartrate"):
+                if "hr_csv" in exportable_formats:
                     csv_path = Path(output_dir) / f"{base_filename}_hr.csv"
                     StravaFileExporter.export_hr_to_csv(
                         activity, streams["heartrate"], streams.get("time"), csv_path
                     )
                     file_paths["hr_csv"] = str(csv_path)
                     print(f"  ✓ Downloaded: {csv_path.name}")
+
+                # Show skipped formats for this specific activity
+                if skipped_formats:
+                    for fmt, reason in skipped_formats:
+                        print(f"  ⊘ Skipped {fmt.upper()}: {reason}")
 
                 if file_paths:
                     success_count += 1

@@ -85,14 +85,7 @@ def cmd_strava_download(args):
         print(f"Error initializing Strava client: {e}")
         return
 
-    # Determine formats
-    format_arg = args.format if hasattr(args, "format") and args.format else "all"
-    if format_arg == "all":
-        formats = ["gpx", "json", "hr_csv"]
-    else:
-        formats = [format_arg]
-
-    # Download activity
+    # Fetch activity and streams first
     print(f"Fetching activity {activity_id}...")
     try:
         activity = client.get_activity(activity_id)
@@ -102,17 +95,32 @@ def cmd_strava_download(args):
         print(f"Error fetching activity: {e}")
         return
 
-    print(f"Activity: {activity.name}")
+    print(f"\nActivity: {activity.name}")
     print(f"Type: {activity.activity_type}")
     print(f"Date: {activity.start_date_local.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    # Download files
-    print(f"\nDownloading in formats: {', '.join(formats)}")
+    # Determine requested formats
+    format_arg = args.format if hasattr(args, "format") and args.format else "all"
+    if format_arg == "all":
+        requested_formats = ["gpx", "json", "hr_csv"]
+    else:
+        requested_formats = [format_arg]
 
+    # Smart format selection based on available data
+    exportable_formats, skipped_formats = StravaFileExporter.recommend_formats(
+        streams, requested_formats
+    )
+
+    # Inform user about format selection
+    print(f"\nExporting in formats: {', '.join(exportable_formats)}")
+    if skipped_formats:
+        for fmt, reason in skipped_formats:
+            print(f"  ⊘ Skipping {fmt.upper()}: {reason}")
+
+    # Prepare output directory and filename
     output_dir = PATHS.STRAVA_ACTIVITY_DIR.value
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    # Safe filename
     safe_name = "".join(
         c if c.isalnum() or c in (" ", "_", "-") else "_" for c in activity.name
     )
@@ -122,20 +130,21 @@ def cmd_strava_download(args):
 
     file_paths = {}
 
+    # Export in recommended formats
     try:
-        if "gpx" in formats:
+        if "gpx" in exportable_formats:
             gpx_path = Path(output_dir) / f"{base_filename}.gpx"
             StravaFileExporter.export_to_gpx(activity, streams, gpx_path)
             file_paths["gpx"] = str(gpx_path)
             print(f"  ✓ GPX: {gpx_path}")
 
-        if "json" in formats:
+        if "json" in exportable_formats:
             json_path = Path(output_dir) / f"{base_filename}.json"
             StravaFileExporter.export_to_json(activity, streams, json_path)
             file_paths["json"] = str(json_path)
             print(f"  ✓ JSON: {json_path}")
 
-        if "hr_csv" in formats and streams.get("heartrate"):
+        if "hr_csv" in exportable_formats:
             csv_path = Path(output_dir) / f"{base_filename}_hr.csv"
             StravaFileExporter.export_hr_to_csv(
                 activity, streams["heartrate"], streams.get("time"), csv_path

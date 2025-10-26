@@ -525,6 +525,18 @@ class StravaActivityBrowser:
         activity = self.client.get_activity(activity_id)
         streams = self.client.get_activity_streams(activity_id)
 
+        # Smart format selection based on available data
+        exportable_formats, skipped_formats = StravaFileExporter.recommend_formats(
+            streams, formats
+        )
+
+        # Log skipped formats
+        if skipped_formats:
+            for fmt, reason in skipped_formats:
+                logger.info(
+                    f"Skipping {fmt} for activity {activity.name}: {reason}"
+                )
+
         # Create output directory
         output_dir = PATHS.STRAVA_ACTIVITY_DIR.value
         Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -539,18 +551,18 @@ class StravaActivityBrowser:
 
         file_paths = {}
 
-        # Export each format
-        if "gpx" in formats:
+        # Export in recommended formats
+        if "gpx" in exportable_formats:
             gpx_path = Path(output_dir) / f"{base_filename}.gpx"
             StravaFileExporter.export_to_gpx(activity, streams, gpx_path)
             file_paths["gpx"] = str(gpx_path)
 
-        if "json" in formats:
+        if "json" in exportable_formats:
             json_path = Path(output_dir) / f"{base_filename}.json"
             StravaFileExporter.export_to_json(activity, streams, json_path)
             file_paths["json"] = str(json_path)
 
-        if "hr_csv" in formats and streams.get("heartrate"):
+        if "hr_csv" in exportable_formats:
             csv_path = Path(output_dir) / f"{base_filename}_hr.csv"
             StravaFileExporter.export_hr_to_csv(
                 activity, streams["heartrate"], streams.get("time"), csv_path

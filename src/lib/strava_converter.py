@@ -337,6 +337,69 @@ class StravaFileExporter:
         return bool(time_stream.data and latlng_stream.data)
 
     @classmethod
+    def recommend_formats(
+        cls,
+        streams: dict[str, StravaStream],
+        requested_formats: list[str],
+    ) -> tuple[list[str], list[tuple[str, str]]]:
+        """
+        Determine which formats can be exported based on available streams.
+
+        Automatically selects appropriate formats based on stream availability:
+        - GPX requires GPS data (latlng + time streams)
+        - JSON always works (exports all available data)
+        - HR CSV requires heart rate data
+
+        If no formats are exportable, JSON is added as fallback to ensure
+        some data is always captured.
+
+        Args:
+            streams: Dictionary of available streams from Strava
+            requested_formats: List of formats user requested
+
+        Returns:
+            Tuple of (exportable_formats, skipped_formats_with_reasons)
+            - exportable_formats: List of format strings that can be exported
+            - skipped_formats_with_reasons: List of (format, reason) tuples
+
+        Example:
+            >>> streams = {"time": stream1, "heartrate": stream2}  # No GPS
+            >>> exportable, skipped = StravaFileExporter.recommend_formats(
+            ...     streams, ["gpx", "json", "hr_csv"]
+            ... )
+            >>> print(exportable)
+            ['json', 'hr_csv']
+            >>> print(skipped)
+            [('gpx', 'No GPS data available')]
+        """
+        exportable = []
+        skipped = []
+
+        for fmt in requested_formats:
+            if fmt == "gpx":
+                if cls.has_gpx_support(streams):
+                    exportable.append("gpx")
+                else:
+                    skipped.append(("gpx", "No GPS data available"))
+            elif fmt == "json":
+                exportable.append("json")  # JSON always works
+            elif fmt == "hr_csv":
+                if streams.get("heartrate"):
+                    exportable.append("hr_csv")
+                else:
+                    skipped.append(("hr_csv", "No heart rate data available"))
+
+        # Fallback: If nothing exportable, ensure JSON is included as
+        # minimum viable export to capture all available data
+        if not exportable:
+            exportable.append("json")
+            logger.info(
+                "No requested formats available, falling back to JSON export"
+            )
+
+        return exportable, skipped
+
+    @classmethod
     def export_to_gpx(  # pylint: disable=too-many-locals
         cls,
         activity: StravaActivityDetail,
