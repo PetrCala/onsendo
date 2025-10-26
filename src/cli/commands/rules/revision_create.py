@@ -6,7 +6,7 @@ Create a new rule revision with interactive workflow.
 import argparse
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from src.db.conn import get_db
@@ -153,7 +153,9 @@ def auto_fetch_week_statistics(
     try:
         # Parse dates
         start_date = datetime.strptime(week_start, "%Y-%m-%d")
-        end_date = datetime.strptime(week_end, "%Y-%m-%d")
+        # Make end_date inclusive of the entire day by adding 1 day
+        # (so 2025-10-26 becomes 2025-10-27 00:00:00, capturing all of the 26th)
+        end_date = datetime.strptime(week_end, "%Y-%m-%d") + timedelta(days=1)
 
         metrics = WeeklyReviewMetrics()
 

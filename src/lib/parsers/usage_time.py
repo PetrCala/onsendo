@@ -97,11 +97,14 @@ class CachedJapanHolidayService(HolidayService):
         except Exception as e:  # pylint: disable=broad-exception-caught
             print(f"Warning: Failed to save holiday cache: {e}")
 
-    def get_holidays(self, year: int) -> set[date]:
+    def get_holidays(self, year: int) -> set[date]:  # pylint: disable=too-complex
         """Get Japanese holidays for the given year.
 
         First checks memory cache, then file cache, and finally fetches from API
         if not cached. Updates cache after successful fetch.
+
+        Note: Complexity is justified - method implements three-tier caching strategy
+        (memory -> file -> network) with proper error handling for each tier.
         """
         # Check memory cache first (fastest)
         if year in self._memory_cache:
