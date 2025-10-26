@@ -12,6 +12,8 @@ class PATHS(CustomStrEnum):
     DATA_DIR = os.path.join(PROJECT_ROOT, "data")
     TMP_DATA_DIR = os.path.join(DATA_DIR, "tmp")
     DB_DIR = os.path.join(DATA_DIR, "db")
+    STRAVA_DIR = os.path.join(DATA_DIR, "strava")
+    STRAVA_ACTIVITY_DIR = os.path.join(STRAVA_DIR, "activities")
     OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output")
     MAPS_DIR = os.path.join(OUTPUT_DIR, "maps")
     ARTIFACTS_DIR = os.path.join(PROJECT_ROOT, "artifacts")
