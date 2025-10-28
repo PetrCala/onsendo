@@ -10,6 +10,7 @@ from src.db.conn import get_db
 from src.lib.recommendation import OnsenRecommendationEngine
 from src.lib.map_generator import generate_recommendation_map
 from src.lib.apple_reminders import is_reminders_available
+from src.lib.datetime_input import get_datetime_input
 from src.config import get_database_config
 
 
@@ -179,16 +180,14 @@ def recommend_onsen_interactive(args: argparse.Namespace) -> None:
         # Get distance milestones for display in the prompt
         distance_milestones = engine.get_distance_milestones()
 
-        # Get target time
-        time_input = input(
-            "Target time (YYYY-MM-DD HH:MM, or press Enter for now): "
-        ).strip()
-        target_time = None
-        if time_input:
-            try:
-                target_time = datetime.strptime(time_input, "%Y-%m-%d %H:%M")
-            except ValueError:
-                print("Invalid time format. Using current time.")
+        # Get target date and time (split into two questions)
+        print()
+        target_time = get_datetime_input(
+            date_prompt="Target date",
+            time_prompt="Target time",
+            allow_date_shortcuts=True,
+            allow_now=True
+        )
 
         # Get distance category
         print("\nDistance categories:")
@@ -288,7 +287,7 @@ def recommend_onsen_interactive(args: argparse.Namespace) -> None:
 
         args = Args()
         args.location = location.name
-        args.time = time_input if time_input else None
+        args.time = target_time.strftime("%Y-%m-%d %H:%M") if target_time else None
         args.distance = distance_category
         args.exclude_closed = exclude_closed
         args.exclude_visited = exclude_visited

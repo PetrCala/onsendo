@@ -18,6 +18,83 @@ from src.lib.apple_reminders import (
 )
 
 
+def format_single_onsen_for_reminder(
+    onsen: Onsen,
+    distance: float,
+    metadata: dict,
+    location_name: str,
+    index: int
+) -> str:
+    """
+    Format details for a single onsen for reminder body.
+
+    Args:
+        onsen: Onsen object
+        distance: Distance in km
+        metadata: Metadata dictionary
+        location_name: Name of the user's location
+        index: Index number (1-based) in the recommendation list
+
+    Returns:
+        Formatted string for reminder body
+    """
+    lines = [f"📍 From: {location_name}", ""]
+
+    # Onsen header
+    lines.append(f"{index}. {onsen.name}")
+
+    # BAN number
+    if onsen.ban_number:
+        lines.append(f"   BAN: {onsen.ban_number}")
+
+    # Distance
+    lines.append(f"   Distance: {distance:.1f} km ({metadata['distance_category']})")
+
+    # Address
+    if onsen.address:
+        lines.append(f"   Address: {onsen.address}")
+
+    # Coordinates
+    lines.append(f"   Coordinates: {onsen.latitude}, {onsen.longitude}")
+
+    # Hours
+    if onsen.usage_time:
+        lines.append(f"   Hours: {onsen.usage_time}")
+
+    # Closed days
+    if onsen.closed_days:
+        lines.append(f"   Closed: {onsen.closed_days}")
+
+    # Fee
+    if onsen.admission_fee:
+        lines.append(f"   Fee: {onsen.admission_fee}")
+
+    # Spring quality
+    if onsen.spring_quality:
+        lines.append(f"   Spring: {onsen.spring_quality}")
+
+    # Parking
+    if onsen.parking:
+        lines.append(f"   Parking: {onsen.parking}")
+
+    # Status
+    if metadata['is_available']:
+        lines.append("   Status: ✅ Available")
+    else:
+        lines.append("   Status: ⚠️ Currently Closed")
+
+    if metadata['has_been_visited']:
+        lines.append("   Previously Visited: Yes")
+
+    if metadata['stay_restricted']:
+        lines.append("   Stay Restriction: Yes")
+
+    # Google Maps link
+    lines.append(f"   Maps: {metadata['google_maps_link']}")
+
+    return "\n".join(lines)
+
+
 def generate_recommendation_map(
     recommendations: list[tuple[Onsen, float, dict]],
     location: Location,
@@ -46,6 +123,31 @@ def generate_recommendation_map(
 
     output_path = os.path.join(PATHS.MAPS_DIR, output_filename)
 
+    # Generate individual reminder scripts for each onsen if target_time provided
+    reminder_scripts = {}  # onsen_id -> script_path
+    if target_time and is_reminders_available():
+        base_filename = output_filename.replace('.html', '')
+        time_str = target_time.strftime("%H:%M")
+
+        for i, (onsen, distance, metadata) in enumerate(recommendations, 1):
+            try:
+                # Generate script for this specific onsen
+                script_filename = f"{base_filename}_onsen_{i}.command"
+                script_path = os.path.join(PATHS.MAPS_DIR, script_filename)
+
+                # Format reminder title and body for this onsen
+                reminder_title = f"Onsen: {onsen.name} at {time_str}"
+                reminder_body = format_single_onsen_for_reminder(
+                    onsen, distance, metadata, location.name, i
+                )
+
+                # Generate the .command script
+                generate_reminder_script(reminder_title, target_time, script_path, body=reminder_body)
+
+                reminder_scripts[onsen.id] = script_path
+            except (OSError, ValueError) as e:
+                logger.warning(f"Failed to generate reminder script for onsen {onsen.id}: {e}")
+
     # Create map centered on user's location
     center_lat = location.latitude or 33.2794  # Default to Beppu
     center_lon = location.longitude or 131.5006
@@ -72,6 +174,62 @@ def generate_recommendation_map(
 
         # Prepare tooltip text (shown on hover)
         tooltip_text = f"{i}. {onsen.name}"
+
+        # Check if reminder button should be added for this onsen
+        reminder_button_html = ""
+        if onsen.id in reminder_scripts:
+            script_path = reminder_scripts[onsen.id]
+            # Escape for JavaScript string
+            escaped_script_path = script_path.replace('\\', '\\\\').replace("'", "\\'").replace('"', '\\"')
+            escaped_onsen_name = onsen.name.replace('\\', '\\\\').replace("'", "\\'").replace('"', '\\"')
+
+            reminder_button_html = f"""
+            <hr style="margin: 10px 0;">
+            <script>
+            function createReminderForThisOnsen() {{
+                var scriptPath = '{escaped_script_path}';
+                var onsenName = '{escaped_onsen_name}';
+                var terminalCommand = 'bash "' + scriptPath + '"';
+
+                // Try to copy to clipboard
+                if (navigator.clipboard && navigator.clipboard.writeText) {{
+                    navigator.clipboard.writeText(terminalCommand).then(function() {{
+                        alert('Reminder command copied to clipboard!\\n\\n' +
+                              'For: ' + onsenName + '\\n\\n' +
+                              'Option 1 (Recommended):\\n' +
+                              '1. Open Terminal\\n' +
+                              '2. Paste (Cmd+V) and press Enter\\n\\n' +
+                              'Option 2:\\n' +
+                              'Double-click the .command file in:\\n' +
+                              scriptPath.substring(0, scriptPath.lastIndexOf('/')));
+                    }}).catch(function(err) {{
+                        alert('To create reminder for ' + onsenName + ':\\n\\n' +
+                              '1. Open Terminal\\n' +
+                              '2. Run: ' + terminalCommand);
+                    }});
+                }} else {{
+                    alert('To create reminder for ' + onsenName + ':\\n\\n' +
+                          '1. Open Terminal\\n' +
+                          '2. Run: ' + terminalCommand);
+                }}
+            }}
+            </script>
+            <div style="text-align: center;">
+                <button onclick="createReminderForThisOnsen()"
+                       style="padding: 10px 15px;
+                              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                              color: white;
+                              border: none;
+                              border-radius: 6px;
+                              font-size: 13px;
+                              font-weight: bold;
+                              cursor: pointer;
+                              box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                              width: 100%;">
+                    <i class="fa fa-bell"></i> Create Reminder for this Onsen
+                </button>
+            </div>
+            """
 
         # Prepare popup HTML (shown on click) with all onsen details
         popup_html = f"""
@@ -122,6 +280,8 @@ def generate_recommendation_map(
                     Open in Google Maps
                 </a>
             </p>
+
+            {reminder_button_html}
         </div>
         """
 
@@ -184,68 +344,65 @@ def generate_recommendation_map(
     """
     m.get_root().html.add_child(folium.Element(legend_html))
 
-    # Generate reminder script and add button if target_time is provided
-    reminder_script_path = None
+    # Add global reminder button for all onsens if target_time is provided
     if target_time and is_reminders_available():
         try:
-            # Generate script filename based on map filename
-            script_filename = output_filename.replace('.html', '.command')
-            reminder_script_path = os.path.join(PATHS.MAPS_DIR, script_filename)
+            # Generate global script for all onsens
+            global_script_filename = output_filename.replace('.html', '_all.command')
+            global_script_path = os.path.join(PATHS.MAPS_DIR, global_script_filename)
 
-            # Format reminder title
+            # Format reminder title and body for all onsens
             time_str = target_time.strftime("%H:%M")
-            reminder_title = f"Onsen recommendation {time_str}"
-
-            # Format reminder body with onsen details
-            reminder_body = format_onsen_details_for_reminder(
+            global_reminder_title = f"Onsen recommendation {time_str}"
+            global_reminder_body = format_onsen_details_for_reminder(
                 recommendations=recommendations,
                 location_name=location.name
             )
 
-            # Generate the .command script with body
-            generate_reminder_script(reminder_title, target_time, reminder_script_path, body=reminder_body)
+            # Generate the global .command script
+            generate_reminder_script(global_reminder_title, target_time, global_script_path, body=global_reminder_body)
 
-            # Add reminder button to the map with JavaScript execution
             # Escape the path for JavaScript
-            escaped_script_path = reminder_script_path.replace('\\', '\\\\').replace("'", "\\'")
+            escaped_global_script_path = global_script_path.replace('\\', '\\\\').replace("'", "\\'")
 
-            reminder_button_html = f"""
+            # Add global reminder button with modal
+            global_reminder_html = f"""
             <script>
-            var reminderScriptPath = '{escaped_script_path}';
+            var globalReminderScriptPath = '{escaped_global_script_path}';
 
-            function createReminder() {{
-                var terminalCommand = 'bash "' + reminderScriptPath + '"';
+            function createGlobalReminder() {{
+                var terminalCommand = 'bash "' + globalReminderScriptPath + '"';
 
                 // Copy terminal command to clipboard
                 navigator.clipboard.writeText(terminalCommand).then(function() {{
                     // Show modal with instructions
-                    var modal = document.getElementById('reminderModal');
+                    var modal = document.getElementById('globalReminderModal');
                     modal.style.display = 'block';
                 }}).catch(function(err) {{
                     // Fallback if clipboard fails
-                    alert('To create the reminder:\\n\\n' +
+                    alert('To create reminder for all onsens:\\n\\n' +
                           '1. Open Terminal\\n' +
                           '2. Run this command:\\n' +
                           terminalCommand + '\\n\\n' +
                           'Or double-click this file in Finder:\\n' +
-                          reminderScriptPath);
+                          globalReminderScriptPath);
                 }});
             }}
 
-            function closeModal() {{
-                document.getElementById('reminderModal').style.display = 'none';
+            function closeGlobalModal() {{
+                document.getElementById('globalReminderModal').style.display = 'none';
             }}
 
-            function openInFinder() {{
+            function openGlobalInFinder() {{
                 // Try to reveal in Finder using file:// protocol
-                var dirPath = reminderScriptPath.substring(0, reminderScriptPath.lastIndexOf('/'));
+                var dirPath = globalReminderScriptPath.substring(0, globalReminderScriptPath.lastIndexOf('/'));
                 window.open('file://' + dirPath);
-                closeModal();
+                closeGlobalModal();
             }}
             </script>
 
-            <!-- Reminder Modal -->
-            <div id="reminderModal" style="display: none;
+            <!-- Global Reminder Modal -->
+            <div id="globalReminderModal" style="display: none;
                                            position: fixed;
                                            z-index: 10000;
                                            left: 0;
@@ -260,8 +417,8 @@ def generate_recommendation_map(
                            width: 500px;
                            max-width: 90%;
                            box-shadow: 0 8px 16px rgba(0,0,0,0.3);">
-                    <h2 style="margin-top: 0; color: #667eea;">Create Reminder</h2>
-                    <p style="margin: 20px 0;">Choose how to create your reminder:</p>
+                    <h2 style="margin-top: 0; color: #667eea;">Create Reminder for All Onsens</h2>
+                    <p style="margin: 20px 0;">This will create a reminder with all {len(recommendations)} recommended onsens.</p>
 
                     <div style="margin: 20px 0; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
                         <strong>Option 1: Terminal (Recommended)</strong>
@@ -281,7 +438,7 @@ def generate_recommendation_map(
                             <li>Click "Open Folder" below</li>
                             <li>Double-click the .command file</li>
                         </ol>
-                        <button onclick="openInFinder()"
+                        <button onclick="openGlobalInFinder()"
                                style="margin-top: 10px;
                                       padding: 8px 16px;
                                       background-color: #667eea;
@@ -293,7 +450,7 @@ def generate_recommendation_map(
                         </button>
                     </div>
 
-                    <button onclick="closeModal()"
+                    <button onclick="closeGlobalModal()"
                            style="margin-top: 20px;
                                   padding: 10px 20px;
                                   background-color: #ccc;
@@ -309,7 +466,7 @@ def generate_recommendation_map(
                         top: 80px;
                         right: 10px;
                         z-index: 9999;">
-                <button onclick="createReminder()"
+                <button onclick="createGlobalReminder()"
                    style="display: block;
                           padding: 12px 20px;
                           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -324,7 +481,7 @@ def generate_recommendation_map(
                           text-align: center;
                           cursor: pointer;
                           transition: all 0.3s ease;">
-                    <i class="fa fa-bell" style="margin-right: 8px;"></i>Create Reminder
+                    <i class="fa fa-bell" style="margin-right: 8px;"></i>Reminder: All Onsens
                 </button>
                 <div style="margin-top: 8px;
                            padding: 8px;
@@ -335,16 +492,16 @@ def generate_recommendation_map(
                            color: #666;
                            text-align: center;
                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    {reminder_title}<br>
-                    <span style="font-size: 10px; color: #999;">Click for options</span>
+                    {global_reminder_title}<br>
+                    <span style="font-size: 10px; color: #999;">Click for all {len(recommendations)} onsens</span>
                 </div>
             </div>
             """
-            m.get_root().html.add_child(folium.Element(reminder_button_html))
+            m.get_root().html.add_child(folium.Element(global_reminder_html))
 
         except (OSError, ValueError) as e:
             # Log error but don't fail map generation
-            logger.warning(f"Failed to generate reminder script: {e}")
+            logger.warning(f"Failed to generate global reminder script: {e}")
 
     # Save map
     m.save(output_path)

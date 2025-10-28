@@ -5,7 +5,7 @@ Interactive visit commands.
 import sys
 import argparse
 from collections.abc import Callable
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Optional
 from src.db.conn import get_db
 from src.db.models import Onsen, OnsenVisit
@@ -217,10 +217,24 @@ def add_visit_interactive(args: argparse.Namespace) -> None:
         except ValueError:
             return False
 
-    def validate_datetime(input_str: str) -> bool:
-        """Validate datetime input (YYYY-MM-DD HH:MM)."""
+    def validate_date(input_str: str) -> bool:
+        """Validate date input (YYYY-MM-DD, or shortcuts: 0/empty for today, 1 for tomorrow)."""
+        if not input_str or input_str == "0":
+            return True  # Empty or "0" = today
+        if input_str == "1":
+            return True  # "1" = tomorrow
         try:
-            datetime.strptime(input_str, "%Y-%m-%d %H:%M")
+            datetime.strptime(input_str, "%Y-%m-%d")
+            return True
+        except ValueError:
+            return False
+
+    def validate_time(input_str: str) -> bool:
+        """Validate time input (HH:MM or empty for now)."""
+        if not input_str:
+            return True  # Empty = now
+        try:
+            datetime.strptime(input_str, "%H:%M")
             return True
         except ValueError:
             return False
@@ -248,12 +262,23 @@ def add_visit_interactive(args: argparse.Namespace) -> None:
             "step_title": "Basic visit information",
         },
         {
-            "name": "visit_time",
-            "prompt": "Enter visit time (YYYY-MM-DD HH:MM) or press Enter for now: ",
-            "validator": lambda x: not x or validate_datetime(x),
+            "name": "visit_date",
+            "prompt": "Enter visit date (0 or Enter for today, 1 for tomorrow, or YYYY-MM-DD): ",
+            "validator": validate_date,
             "processor": lambda x: (
-                datetime.now() if not x else datetime.strptime(x, "%Y-%m-%d %H:%M")
+                datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                if not x or x == "0"
+                else (datetime.now() + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+                if x == "1"
+                else datetime.strptime(x, "%Y-%m-%d")
             ),
+            "step_title": "Basic visit information",
+        },
+        {
+            "name": "visit_time_str",
+            "prompt": "Enter visit time (HH:MM or Enter for now): ",
+            "validator": validate_time,
+            "processor": lambda x: x,  # Store as string, will combine with date later
             "step_title": "Basic visit information",
         },
         {
@@ -739,8 +764,27 @@ def add_visit_interactive(args: argparse.Namespace) -> None:
             else:
                 print("Invalid input. Please try again.")
 
+    # Combine visit_date and visit_time_str into visit_time
+    print("\nProcessing visit data...")
+    if "visit_date" in session.visit_data and "visit_time_str" in session.visit_data:
+        visit_date = session.visit_data.pop("visit_date")
+        visit_time_str = session.visit_data.pop("visit_time_str")
+
+        if not visit_time_str:
+            # No time specified, use current time
+            now = datetime.now()
+            visit_time = visit_date.replace(
+                hour=now.hour, minute=now.minute, second=now.second, microsecond=now.microsecond
+            )
+        else:
+            # Parse time and combine with date
+            time_obj = datetime.strptime(visit_time_str, "%H:%M")
+            visit_time = visit_date.replace(hour=time_obj.hour, minute=time_obj.minute, second=0, microsecond=0)
+
+        session.visit_data["visit_time"] = visit_time
+
     # Save the visit
-    print("\nSaving visit data...")
+    print("Saving visit data...")
     with get_db(url=config.url) as db:
         onsen = (
             db.query(Onsen).filter(Onsen.id == session.visit_data["onsen_id"]).first()
