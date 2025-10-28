@@ -205,30 +205,127 @@ def generate_recommendation_map(
             # Generate the .command script with body
             generate_reminder_script(reminder_title, target_time, reminder_script_path, body=reminder_body)
 
-            # Add reminder button to the map
-            # Convert to file:// URI for the button link
-            script_uri = Path(reminder_script_path).as_uri()
+            # Add reminder button to the map with JavaScript execution
+            # Escape the path for JavaScript
+            escaped_script_path = reminder_script_path.replace('\\', '\\\\').replace("'", "\\'")
 
             reminder_button_html = f"""
+            <script>
+            var reminderScriptPath = '{escaped_script_path}';
+
+            function createReminder() {{
+                var terminalCommand = 'bash "' + reminderScriptPath + '"';
+
+                // Copy terminal command to clipboard
+                navigator.clipboard.writeText(terminalCommand).then(function() {{
+                    // Show modal with instructions
+                    var modal = document.getElementById('reminderModal');
+                    modal.style.display = 'block';
+                }}).catch(function(err) {{
+                    // Fallback if clipboard fails
+                    alert('To create the reminder:\\n\\n' +
+                          '1. Open Terminal\\n' +
+                          '2. Run this command:\\n' +
+                          terminalCommand + '\\n\\n' +
+                          'Or double-click this file in Finder:\\n' +
+                          reminderScriptPath);
+                }});
+            }}
+
+            function closeModal() {{
+                document.getElementById('reminderModal').style.display = 'none';
+            }}
+
+            function openInFinder() {{
+                // Try to reveal in Finder using file:// protocol
+                var dirPath = reminderScriptPath.substring(0, reminderScriptPath.lastIndexOf('/'));
+                window.open('file://' + dirPath);
+                closeModal();
+            }}
+            </script>
+
+            <!-- Reminder Modal -->
+            <div id="reminderModal" style="display: none;
+                                           position: fixed;
+                                           z-index: 10000;
+                                           left: 0;
+                                           top: 0;
+                                           width: 100%;
+                                           height: 100%;
+                                           background-color: rgba(0,0,0,0.5);">
+                <div style="background-color: white;
+                           margin: 10% auto;
+                           padding: 30px;
+                           border-radius: 10px;
+                           width: 500px;
+                           max-width: 90%;
+                           box-shadow: 0 8px 16px rgba(0,0,0,0.3);">
+                    <h2 style="margin-top: 0; color: #667eea;">Create Reminder</h2>
+                    <p style="margin: 20px 0;">Choose how to create your reminder:</p>
+
+                    <div style="margin: 20px 0; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
+                        <strong>Option 1: Terminal (Recommended)</strong>
+                        <p style="margin: 10px 0 5px 0; font-size: 13px;">
+                            The terminal command has been copied to your clipboard!
+                        </p>
+                        <ol style="margin: 10px 0; padding-left: 20px; font-size: 13px;">
+                            <li>Open Terminal (⌘+Space, type "Terminal")</li>
+                            <li>Paste the command (⌘+V)</li>
+                            <li>Press Enter</li>
+                        </ol>
+                    </div>
+
+                    <div style="margin: 20px 0; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
+                        <strong>Option 2: Finder</strong>
+                        <ol style="margin: 10px 0; padding-left: 20px; font-size: 13px;">
+                            <li>Click "Open Folder" below</li>
+                            <li>Double-click the .command file</li>
+                        </ol>
+                        <button onclick="openInFinder()"
+                               style="margin-top: 10px;
+                                      padding: 8px 16px;
+                                      background-color: #667eea;
+                                      color: white;
+                                      border: none;
+                                      border-radius: 5px;
+                                      cursor: pointer;">
+                            Open Folder
+                        </button>
+                    </div>
+
+                    <button onclick="closeModal()"
+                           style="margin-top: 20px;
+                                  padding: 10px 20px;
+                                  background-color: #ccc;
+                                  border: none;
+                                  border-radius: 5px;
+                                  cursor: pointer;">
+                        Close
+                    </button>
+                </div>
+            </div>
+
             <div style="position: fixed;
                         top: 80px;
                         right: 10px;
                         z-index: 9999;">
-                <a href="{script_uri}"
+                <button onclick="createReminder()"
                    style="display: block;
                           padding: 12px 20px;
                           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                           color: white;
                           text-decoration: none;
+                          border: none;
                           border-radius: 8px;
                           font-size: 14px;
                           font-weight: bold;
                           font-family: Arial, sans-serif;
                           box-shadow: 0 4px 6px rgba(0,0,0,0.3);
                           text-align: center;
+                          cursor: pointer;
                           transition: all 0.3s ease;">
                     <i class="fa fa-bell" style="margin-right: 8px;"></i>Create Reminder
-                </a>
+                </button>
                 <div style="margin-top: 8px;
                            padding: 8px;
                            background-color: white;
@@ -238,7 +335,8 @@ def generate_recommendation_map(
                            color: #666;
                            text-align: center;
                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    {reminder_title}
+                    {reminder_title}<br>
+                    <span style="font-size: 10px; color: #999;">Click for options</span>
                 </div>
             </div>
             """
