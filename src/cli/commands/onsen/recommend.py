@@ -95,6 +95,12 @@ def recommend_onsen(args: argparse.Namespace) -> None:
                         print(f"     Note: {note}")
             print()
 
+        # If no target time was specified, use current time for reminder
+        # (The recommendation engine already uses "now" internally when target_time is None,
+        # but the map generator needs an actual datetime for the reminder button)
+        if target_time is None:
+            target_time = datetime.now()
+
         # Generate interactive map by default (unless disabled)
         should_generate_map = not (hasattr(args, "no_generate_map") and args.no_generate_map)
         if hasattr(args, "generate_map"):
