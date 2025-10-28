@@ -2,19 +2,27 @@
 
 import os
 from datetime import datetime
+from pathlib import Path
 import folium
 from folium import IFrame
+from loguru import logger
 
 from sqlalchemy.orm import Session
 from src.db.models import Onsen, Location, OnsenVisit
 from src.paths import PATHS
 from src.lib.utils import generate_google_maps_link
+from src.lib.apple_reminders import (
+    generate_reminder_script,
+    is_reminders_available,
+    format_onsen_details_for_reminder
+)
 
 
 def generate_recommendation_map(
     recommendations: list[tuple[Onsen, float, dict]],
     location: Location,
     output_filename: str | None = None,
+    target_time: datetime | None = None,
 ) -> str:
     """
     Generate an interactive HTML map showing recommended onsens.
@@ -23,6 +31,7 @@ def generate_recommendation_map(
         recommendations: List of tuples (onsen, distance_km, metadata)
         location: User's location (used as map center)
         output_filename: Optional filename for the map (default: timestamped)
+        target_time: Optional target time for onsen visit (enables reminder button)
 
     Returns:
         Absolute path to the generated HTML file
@@ -174,6 +183,70 @@ def generate_recommendation_map(
     </div>
     """
     m.get_root().html.add_child(folium.Element(legend_html))
+
+    # Generate reminder script and add button if target_time is provided
+    reminder_script_path = None
+    if target_time and is_reminders_available():
+        try:
+            # Generate script filename based on map filename
+            script_filename = output_filename.replace('.html', '.command')
+            reminder_script_path = os.path.join(PATHS.MAPS_DIR, script_filename)
+
+            # Format reminder title
+            time_str = target_time.strftime("%H:%M")
+            reminder_title = f"Onsen recommendation {time_str}"
+
+            # Format reminder body with onsen details
+            reminder_body = format_onsen_details_for_reminder(
+                recommendations=recommendations,
+                location_name=location.name
+            )
+
+            # Generate the .command script with body
+            generate_reminder_script(reminder_title, target_time, reminder_script_path, body=reminder_body)
+
+            # Add reminder button to the map
+            # Convert to file:// URI for the button link
+            script_uri = Path(reminder_script_path).as_uri()
+
+            reminder_button_html = f"""
+            <div style="position: fixed;
+                        top: 80px;
+                        right: 10px;
+                        z-index: 9999;">
+                <a href="{script_uri}"
+                   style="display: block;
+                          padding: 12px 20px;
+                          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                          color: white;
+                          text-decoration: none;
+                          border-radius: 8px;
+                          font-size: 14px;
+                          font-weight: bold;
+                          font-family: Arial, sans-serif;
+                          box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                          text-align: center;
+                          transition: all 0.3s ease;">
+                    <i class="fa fa-bell" style="margin-right: 8px;"></i>Create Reminder
+                </a>
+                <div style="margin-top: 8px;
+                           padding: 8px;
+                           background-color: white;
+                           border: 1px solid #ddd;
+                           border-radius: 5px;
+                           font-size: 11px;
+                           color: #666;
+                           text-align: center;
+                           box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    {reminder_title}
+                </div>
+            </div>
+            """
+            m.get_root().html.add_child(folium.Element(reminder_button_html))
+
+        except (OSError, ValueError) as e:
+            # Log error but don't fail map generation
+            logger.warning(f"Failed to generate reminder script: {e}")
 
     # Save map
     m.save(output_path)

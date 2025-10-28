@@ -9,6 +9,7 @@ from pathlib import Path
 from src.db.conn import get_db
 from src.lib.recommendation import OnsenRecommendationEngine
 from src.lib.map_generator import generate_recommendation_map
+from src.lib.apple_reminders import is_reminders_available
 from src.config import get_database_config
 
 
@@ -102,11 +103,17 @@ def recommend_onsen(args: argparse.Namespace) -> None:
         if should_generate_map:
             try:
                 map_path = generate_recommendation_map(
-                    recommendations, location
+                    recommendations, location, target_time=target_time
                 )
                 print("=" * 60)
                 print("Interactive Map Generated!")
                 print(f"\nMap saved to: {map_path}")
+
+                # Inform about reminder button if target time was provided
+                if target_time and is_reminders_available():
+                    time_str = target_time.strftime("%H:%M")
+                    print("\n💡 Tip: Click the 'Create Reminder' button in the map to add")
+                    print(f"   'Onsen recommendation {time_str}' to your Apple Reminders!")
 
                 # Check if auto-open is requested
                 auto_open = getattr(args, "open_map", False)
