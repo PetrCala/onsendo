@@ -62,6 +62,10 @@ def list_heart_rate_data(args: argparse.Namespace) -> int:
             # Sort by recording start time (newest first)
             records.sort(key=lambda x: x.recording_start, reverse=True)
 
+            # Apply limit if specified
+            if hasattr(args, 'limit') and args.limit is not None:
+                records = records[:args.limit]
+
             for record in records:
                 print(f"\n📊 Record ID: {record.id}")
                 print(

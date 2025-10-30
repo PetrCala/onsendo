@@ -93,7 +93,13 @@ CLI_COMMANDS = {
     "location-list": CommandConfig(
         func=lazy_command("src.cli.commands.location.list", "list_locations"),
         help="List all locations in the database.",
-        args={},
+        args={
+            "limit": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Limit number of results",
+            ),
+        },
     ),
     "location-delete": CommandConfig(
         func=lazy_command("src.cli.commands.location.delete", "delete_location"),
@@ -202,7 +208,13 @@ CLI_COMMANDS = {
     "visit-list": CommandConfig(
         func=lazy_command("src.cli.commands.visit.list", "list_visits"),
         help="List all visits in the database.",
-        args={},
+        args={
+            "limit": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Limit number of results",
+            ),
+        },
     ),
     "visit-delete": CommandConfig(
         func=lazy_command("src.cli.commands.visit.delete", "delete_visit"),
@@ -744,6 +756,11 @@ CLI_COMMANDS = {
             "details": ArgumentConfig(
                 action="store_true",
                 help="Show detailed information including file integrity",
+            ),
+            "limit": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Limit number of results",
             ),
         },
     ),

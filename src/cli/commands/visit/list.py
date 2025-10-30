@@ -18,12 +18,17 @@ def list_visits(args: argparse.Namespace) -> None:
 
     with get_db(url=config.url) as db:
         # Get visits with onsen information
-        visits = (
+        query = (
             db.query(OnsenVisit, Onsen)
             .join(Onsen)
             .order_by(OnsenVisit.visit_time.desc())
-            .all()
         )
+
+        # Apply limit if specified
+        if hasattr(args, 'limit') and args.limit is not None:
+            query = query.limit(args.limit)
+
+        visits = query.all()
 
         if not visits:
             print("No visits found in the database.")

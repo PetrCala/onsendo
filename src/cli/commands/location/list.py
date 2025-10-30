@@ -17,7 +17,13 @@ def list_locations(args: argparse.Namespace) -> None:
     )
 
     with get_db(url=config.url) as db:
-        locations = db.query(Location).order_by(Location.name).all()
+        query = db.query(Location).order_by(Location.name)
+
+        # Apply limit if specified
+        if hasattr(args, 'limit') and args.limit is not None:
+            query = query.limit(args.limit)
+
+        locations = query.all()
 
         if not locations:
             print("No locations found in the database.")
