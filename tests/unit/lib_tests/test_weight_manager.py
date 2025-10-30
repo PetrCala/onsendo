@@ -24,7 +24,7 @@ class TestWeightMeasurement:
     def test_weight_measurement_creation(self):
         """Test creating a weight measurement."""
         measurement = WeightMeasurement(
-            measurement_time=datetime(2025, 11, 1, 7, 30, 0),
+            measurement_time=datetime(2025, 10, 15, 7, 30, 0),
             weight_kg=72.5,
             data_source="manual",
             measurement_conditions="fasted",
@@ -32,7 +32,7 @@ class TestWeightMeasurement:
             notes="After workout",
         )
 
-        assert measurement.measurement_time == datetime(2025, 11, 1, 7, 30, 0)
+        assert measurement.measurement_time == datetime(2025, 10, 15, 7, 30, 0)
         assert measurement.weight_kg == 72.5
         assert measurement.data_source == "manual"
         assert measurement.measurement_conditions == "fasted"
@@ -42,7 +42,7 @@ class TestWeightMeasurement:
     def test_weight_measurement_required_only(self):
         """Test measurement with only required fields."""
         measurement = WeightMeasurement(
-            measurement_time=datetime(2025, 11, 1, 7, 30, 0),
+            measurement_time=datetime(2025, 10, 15, 7, 30, 0),
             weight_kg=70.0,
             data_source="scale",
         )
@@ -56,7 +56,7 @@ class TestWeightMeasurement:
         """Test that negative weight raises error."""
         with pytest.raises(ValueError, match="Weight must be positive"):
             WeightMeasurement(
-                measurement_time=datetime(2025, 11, 1, 7, 30, 0),
+                measurement_time=datetime(2025, 10, 15, 7, 30, 0),
                 weight_kg=-5.0,
                 data_source="manual",
             )
@@ -64,7 +64,7 @@ class TestWeightMeasurement:
     def test_data_source_normalization(self):
         """Test that data source is normalized to lowercase."""
         measurement = WeightMeasurement(
-            measurement_time=datetime(2025, 11, 1, 7, 30, 0),
+            measurement_time=datetime(2025, 10, 15, 7, 30, 0),
             weight_kg=70.0,
             data_source="MANUAL",
         )
@@ -78,7 +78,7 @@ class TestWeightDataValidator:
     def test_valid_measurement(self):
         """Test validation of a valid measurement."""
         measurement = WeightMeasurement(
-            measurement_time=datetime(2025, 11, 1, 7, 30, 0),
+            measurement_time=datetime(2025, 10, 15, 7, 30, 0),
             weight_kg=72.5,
             data_source="manual",
         )
@@ -90,7 +90,7 @@ class TestWeightDataValidator:
     def test_weight_too_low(self):
         """Test validation of unrealistically low weight."""
         measurement = WeightMeasurement(
-            measurement_time=datetime(2025, 11, 1, 7, 30, 0),
+            measurement_time=datetime(2025, 10, 15, 7, 30, 0),
             weight_kg=30.0,  # Below 40 kg minimum
             data_source="manual",
         )
@@ -102,7 +102,7 @@ class TestWeightDataValidator:
     def test_weight_too_high(self):
         """Test validation of unrealistically high weight."""
         measurement = WeightMeasurement(
-            measurement_time=datetime(2025, 11, 1, 7, 30, 0),
+            measurement_time=datetime(2025, 10, 15, 7, 30, 0),
             weight_kg=250.0,  # Above 200 kg maximum
             data_source="manual",
         )
@@ -128,7 +128,7 @@ class TestWeightDataValidator:
         """Test validation accepts valid measurement conditions."""
         for condition in ["fasted", "after_meal", "post_workout", "before_workout", "normal"]:
             measurement = WeightMeasurement(
-                measurement_time=datetime(2025, 11, 1, 7, 30, 0),
+                measurement_time=datetime(2025, 10, 15, 7, 30, 0),
                 weight_kg=72.5,
                 data_source="manual",
                 measurement_conditions=condition,
@@ -140,7 +140,7 @@ class TestWeightDataValidator:
     def test_invalid_conditions(self):
         """Test validation rejects invalid measurement conditions."""
         measurement = WeightMeasurement(
-            measurement_time=datetime(2025, 11, 1, 7, 30, 0),
+            measurement_time=datetime(2025, 10, 15, 7, 30, 0),
             weight_kg=72.5,
             data_source="manual",
             measurement_conditions="invalid_condition",
@@ -154,7 +154,7 @@ class TestWeightDataValidator:
         """Test validation accepts valid time of day values."""
         for time_of_day in ["morning", "afternoon", "evening", "night"]:
             measurement = WeightMeasurement(
-                measurement_time=datetime(2025, 11, 1, 7, 30, 0),
+                measurement_time=datetime(2025, 10, 15, 7, 30, 0),
                 weight_kg=72.5,
                 data_source="manual",
                 time_of_day=time_of_day,
@@ -166,7 +166,7 @@ class TestWeightDataValidator:
     def test_invalid_time_of_day(self):
         """Test validation rejects invalid time of day."""
         measurement = WeightMeasurement(
-            measurement_time=datetime(2025, 11, 1, 7, 30, 0),
+            measurement_time=datetime(2025, 10, 15, 7, 30, 0),
             weight_kg=72.5,
             data_source="manual",
             time_of_day="invalid_time",

@@ -308,17 +308,17 @@ class TestWeightDatabaseIntegration:
         # Store measurements in random order
         measurements = [
             WeightMeasurement(
-                measurement_time=datetime(2025, 11, 3, 7, 30, 0),
+                measurement_time=datetime(2025, 10, 20, 7, 30, 0),
                 weight_kg=71.0,
                 data_source="manual",
             ),
             WeightMeasurement(
-                measurement_time=datetime(2025, 11, 1, 7, 30, 0),
+                measurement_time=datetime(2025, 10, 18, 7, 30, 0),
                 weight_kg=73.0,
                 data_source="manual",
             ),
             WeightMeasurement(
-                measurement_time=datetime(2025, 11, 2, 7, 30, 0),
+                measurement_time=datetime(2025, 10, 19, 7, 30, 0),
                 weight_kg=72.0,
                 data_source="manual",
             ),
@@ -330,14 +330,15 @@ class TestWeightDatabaseIntegration:
         # Get all (should be ordered by time descending)
         all_measurements = manager.get_all()
         assert len(all_measurements) == 3
-        assert all_measurements[0].measurement_time.day == 3  # Most recent first
-        assert all_measurements[1].measurement_time.day == 2
-        assert all_measurements[2].measurement_time.day == 1
+        assert all_measurements[0].measurement_time.day == 20  # Most recent first
+        assert all_measurements[1].measurement_time.day == 19
+        assert all_measurements[2].measurement_time.day == 18
 
         # Get by date range (should be ordered ascending)
+        # Note: end_date needs to be end of day to include measurements on that day
         range_measurements = manager.get_by_date_range(
-            datetime(2025, 11, 1), datetime(2025, 11, 3)
+            datetime(2025, 10, 18), datetime(2025, 10, 20, 23, 59, 59)
         )
-        assert range_measurements[0].measurement_time.day == 1  # Earliest first
-        assert range_measurements[1].measurement_time.day == 2
-        assert range_measurements[2].measurement_time.day == 3
+        assert range_measurements[0].measurement_time.day == 18  # Earliest first
+        assert range_measurements[1].measurement_time.day == 19
+        assert range_measurements[2].measurement_time.day == 20
