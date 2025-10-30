@@ -5,7 +5,7 @@ from loguru import logger
 
 from src.db.conn import db_manager
 from src.db.models import Base
-from src.const import CONST
+from src.config import get_database_url
 
 
 def main(action: Optional[str] = "create"):
@@ -35,9 +35,9 @@ def drop_all(database_url: Optional[str] = None):
     Drop all tables in the database.
 
     Args:
-        database_url: Optional database URL. If not provided, uses CONST.DATABASE_URL.
+        database_url: Optional database URL. If not provided, uses default from config.
     """
-    url = database_url or CONST.DATABASE_URL
+    url = database_url or get_database_url()
     logger.warning(f"Dropping all tables in the database: {url}")
     # Get the engine from db_manager
     engine = db_manager.engines.get(url)
@@ -52,9 +52,9 @@ def create_all(database_url: Optional[str] = None):
     Create all tables in the database.
 
     Args:
-        database_url: Optional database URL. If not provided, uses CONST.DATABASE_URL.
+        database_url: Optional database URL. If not provided, uses default from config.
     """
-    url = database_url or CONST.DATABASE_URL
+    url = database_url or get_database_url()
     logger.info(f"Creating all tables in the database: {url}")
     # Get the engine from db_manager
     engine = db_manager.engines.get(url)

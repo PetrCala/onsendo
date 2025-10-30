@@ -11,7 +11,7 @@ import pytest
 from src.cli.commands.rules.revision_create import auto_fetch_week_statistics
 from src.db.conn import get_db
 from src.db.models import OnsenVisit, ExerciseSession, Onsen
-from src.const import CONST
+from src.config import get_database_url
 from src.types.exercise import ExerciseType, DataSource
 
 
@@ -25,7 +25,7 @@ class TestAutoFetchWeekStatisticsIntegration:
         week_start = "2020-01-01"
         week_end = "2020-01-07"
 
-        metrics = auto_fetch_week_statistics(week_start, week_end, database_url=CONST.DATABASE_URL)
+        metrics = auto_fetch_week_statistics(week_start, week_end, database_url=get_database_url())
 
         assert metrics is not None
         assert metrics.onsen_visits_count == 0
@@ -43,7 +43,7 @@ class TestAutoFetchWeekStatisticsIntegration:
         week_start = week_start_dt.strftime("%Y-%m-%d")
         week_end = week_end_dt.strftime("%Y-%m-%d")
 
-        with get_db(url=CONST.DATABASE_URL) as db:
+        with get_db(url=get_database_url()) as db:
             # Find or create a test onsen
             test_onsen = db.query(Onsen).first()
             if not test_onsen:
@@ -115,7 +115,7 @@ class TestAutoFetchWeekStatisticsIntegration:
 
         try:
             # Test auto-fetch
-            metrics = auto_fetch_week_statistics(week_start, week_end, database_url=CONST.DATABASE_URL)
+            metrics = auto_fetch_week_statistics(week_start, week_end, database_url=get_database_url())
 
             assert metrics is not None
             assert metrics.onsen_visits_count == 3
@@ -127,7 +127,7 @@ class TestAutoFetchWeekStatisticsIntegration:
 
         finally:
             # Cleanup test data
-            with get_db(url=CONST.DATABASE_URL) as db:
+            with get_db(url=get_database_url()) as db:
                 # Delete test visits
                 db.query(OnsenVisit).filter(
                     OnsenVisit.visit_time >= week_start_dt
@@ -149,7 +149,7 @@ class TestAutoFetchWeekStatisticsIntegration:
         week_start = week_start_dt.strftime("%Y-%m-%d")
         week_end = week_end_dt.strftime("%Y-%m-%d")
 
-        with get_db(url=CONST.DATABASE_URL) as db:
+        with get_db(url=get_database_url()) as db:
             # Find or create a test onsen
             test_onsen = db.query(Onsen).first()
             if not test_onsen:
@@ -184,7 +184,7 @@ class TestAutoFetchWeekStatisticsIntegration:
 
         try:
             # Test auto-fetch
-            metrics = auto_fetch_week_statistics(week_start, week_end, database_url=CONST.DATABASE_URL)
+            metrics = auto_fetch_week_statistics(week_start, week_end, database_url=get_database_url())
 
             assert metrics is not None
             assert metrics.onsen_visits_count == 1  # Only visit_within
@@ -192,7 +192,7 @@ class TestAutoFetchWeekStatisticsIntegration:
 
         finally:
             # Cleanup
-            with get_db(url=CONST.DATABASE_URL) as db:
+            with get_db(url=get_database_url()) as db:
                 # Delete all three test visits
                 db.query(OnsenVisit).filter(
                     OnsenVisit.visit_time >= week_start_dt - timedelta(days=2)
@@ -208,7 +208,7 @@ class TestAutoFetchWeekStatisticsIntegration:
         week_start = week_start_dt.strftime("%Y-%m-%d")
         week_end = week_end_dt.strftime("%Y-%m-%d")
 
-        with get_db(url=CONST.DATABASE_URL) as db:
+        with get_db(url=get_database_url()) as db:
             test_onsen = db.query(Onsen).first()
             if not test_onsen:
                 pytest.skip("No onsens in database")
@@ -224,7 +224,7 @@ class TestAutoFetchWeekStatisticsIntegration:
             db.commit()
 
         try:
-            metrics = auto_fetch_week_statistics(week_start, week_end, database_url=CONST.DATABASE_URL)
+            metrics = auto_fetch_week_statistics(week_start, week_end, database_url=get_database_url())
 
             assert metrics is not None
             assert metrics.onsen_visits_count == 1
@@ -233,7 +233,7 @@ class TestAutoFetchWeekStatisticsIntegration:
 
         finally:
             # Cleanup
-            with get_db(url=CONST.DATABASE_URL) as db:
+            with get_db(url=get_database_url()) as db:
                 db.query(OnsenVisit).filter(
                     OnsenVisit.visit_time >= week_start_dt
                 ).filter(
@@ -243,7 +243,7 @@ class TestAutoFetchWeekStatisticsIntegration:
 
     def test_auto_fetch_with_invalid_date_format(self):
         """Test auto-fetch handles invalid date format gracefully."""
-        metrics = auto_fetch_week_statistics("invalid-date", "also-invalid", database_url=CONST.DATABASE_URL)
+        metrics = auto_fetch_week_statistics("invalid-date", "also-invalid", database_url=get_database_url())
 
         # Should return None due to error
         assert metrics is None

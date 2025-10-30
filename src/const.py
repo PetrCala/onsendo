@@ -4,12 +4,6 @@ from src.paths import PATHS
 
 class CONST(NamedTuple):
     DATABASE_FOLDER: str = PATHS.DB_DIR
-
-    # Legacy database configuration (deprecated - use src.config instead)
-    DATABASE_NAME: str = "onsen.db"
-    DATABASE_URL: str = f"sqlite:///{PATHS.DB_DIR}/{DATABASE_NAME}"
-
-    # Environment-specific database URLs
     DEV_DATABASE_URL: str = f"sqlite:///{PATHS.DB_DIR}/onsen.dev.db"
     PROD_DATABASE_URL: str = f"sqlite:///{PATHS.DB_DIR}/onsen.prod.db"
     MOCK_DATABASE_URL: str = "sqlite:///:memory:"

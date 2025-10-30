@@ -28,8 +28,8 @@ class ArtifactGenerator:
 
     def _backup_current_db(self) -> str:
         """Create a backup of the current database if it exists."""
-        current_db_path = CONST.DATABASE_URL.replace("sqlite:///", "")
-        if not os.path.exists(current_db_path):
+        current_db_path = get_database_config().path
+        if not current_db_path or not os.path.exists(current_db_path):
             return ""
 
         backup_path = tempfile.mktemp(suffix=".db")
@@ -42,7 +42,11 @@ class ArtifactGenerator:
         if not backup_path or not os.path.exists(backup_path):
             return
 
-        current_db_path = CONST.DATABASE_URL.replace("sqlite:///", "")
+        current_db_path = get_database_config().path
+        if not current_db_path:
+            logger.warning("Cannot restore database: no valid database path")
+            return
+
         shutil.copy2(backup_path, current_db_path)
         os.unlink(backup_path)
         logger.info("Restored current database from backup")
@@ -228,13 +232,13 @@ class ArtifactGenerator:
     def generate_onsen_latest_db(self) -> str:
         """Generate onsen_latest.db artifact - copy of current database state."""
         artifact_path = Path(PATHS.ONSEN_LATEST_ARTIFACT)
-        current_db_path = CONST.DATABASE_URL.replace("sqlite:///", "")
+        current_db_path = get_database_config().path
 
         # Remove existing artifact if it exists
         if artifact_path.exists():
             artifact_path.unlink()
 
-        if os.path.exists(current_db_path):
+        if current_db_path and os.path.exists(current_db_path):
             # Copy current database state
             shutil.copy2(current_db_path, str(artifact_path))
             logger.info(

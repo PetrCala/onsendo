@@ -13,6 +13,7 @@ from datetime import datetime
 from difflib import unified_diff
 
 from src.paths import PATHS
+from src.config import get_database_url
 from src.types.rules import (
     RuleSection,
     RuleModification,
@@ -117,16 +118,15 @@ class RuleRevisionBuilder:
         Get the next version number based on existing revisions in the database.
 
         Args:
-            database_url: Optional database URL. If not provided, uses CONST.DATABASE_URL.
+            database_url: Optional database URL. If not provided, uses default from config.
 
         Returns:
             Next sequential version number.
         """
         from src.db.conn import get_db
         from src.db.models import RuleRevision
-        from src.const import CONST
 
-        url = database_url or CONST.DATABASE_URL
+        url = database_url or get_database_url()
         with get_db(url=url) as db:
             max_version = db.query(RuleRevision.version_number).order_by(
                 RuleRevision.version_number.desc()
@@ -185,16 +185,15 @@ class RuleDiffer:
         Args:
             version_a: First version number
             version_b: Second version number
-            database_url: Optional database URL. If not provided, uses CONST.DATABASE_URL.
+            database_url: Optional database URL. If not provided, uses default from config.
 
         Returns:
             RulesDiff object containing the differences
         """
         from src.db.conn import get_db
         from src.db.models import RuleRevision
-        from src.const import CONST
 
-        url = database_url or CONST.DATABASE_URL
+        url = database_url or get_database_url()
         with get_db(url=url) as db:
             revision_a = (
                 db.query(RuleRevision)

@@ -174,6 +174,7 @@ poetry run onsendo database migrate-to-envs
 ```
 
 **After migration:**
+
 - Your original `onsen.db` remains unchanged
 - `onsen.prod.db` contains your production data
 - `onsen.dev.db` is your new default for development
@@ -273,6 +274,7 @@ def my_mock_command(args: argparse.Namespace) -> None:
 **Problem**: Tests fail with "Cannot run tests with ONSENDO_ENV=prod"
 
 **Solution**: Unset the environment variable:
+
 ```bash
 unset ONSENDO_ENV
 poetry run pytest
@@ -283,6 +285,7 @@ poetry run pytest
 **Problem**: Modified or deleted production data
 
 **Solution**: Restore from automatic backups:
+
 ```bash
 # List available backups
 make backup-list
@@ -290,12 +293,6 @@ make backup-list
 # Restore interactively
 make backup-restore
 ```
-
-### Commands not using new environment system
-
-**Problem**: Some commands still use old `CONST.DATABASE_URL`
-
-**Solution**: Update the command following the patterns above. See `src/cli/commands/database/init_db.py` for a complete example.
 
 ## Best Practices
 
