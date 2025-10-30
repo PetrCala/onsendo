@@ -4,6 +4,7 @@ Tests for mock visit data generation and logic chains.
 
 import pytest
 from datetime import datetime
+from src.lib.datetime_input import get_time_of_day_from_datetime
 from src.testing.mocks.mock_visit_data import (
     MockOnsenVisit,
     MockVisitDataGenerator,
@@ -22,7 +23,6 @@ class TestMockOnsenVisit:
             entry_fee_yen=500,
             payment_method="cash",
             weather="sunny",
-            time_of_day="afternoon",
             temperature_outside_celsius=25.0,
             visit_time=datetime.now(),
             stay_length_minutes=60,
@@ -69,7 +69,6 @@ class TestMockOnsenVisit:
             entry_fee_yen=500,
             payment_method="cash",
             weather="sunny",
-            time_of_day="afternoon",
             temperature_outside_celsius=25.0,
             visit_time=datetime.now(),
             stay_length_minutes=60,
@@ -114,7 +113,6 @@ class TestMockOnsenVisit:
             entry_fee_yen=500,
             payment_method="cash",
             weather="sunny",
-            time_of_day="afternoon",
             temperature_outside_celsius=25.0,
             visit_time=datetime.now(),
             stay_length_minutes=60,
@@ -164,7 +162,9 @@ class TestMockVisitDataGenerator:
         assert isinstance(visit.entry_fee_yen, int)
         assert visit.payment_method in generator.PAYMENT_METHODS
         assert visit.weather in generator.WEATHER_CONDITIONS
-        assert visit.time_of_day in generator.TIME_OF_DAY
+        # time_of_day is now derived from visit_time
+        time_of_day = get_time_of_day_from_datetime(visit.visit_time)
+        assert time_of_day in generator.TIME_OF_DAY
         assert isinstance(visit.temperature_outside_celsius, float)
         assert isinstance(visit.visit_time, datetime)
         assert isinstance(visit.stay_length_minutes, int)
@@ -217,16 +217,20 @@ class TestMockVisitDataGenerator:
         """Test that seasonal temperatures are realistic."""
         generator = MockVisitDataGenerator()
 
-        # Test summer visits (should avoid afternoon)
+        # Test summer visits (should avoid afternoon - hours 12-17)
         summer_visits = generator.generate_seasonal_visits([1], "summer", 5)
         for visit in summer_visits:
-            assert visit.time_of_day in ["morning", "evening"]
+            # Should be morning (6-11) or evening (18-22)
+            hour = visit.visit_time.hour
+            assert hour in list(range(6, 12)) + list(range(18, 23))
             assert 25.0 <= visit.temperature_outside_celsius <= 35.0
 
-        # Test winter visits (should avoid morning)
+        # Test winter visits (should avoid cold morning - hours 5-11)
         winter_visits = generator.generate_seasonal_visits([1], "winter", 5)
         for visit in winter_visits:
-            assert visit.time_of_day in ["afternoon", "evening"]
+            # Should be afternoon (12-17) or evening (18-22)
+            hour = visit.visit_time.hour
+            assert hour in list(range(12, 18)) + list(range(18, 23))
             assert 5.0 <= visit.temperature_outside_celsius <= 15.0
 
 

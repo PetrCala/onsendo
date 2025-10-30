@@ -10,7 +10,9 @@ from loguru import logger
 from src.config import DatabaseConfig
 
 
-def show_database_banner(config: DatabaseConfig, operation: Optional[str] = None) -> None:
+def show_database_banner(
+    config: DatabaseConfig, operation: Optional[str] = None
+) -> None:
     """Display database environment banner for destructive operations.
 
     Shows a prominent warning banner for production database operations,

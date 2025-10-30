@@ -35,7 +35,6 @@ class MockOnsenVisit:
     entry_fee_yen: int
     payment_method: str
     weather: str
-    time_of_day: str
     temperature_outside_celsius: float
     visit_time: datetime
     stay_length_minutes: int
@@ -291,7 +290,6 @@ class MockVisitDataGenerator:
         self,
         onsen_id: int,
         visit_date: Optional[datetime] = None,
-        time_of_day: Optional[str] = None,
         weather: Optional[str] = None,
         visited_with: Optional[str] = None,
         travel_mode: Optional[str] = None,
@@ -303,9 +301,6 @@ class MockVisitDataGenerator:
         if visit_date is None:
             visit_date = self.fake.date_time_between(start_date="-1y", end_date="now")
 
-        if time_of_day is None:
-            time_of_day = random.choice(self.TIME_OF_DAY)
-
         if weather is None:
             weather = random.choice(self.WEATHER_CONDITIONS)
 
@@ -314,6 +309,15 @@ class MockVisitDataGenerator:
 
         if travel_mode is None:
             travel_mode = random.choice(self.TRAVEL_MODES)
+
+        # Derive time of day from visit_date for temperature calculation
+        hour = visit_date.hour
+        if 5 <= hour < 12:
+            time_of_day = "morning"
+        elif 12 <= hour < 18:
+            time_of_day = "afternoon"
+        else:
+            time_of_day = "evening"
 
         # Determine season and generate realistic temperatures
         season = self._get_season(visit_date)
@@ -337,7 +341,6 @@ class MockVisitDataGenerator:
             "entry_fee_yen": random.choice([100, 200, 300, 400, 500, 800, 1000]),
             "payment_method": random.choice(self.PAYMENT_METHODS),
             "weather": weather,
-            "time_of_day": time_of_day,
             "temperature_outside_celsius": outside_temp,
             "visit_time": visit_date,
             "stay_length_minutes": random.randint(30, 120),
@@ -496,20 +499,24 @@ class MockVisitDataGenerator:
             season_kwargs = kwargs.copy()
 
             if season == "summer":
+                # Avoid hot afternoon - adjust visit_date to morning (6-11) or evening (18-22)
+                preferred_hour = random.choice(
+                    list(range(6, 12)) + list(range(18, 23))
+                )
+                visit_date = visit_date.replace(hour=preferred_hour)
                 season_kwargs.update(
                     {
-                        "time_of_day": random.choice(
-                            ["morning", "evening"]
-                        ),  # Avoid hot afternoon
                         "temperature_outside_celsius": random.uniform(25.0, 35.0),
                     }
                 )
             elif season == "winter":
+                # Avoid cold morning - adjust visit_date to afternoon (12-17) or evening (18-22)
+                preferred_hour = random.choice(
+                    list(range(12, 18)) + list(range(18, 23))
+                )
+                visit_date = visit_date.replace(hour=preferred_hour)
                 season_kwargs.update(
                     {
-                        "time_of_day": random.choice(
-                            ["afternoon", "evening"]
-                        ),  # Avoid cold morning
                         "temperature_outside_celsius": random.uniform(5.0, 15.0),
                     }
                 )

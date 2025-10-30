@@ -132,7 +132,6 @@ class ModelSearchEngine:
         experience_vars = [
             'crowd_level',
             'weather',
-            'time_of_day',
         ]
 
         heart_rate_vars = [col for col in ['average_heart_rate', 'hr_range', 'hr_pct_max']

@@ -3,6 +3,7 @@ Reusable datetime input utilities for CLI interactive workflows.
 
 This module provides helper functions for collecting date and time input
 from users with convenient shortcuts like "today", "tomorrow", and "now".
+It also provides utilities for deriving time-of-day categories from datetime objects.
 """
 # pylint: disable=bad-builtin  # input() is appropriate for CLI interaction
 
@@ -163,3 +164,32 @@ def get_datetime_input(
     date_obj = get_date_input(date_prompt, allow_shortcuts=allow_date_shortcuts)
     time_tuple = get_time_input(time_prompt, allow_now=allow_now)
     return combine_date_time(date_obj, time_tuple)
+
+
+def get_time_of_day_from_datetime(dt: datetime) -> str:
+    """
+    Derive time of day category from a datetime object.
+
+    Args:
+        dt: datetime object to categorize
+
+    Returns:
+        One of: "morning", "afternoon", "evening"
+
+    Time ranges:
+        - morning: 05:00 - 11:59
+        - afternoon: 12:00 - 17:59
+        - evening: 18:00 - 04:59
+
+    Example:
+        >>> dt = datetime(2025, 10, 30, 8, 30)
+        >>> get_time_of_day_from_datetime(dt)
+        'morning'
+    """
+    hour = dt.hour
+    if 5 <= hour < 12:
+        return "morning"
+    elif 12 <= hour < 18:
+        return "afternoon"
+    else:
+        return "evening"

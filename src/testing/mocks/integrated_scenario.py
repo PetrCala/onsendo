@@ -14,6 +14,7 @@ from typing import Optional
 import random
 import numpy as np
 
+from src.lib.datetime_input import get_time_of_day_from_datetime
 from src.testing.mocks.scenario_builder import (
     RealisticDataGenerator,
     ScenarioConfig,
@@ -68,12 +69,13 @@ def generate_heart_rate_for_visit(
     recording_end = recording_start + timedelta(minutes=recording_duration)
 
     # Create session with realistic HR progression during onsen visit
+    time_of_day = get_time_of_day_from_datetime(visit.visit_time)
     session = hr_generator.generate_session(
         scenario=scenario,
         start_time=recording_start,
         duration_minutes=recording_duration,
         base_heart_rate=base_hr,
-        notes=f"Onsen visit to ID {visit.onsen_id} - {visit.time_of_day}",
+        notes=f"Onsen visit to ID {visit.onsen_id} - {time_of_day}",
     )
 
     # Adjust heart rate based on onsen characteristics

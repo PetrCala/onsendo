@@ -50,9 +50,7 @@ class DistanceMilestones:
             "far": DistanceCategory(
                 "far", float("inf"), f"Far (beyond {self.medium_max:.1f}km)"
             ),
-            "any": DistanceCategory(
-                "any", float("inf"), "Any distance"
-            ),
+            "any": DistanceCategory("any", float("inf"), "Any distance"),
         }
 
 
@@ -252,7 +250,8 @@ def filter_onsens_by_distance(
     if use_heap:
         # Convert the heap into a sorted list of (onsen, distance) pairs
         filtered_onsens = [
-            (onsen, dist) for _, _, onsen, dist in sorted(heap, key=lambda item: item[3])
+            (onsen, dist)
+            for _, _, onsen, dist in sorted(heap, key=lambda item: item[3])
         ]
     else:
         # Sort by distance (closest first)

@@ -315,13 +315,6 @@ def get_visit_steps(skip_onsen_selection: bool = False) -> list[dict]:
             "step_title": "Basic visit information",
         },
         {
-            "name": "time_of_day",
-            "prompt": "Time of day (morning/afternoon/evening): ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "step_title": "Basic visit information",
-        },
-        {
             "name": "temperature_outside_celsius",
             "prompt": "Temperature outside (°C): ",
             "validator": lambda x: not x or validate_float(x),

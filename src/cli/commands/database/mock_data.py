@@ -122,7 +122,6 @@ def insert_mock_visits(args: argparse.Namespace) -> None:
                 entry_fee_yen=visit.entry_fee_yen,
                 payment_method=visit.payment_method,
                 weather=visit.weather,
-                time_of_day=visit.time_of_day,
                 temperature_outside_celsius=visit.temperature_outside_celsius,
                 visit_time=visit.visit_time,
                 stay_length_minutes=visit.stay_length_minutes,

@@ -89,7 +89,6 @@ class OnsenVisit(Base):
     - entry_fee_yen: the entry fee for the onsen
     - payment_method: the payment method used (cash, credit card, etc.)
     - weather: the weather at the time of the visit
-    - time_of_day: the time of day of the visit (morning, afternoon, evening)
     - temperature_outside_celsius: the temperature outside the onsen
     - visit_time: date/time of the visit
     - stay_length_minutes: how long I stayed
@@ -145,7 +144,6 @@ class OnsenVisit(Base):
     entry_fee_yen = Column(Integer)
     payment_method = Column(String)
     weather = Column(String)
-    time_of_day = Column(String)
     temperature_outside_celsius = Column(Float)
     visit_time = Column(DateTime)
     stay_length_minutes = Column(Integer)

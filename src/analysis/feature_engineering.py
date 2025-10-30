@@ -173,7 +173,6 @@ class FeatureEngineer:
 
             # Time interactions
             ('stay_length_minutes', 'crowd_level'),
-            ('stay_length_minutes', 'time_of_day'),
 
             # Experience interactions
             ('view_rating', 'weather'),

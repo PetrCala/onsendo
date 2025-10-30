@@ -8,7 +8,9 @@ from datetime import datetime
 from loguru import logger
 
 
-def create_reminder(title: str, reminder_datetime: datetime, body: str | None = None) -> bool:
+def create_reminder(
+    title: str, reminder_datetime: datetime, body: str | None = None
+) -> bool:
     """
     Create a reminder in Apple Reminders app using AppleScript.
 
@@ -39,18 +41,20 @@ def create_reminder(title: str, reminder_datetime: datetime, body: str | None = 
         second = reminder_datetime.second
 
         # Escape special characters in title and body for AppleScript
-        escaped_title = title.replace('"', '\\"').replace('\\', '\\\\')
+        escaped_title = title.replace('"', '\\"').replace("\\", "\\\\")
 
         # Build properties dictionary
         if body:
-            escaped_body = body.replace('"', '\\"').replace('\\', '\\\\')
-            properties = f'{{name:"{escaped_title}", due date:theDate, body:"{escaped_body}"}}'
+            escaped_body = body.replace('"', '\\"').replace("\\", "\\\\")
+            properties = (
+                f'{{name:"{escaped_title}", due date:theDate, body:"{escaped_body}"}}'
+            )
         else:
             properties = f'{{name:"{escaped_title}", due date:theDate}}'
 
         # Construct AppleScript command
         # Build date from components for reliable cross-locale operation
-        applescript = f'''
+        applescript = f"""
         set theDate to current date
         set year of theDate to {year}
         set month of theDate to {month}
@@ -64,7 +68,7 @@ def create_reminder(title: str, reminder_datetime: datetime, body: str | None = 
                 make new reminder with properties {properties}
             end tell
         end tell
-        '''
+        """
 
         # Execute AppleScript via osascript
         subprocess.run(
@@ -72,7 +76,7 @@ def create_reminder(title: str, reminder_datetime: datetime, body: str | None = 
             capture_output=True,
             text=True,
             timeout=10,
-            check=True
+            check=True,
         )
 
         logger.info(f"Successfully created reminder: {title} for {reminder_datetime}")
@@ -90,10 +94,7 @@ def create_reminder(title: str, reminder_datetime: datetime, body: str | None = 
 
 
 def generate_reminder_script(
-    title: str,
-    reminder_datetime: datetime,
-    script_path: str,
-    body: str | None = None
+    title: str, reminder_datetime: datetime, script_path: str, body: str | None = None
 ) -> None:
     """
     Generate a shell script (.command file) that creates an Apple Reminder.
@@ -125,17 +126,24 @@ def generate_reminder_script(
     second = reminder_datetime.second
 
     # Escape special characters for shell script
-    escaped_title = title.replace('"', '\\"').replace('$', '\\$').replace('`', '\\`')
+    escaped_title = title.replace('"', '\\"').replace("$", "\\$").replace("`", "\\`")
 
     # Build properties for AppleScript
     if body:
-        escaped_body = body.replace('"', '\\"').replace('$', '\\$').replace('`', '\\`').replace('\n', '\\n')
-        properties_line = f'{{name:"{escaped_title}", due date:theDate, body:"{escaped_body}"}}'
+        escaped_body = (
+            body.replace('"', '\\"')
+            .replace("$", "\\$")
+            .replace("`", "\\`")
+            .replace("\n", "\\n")
+        )
+        properties_line = (
+            f'{{name:"{escaped_title}", due date:theDate, body:"{escaped_body}"}}'
+        )
     else:
         properties_line = f'{{name:"{escaped_title}", due date:theDate}}'
 
     # Create shell script content
-    script_content = f'''#!/bin/bash
+    script_content = f"""#!/bin/bash
 # Onsen Reminder Creation Script
 # This script creates a reminder in Apple Reminders
 
@@ -170,15 +178,18 @@ fi
 
 # Keep terminal window open for 3 seconds so user can see the result
 sleep 3
-'''
+"""
 
     # Write the script file
     try:
-        with open(script_path, 'w', encoding='utf-8') as f:
+        with open(script_path, "w", encoding="utf-8") as f:
             f.write(script_content)
 
         # Make it executable
-        os.chmod(script_path, os.stat(script_path).st_mode | stat.S_IEXEC | stat.S_IXUSR | stat.S_IXGRP)
+        os.chmod(
+            script_path,
+            os.stat(script_path).st_mode | stat.S_IEXEC | stat.S_IXUSR | stat.S_IXGRP,
+        )
 
         logger.info(f"Generated reminder script at: {script_path}")
 
@@ -198,8 +209,7 @@ def is_reminders_available() -> bool:
 
 
 def format_onsen_details_for_reminder(
-    recommendations: list[tuple],
-    location_name: str
+    recommendations: list[tuple], location_name: str
 ) -> str:
     """
     Format onsen recommendation details for reminder body.
@@ -237,7 +247,7 @@ def format_onsen_details_for_reminder(
             lines.append(f"   BAN: {onsen.ban_number}")
 
         # Distance and category
-        distance_cat = metadata.get('distance_category', 'N/A')
+        distance_cat = metadata.get("distance_category", "N/A")
         lines.append(f"   Distance: {distance:.1f} km ({distance_cat})")
 
         # Address
@@ -270,23 +280,23 @@ def format_onsen_details_for_reminder(
 
         # Status information
         status_parts = []
-        if metadata.get('is_available'):
+        if metadata.get("is_available"):
             status_parts.append("✅ Available")
         else:
             status_parts.append("🔒 Closed")
 
-        if metadata.get('has_been_visited'):
+        if metadata.get("has_been_visited"):
             status_parts.append("✓ Visited")
 
-        if metadata.get('stay_restricted'):
+        if metadata.get("stay_restricted"):
             status_parts.append("🏨 Stay-restricted")
 
         if status_parts:
             lines.append(f"   Status: {', '.join(status_parts)}")
 
         # Stay restriction notes
-        if metadata.get('stay_restriction_notes'):
-            for note in metadata['stay_restriction_notes']:
+        if metadata.get("stay_restriction_notes"):
+            for note in metadata["stay_restriction_notes"]:
                 lines.append(f"   Note: {note}")
 
         # Remarks
@@ -294,7 +304,7 @@ def format_onsen_details_for_reminder(
             lines.append(f"   Remarks: {onsen.remarks}")
 
         # Google Maps link
-        if metadata.get('google_maps_link'):
+        if metadata.get("google_maps_link"):
             lines.append(f"   Maps: {metadata['google_maps_link']}")
 
     return "\n".join(lines)

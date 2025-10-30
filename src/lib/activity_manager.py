@@ -14,7 +14,6 @@ from datetime import datetime, timedelta
 from typing import Optional
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 from loguru import logger
 
 from src.db.models import Activity as ActivityModel, OnsenVisit
@@ -28,6 +27,7 @@ class ActivityData:
     This class has many attributes to comprehensively represent
     activity data from Strava.
     """
+
     # pylint: disable=too-many-instance-attributes
 
     strava_id: str
@@ -240,7 +240,9 @@ class ActivityManager:
             return False
 
         # Verify visit exists
-        visit = self.db_session.query(OnsenVisit).filter(OnsenVisit.id == visit_id).first()
+        visit = (
+            self.db_session.query(OnsenVisit).filter(OnsenVisit.id == visit_id).first()
+        )
         if not visit:
             logger.error(f"Visit with ID {visit_id} not found")
             return False
@@ -282,7 +284,11 @@ class ActivityManager:
 
     def get_by_id(self, activity_id: int) -> Optional[ActivityModel]:
         """Get activity by database ID."""
-        return self.db_session.query(ActivityModel).filter(ActivityModel.id == activity_id).first()
+        return (
+            self.db_session.query(ActivityModel)
+            .filter(ActivityModel.id == activity_id)
+            .first()
+        )
 
     def get_by_strava_id(self, strava_id: str) -> Optional[ActivityModel]:
         """Get activity by Strava ID."""
@@ -429,7 +435,9 @@ class ActivityManager:
         try:
             self.db_session.delete(activity)
             self.db_session.commit()
-            logger.info(f"Deleted activity {activity_id} (Strava: {activity.strava_id})")
+            logger.info(
+                f"Deleted activity {activity_id} (Strava: {activity.strava_id})"
+            )
             return True
         except Exception as e:
             logger.error(f"Error deleting activity: {e}")
@@ -474,7 +482,9 @@ class ActivityManager:
         # Build suggestions with time differences
         suggestions = []
         for visit in nearby_visits:
-            time_diff = abs((visit.visit_time - activity.recording_end).total_seconds() / 60)
+            time_diff = abs(
+                (visit.visit_time - activity.recording_end).total_seconds() / 60
+            )
             # Get onsen name from relationship
             onsen_name = visit.onsen.name if visit.onsen else "Unknown"
             description = (

@@ -49,7 +49,6 @@ def get_complete_flow_inputs() -> list[str]:
         "25.5",  # outside_temperature
         "cash",  # payment_method
         "sunny",  # weather
-        "afternoon",  # time_of_day
         "alone",  # visited_with
         "car",  # travel_mode
         "moderate",  # crowd_level
@@ -110,7 +109,6 @@ def get_exercise_flow_inputs() -> list[str]:
         "20.0",  # outside_temperature
         "card",  # payment_method
         "cloudy",  # weather
-        "morning",  # time_of_day
         "friend",  # visited_with
         "walk",  # travel_mode
         "quiet",  # crowd_level
@@ -171,7 +169,6 @@ def get_minimal_flow_inputs() -> list[str]:
         "18.0",  # outside_temperature
         "cash",  # payment_method
         "clear",  # weather
-        "evening",  # time_of_day
         "alone",  # visited_with
         "train",  # travel_mode
         "quiet",  # crowd_level
@@ -235,7 +232,6 @@ def get_invalid_onsen_retry_inputs() -> list[str]:
         "25.0",  # outside_temperature
         "cash",  # payment_method
         "sunny",  # weather
-        "afternoon",  # time_of_day
         "alone",  # visited_with
         "car",  # travel_mode
         "",  # exercise_type (skip)
@@ -300,7 +296,6 @@ def get_invalid_rating_retry_inputs() -> list[str]:
         "25.0",  # outside_temperature
         "cash",  # payment_method
         "sunny",  # weather
-        "afternoon",  # time_of_day
         "alone",  # visited_with
         "car",  # travel_mode
         "",  # exercise_type (skip)
@@ -363,7 +358,6 @@ def get_multi_onsen_day_inputs() -> list[str]:
         "22.0",  # outside_temperature
         "card",  # payment_method
         "partly cloudy",  # weather
-        "afternoon",  # time_of_day
         "group",  # visited_with
         "bus",  # travel_mode
         "",  # exercise_type (skip)

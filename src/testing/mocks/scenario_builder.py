@@ -364,6 +364,14 @@ class RealisticDataGenerator:
             weights=[1.0] * len(profile.preferred_times)
         )[0]
 
+        # Adjust visit_date hour based on time_of_day preference
+        if time_of_day == 'morning':
+            visit_date = visit_date.replace(hour=random.randint(6, 11))
+        elif time_of_day == 'afternoon':
+            visit_date = visit_date.replace(hour=random.randint(12, 17))
+        elif time_of_day == 'evening':
+            visit_date = visit_date.replace(hour=random.randint(18, 22))
+
         day_of_week = visit_date.weekday()
 
         # Weather (seasonal)
@@ -437,13 +445,12 @@ class RealisticDataGenerator:
 
         energy_change = random.randint(1, 3)  # Onsen generally increases energy
 
-        # Create visit
+        # Create visit (time_of_day is now derived from visit_time)
         visit = MockOnsenVisit(
             onsen_id=onsen_id,
             entry_fee_yen=entry_fee,
             payment_method=random.choice(self.PAYMENT_METHODS),
             weather=weather,
-            time_of_day=time_of_day,
             temperature_outside_celsius=temperature,
             visit_time=visit_date,
             stay_length_minutes=base_stay,

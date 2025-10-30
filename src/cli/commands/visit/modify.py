@@ -26,7 +26,6 @@ FIELD_GROUPS = {
         ("visit_date", "Visit date"),
         ("visit_time_str", "Visit time"),
         ("weather", "Weather"),
-        ("time_of_day", "Time of day"),
         ("temperature_outside_celsius", "Temperature outside"),
         ("stay_length_minutes", "Stay length"),
     ],
