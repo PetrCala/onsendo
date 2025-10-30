@@ -16,6 +16,7 @@ from loguru import logger
 
 from src.lib.exercise_manager import ExercisePoint, ExerciseSession
 from src.lib.heart_rate_manager import HeartRatePoint, HeartRateSession
+from src.lib.activity_manager import ActivityData
 from src.types.exercise import DataSource, ExerciseType, IndoorOutdoor
 from src.types.strava import StravaActivityDetail, StravaStream
 
@@ -234,6 +235,170 @@ class StravaToExerciseConverter:
             diff = altitude_stream.data[i] - altitude_stream.data[i - 1]
             if diff > 0:
                 elevation_gain += diff
+
+        return elevation_gain
+
+
+class StravaToActivityConverter:
+    """Converts Strava activities to ActivityData objects for the unified activity system."""
+
+    @classmethod
+    def convert(
+        cls,
+        activity: StravaActivityDetail,
+        streams: Optional[dict[str, StravaStream]] = None,
+    ) -> ActivityData:
+        """
+        Convert Strava activity to ActivityData for unified activity system.
+
+        Args:
+            activity: Strava activity detail
+            streams: Optional stream data (GPS, HR, etc.)
+
+        Returns:
+            ActivityData object ready for ActivityManager storage
+
+        Example:
+            >>> activity = client.get_activity(12345678)
+            >>> streams = client.get_activity_streams(12345678)
+            >>> activity_data = StravaToActivityConverter.convert(activity, streams)
+            >>> manager.store_activity(activity_data)
+        """
+        # Map activity type
+        exercise_type = StravaActivityTypeMapper.map_type(activity.activity_type)
+
+        # Determine indoor/outdoor
+        indoor_outdoor = None
+        if "Virtual" in activity.activity_type or "Indoor" in activity.activity_type:
+            indoor_outdoor = "indoor"
+        elif activity.start_latlng or (streams and "latlng" in streams):
+            indoor_outdoor = "outdoor"
+        else:
+            indoor_outdoor = "unknown"
+
+        # Build route data from streams
+        route_data = None
+        if streams:
+            route_data = cls._build_route_data(streams, activity.start_date)
+
+        # Calculate elevation gain if not provided
+        elevation_gain_m = activity.total_elevation_gain_m
+        if elevation_gain_m is None and streams and "altitude" in streams:
+            elevation_gain_m = cls._calculate_elevation_gain(streams["altitude"])
+
+        # Calculate min heart rate from streams if available
+        min_heart_rate = None
+        if streams and "heartrate" in streams:
+            hr_data = streams["heartrate"].data
+            if hr_data:
+                min_heart_rate = float(min(hr_data))
+
+        # Calculate data hash for sync detection
+        import hashlib
+        import json
+        activity_dict = {
+            "id": activity.id,
+            "name": activity.name,
+            "type": activity.activity_type,
+            "start_date": activity.start_date.isoformat(),
+            "distance_m": activity.distance_m,
+            "elapsed_time_s": activity.elapsed_time_s,
+            "moving_time_s": activity.moving_time_s,
+        }
+        data_hash = hashlib.sha256(
+            json.dumps(activity_dict, sort_keys=True).encode()
+        ).hexdigest()
+
+        return ActivityData(
+            strava_id=str(activity.id),
+            start_time=activity.start_date_local,
+            end_time=activity.start_date_local
+            + timedelta(seconds=activity.elapsed_time_s),
+            activity_type=exercise_type.value,
+            activity_name=activity.name,
+            workout_type=activity.sport_type,
+            distance_km=activity.distance_km,
+            calories_burned=activity.calories,
+            elevation_gain_m=elevation_gain_m,
+            avg_heart_rate=activity.average_heartrate,
+            min_heart_rate=min_heart_rate,
+            max_heart_rate=activity.max_heartrate,
+            indoor_outdoor=indoor_outdoor,
+            weather_conditions=f"{activity.average_temp}°C"
+            if activity.average_temp
+            else None,
+            route_data=route_data,
+            notes=activity.description,
+            strava_data_hash=data_hash,
+        )
+
+    @classmethod
+    def _build_route_data(
+        cls, streams: dict[str, StravaStream], start_time: datetime
+    ) -> list[dict]:
+        """
+        Build route data from Strava streams.
+
+        Args:
+            streams: Dictionary of stream data
+            start_time: Activity start time
+
+        Returns:
+            List of route point dictionaries
+        """
+        # Get time series for synchronization
+        time_stream = streams.get("time")
+        if not time_stream:
+            return []
+
+        route_points = []
+        for i, timestamp_offset in enumerate(time_stream.data):
+            point_time = start_time + timedelta(seconds=timestamp_offset)
+            point_data = {"timestamp": point_time.isoformat()}
+
+            # Add GPS coordinates if available
+            if "latlng" in streams and i < len(streams["latlng"].data):
+                lat, lng = streams["latlng"].data[i]
+                point_data["lat"] = lat
+                point_data["lon"] = lng
+
+            # Add elevation if available
+            if "altitude" in streams and i < len(streams["altitude"].data):
+                point_data["elevation"] = streams["altitude"].data[i]
+
+            # Add heart rate if available
+            if "heartrate" in streams and i < len(streams["heartrate"].data):
+                point_data["hr"] = streams["heartrate"].data[i]
+
+            # Add speed if available
+            if "velocity_smooth" in streams and i < len(streams["velocity_smooth"].data):
+                point_data["speed_mps"] = streams["velocity_smooth"].data[i]
+
+            route_points.append(point_data)
+
+        return route_points
+
+    @classmethod
+    def _calculate_elevation_gain(cls, altitude_stream: StravaStream) -> float:
+        """
+        Calculate total elevation gain from altitude data.
+
+        Args:
+            altitude_stream: Altitude stream data
+
+        Returns:
+            Total elevation gain in meters
+        """
+        if not altitude_stream or not altitude_stream.data:
+            return 0.0
+
+        elevation_gain = 0.0
+        prev_altitude = altitude_stream.data[0]
+
+        for altitude in altitude_stream.data[1:]:
+            if altitude > prev_altitude:
+                elevation_gain += altitude - prev_altitude
+            prev_altitude = altitude
 
         return elevation_gain
 

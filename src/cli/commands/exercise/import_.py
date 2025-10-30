@@ -12,10 +12,14 @@ from src.lib.exercise_manager import (
 from src.db.conn import get_db
 from src.config import get_database_config
 from src.lib.cli_display import show_database_banner
+from src.cli.commands.exercise.DEPRECATED import print_deprecation_warning
 
 
 def import_exercise_data(args: argparse.Namespace) -> int:
     """Import exercise data from a file."""
+    # Show deprecation warning
+    print_deprecation_warning()
+
     # Get database configuration
     config = get_database_config(
         env_override=getattr(args, 'env', None),

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from loguru import logger
 
-from src.db.models import Onsen, OnsenVisit, HeartRateData
+from src.db.models import Onsen, OnsenVisit, HeartRateData, Activity
 from src.types.analysis import DataCategory
 
 
@@ -233,6 +233,90 @@ class DataPipeline:
                 "alias": "v",
                 "filters": {},
                 "joins": [("onsens", "onsen_id", "id")],
+            },
+            # Unified Activity System categories
+            DataCategory.ACTIVITY_ALL: {
+                "table": "activities",
+                "columns": [
+                    "id",
+                    "strava_id",
+                    "visit_id",
+                    "is_onsen_monitoring",
+                    "recording_start",
+                    "recording_end",
+                    "duration_minutes",
+                    "activity_type",
+                    "activity_name",
+                    "distance_km",
+                    "calories_burned",
+                    "elevation_gain_m",
+                    "avg_heart_rate",
+                    "min_heart_rate",
+                    "max_heart_rate",
+                    "indoor_outdoor",
+                    "weather_conditions",
+                    "notes",
+                    "created_at",
+                ],
+                "alias": "a",
+                "filters": {},
+                "joins": [],
+            },
+            DataCategory.ACTIVITY_ONSEN: {
+                "table": "activities",
+                "columns": [
+                    "id",
+                    "strava_id",
+                    "visit_id",
+                    "recording_start",
+                    "recording_end",
+                    "duration_minutes",
+                    "activity_name",
+                    "avg_heart_rate",
+                    "min_heart_rate",
+                    "max_heart_rate",
+                    "notes",
+                ],
+                "alias": "a",
+                "filters": {"is_onsen_monitoring": True},
+                "joins": [("onsen_visits", "visit_id", "id", "LEFT")],
+            },
+            DataCategory.ACTIVITY_EXERCISE: {
+                "table": "activities",
+                "columns": [
+                    "id",
+                    "strava_id",
+                    "activity_type",
+                    "activity_name",
+                    "recording_start",
+                    "recording_end",
+                    "duration_minutes",
+                    "distance_km",
+                    "calories_burned",
+                    "elevation_gain_m",
+                    "avg_heart_rate",
+                    "indoor_outdoor",
+                ],
+                "alias": "a",
+                "filters": {"is_onsen_monitoring": False},
+                "joins": [],
+            },
+            DataCategory.ACTIVITY_METRICS: {
+                "table": "activities",
+                "columns": [
+                    "id",
+                    "strava_id",
+                    "activity_type",
+                    "duration_minutes",
+                    "distance_km",
+                    "calories_burned",
+                    "elevation_gain_m",
+                    "avg_heart_rate",
+                    "max_heart_rate",
+                ],
+                "alias": "a",
+                "filters": {},
+                "joins": [],
             },
         }
 
@@ -457,6 +541,43 @@ class DataPipeline:
                 df = pd.read_sql(query.statement, self.session.bind)
                 dfs.append(df)
 
+            elif category in [
+                DataCategory.ACTIVITY_ALL,
+                DataCategory.ACTIVITY_EXERCISE,
+                DataCategory.ACTIVITY_METRICS,
+            ]:
+                query = self.session.query(Activity)
+
+                # Apply filters based on category
+                if category == DataCategory.ACTIVITY_EXERCISE:
+                    query = query.filter(Activity.is_onsen_monitoring.is_(False))
+
+                if time_range:
+                    start_time, end_time = time_range
+                    query = query.filter(
+                        Activity.recording_start.between(start_time, end_time)
+                    )
+
+                df = pd.read_sql(query.statement, self.session.bind)
+                dfs.append(df)
+
+            elif category == DataCategory.ACTIVITY_ONSEN:
+                # Join with visits for onsen monitoring activities
+                query = (
+                    self.session.query(Activity)
+                    .outerjoin(OnsenVisit, Activity.visit_id == OnsenVisit.id)
+                    .filter(Activity.is_onsen_monitoring.is_(True))
+                )
+
+                if time_range:
+                    start_time, end_time = time_range
+                    query = query.filter(
+                        Activity.recording_start.between(start_time, end_time)
+                    )
+
+                df = pd.read_sql(query.statement, self.session.bind)
+                dfs.append(df)
+
         # Combine all dataframes
         if dfs:
             # Use onsen_id as the key for joining
@@ -508,6 +629,14 @@ class DataPipeline:
             "food_quality_rating",
             "sauna_rating",
             "outdoor_bath_rating",
+            # Activity columns
+            "duration_minutes",
+            "distance_km",
+            "calories_burned",
+            "elevation_gain_m",
+            "avg_heart_rate",
+            "min_heart_rate",
+            "max_heart_rate",
             "energy_level_change",
             "hydration_level",
             "average_heart_rate",

@@ -1,9 +1,11 @@
 """
-Sync command for Strava integration.
+Sync command for Strava integration - Unified Activity System.
 
-Provides batch synchronization of recent Strava activities with optional
-auto-import and auto-linking.
+Provides batch synchronization of recent Strava activities with interactive
+tagging for onsen monitoring sessions.
 """
+
+# pylint: disable=bad-builtin
 
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -12,46 +14,49 @@ from loguru import logger
 
 from src.config import get_database_config
 from src.db.conn import get_db
-from src.db.models import OnsenVisit
-from src.lib.exercise_manager import ExerciseDataManager
+from src.lib.activity_manager import ActivityManager
 from src.lib.strava_client import StravaClient
-from src.lib.strava_converter import StravaFileExporter, StravaToExerciseConverter
+from src.lib.strava_converter import StravaToActivityConverter
 from src.paths import PATHS
-from src.types.strava import ActivityFilter, StravaConversionError, StravaSettings
+from src.types.strava import ActivityFilter, StravaSettings
 
 
 def cmd_strava_sync(args):
     """
-    Batch sync recent Strava activities.
+    Batch sync recent Strava activities using unified activity system.
 
-    Downloads and optionally imports multiple activities from a specified
-    time period.
+    Downloads and imports Strava activities with optional interactive tagging
+    for onsen monitoring sessions.
 
     Usage:
         poetry run onsendo strava sync
         poetry run onsendo strava sync --days 7
-        poetry run onsendo strava sync --auto-import
-        poetry run onsendo strava sync --auto-import --auto-link
+        poetry run onsendo strava sync --days 30 --interactive
         poetry run onsendo strava sync --type Run --days 30
         poetry run onsendo strava sync --dry-run
+        poetry run onsendo strava sync --auto-tag-pattern "onsen"
 
     Arguments:
         --days N: Sync activities from last N days (default: 7)
         --type TYPE: Only sync specific activity type (Run, Ride, etc.)
-        --auto-import: Automatically import downloaded activities
-        --auto-link: Automatically link to nearby visits
-        --dry-run: Show what would be synced without downloading
-        --format FORMAT: Download format (gpx, json, hr_csv, all) [default: gpx]
+        --interactive: Prompt to tag activities as onsen monitoring
+        --auto-tag-pattern PATTERN: Auto-tag activities with name matching pattern
+        --auto-link: Automatically link tagged activities to nearby visits
+        --dry-run: Show what would be synced without importing
+        --skip-existing: Skip activities that already exist in database
 
     Examples:
-        # Sync last 7 days (download only)
+        # Sync last 7 days (import all, no tagging)
         poetry run onsendo strava sync
 
-        # Sync last 30 days, auto-import and link
-        poetry run onsendo strava sync --days 30 --auto-import --auto-link
+        # Sync with interactive tagging
+        poetry run onsendo strava sync --days 30 --interactive
 
-        # Sync only running activities from last 14 days
-        poetry run onsendo strava sync --type Run --days 14 --auto-import
+        # Auto-tag activities with "onsen" in name
+        poetry run onsendo strava sync --days 14 --auto-tag-pattern "onsen"
+
+        # Sync only running activities
+        poetry run onsendo strava sync --type Run --days 14
 
         # Dry run to see what would be synced
         poetry run onsendo strava sync --days 30 --dry-run
@@ -82,10 +87,13 @@ def cmd_strava_sync(args):
     # Parse arguments
     days = args.days if hasattr(args, "days") and args.days else 7
     activity_type = args.type if hasattr(args, "type") and args.type else None
-    auto_import = args.auto_import if hasattr(args, "auto_import") else False
+    interactive = args.interactive if hasattr(args, "interactive") else False
+    auto_tag_pattern = (
+        args.auto_tag_pattern if hasattr(args, "auto_tag_pattern") else None
+    )
     auto_link = args.auto_link if hasattr(args, "auto_link") else False
     dry_run = args.dry_run if hasattr(args, "dry_run") else False
-    format_arg = args.format if hasattr(args, "format") and args.format else "gpx"
+    skip_existing = args.skip_existing if hasattr(args, "skip_existing") else False
 
     # Build filter
     date_from = datetime.now() - timedelta(days=days)
@@ -128,184 +136,163 @@ def cmd_strava_sync(args):
             print()
 
         print(f"Total: {len(activities)} activities")
-        if auto_import:
-            print("Would auto-import: YES")
-        if auto_link:
-            print("Would auto-link: YES")
         print("\nRun without --dry-run to actually sync")
         return
 
-    # Determine requested formats
-    if format_arg == "all":
-        requested_formats = ["gpx", "json", "hr_csv"]
-    else:
-        requested_formats = [format_arg]
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, "env", None),
+        path_override=getattr(args, "database", None),
+    )
 
     # Process each activity
     print(f"\n--- Syncing {len(activities)} Activities ---")
-    output_dir = PATHS.STRAVA_ACTIVITY_DIR.value
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     success_count = 0
-    import_count = 0
-    link_count = 0
     skip_count = 0
+    tagged_count = 0
+    link_count = 0
+    error_count = 0
 
-    # Get database configuration
-    config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
-    )
-
-    # Use database session for imports and linking
+    # Use database session for imports
     with get_db(url=config.url) as db:
+        manager = ActivityManager(db)
+
         for i, activity_summary in enumerate(activities, 1):
             print(f"\n[{i}/{len(activities)}] {activity_summary.name}")
+            print(f"  Type: {activity_summary.activity_type}")
+            print(f"  Date: {activity_summary.start_date.strftime('%Y-%m-%d %H:%M')}")
 
-            # Check if already exists (simple check based on filename)
-            timestamp = activity_summary.start_date.strftime("%Y%m%d_%H%M%S")
-            safe_name = "".join(
-                c if c.isalnum() or c in (" ", "_", "-") else "_"
-                for c in activity_summary.name
-            )
-            safe_name = safe_name.strip()[:50]
-            base_filename = f"{timestamp}_{safe_name}_{activity_summary.id}"
-
-            # Check if GPX file already exists
-            gpx_path = Path(output_dir) / f"{base_filename}.gpx"
-            if gpx_path.exists() and not auto_import:
-                print(f"  ⊘ Already downloaded: {gpx_path.name}")
+            # Check if already exists
+            strava_id = str(activity_summary.id)
+            if skip_existing and manager.get_by_strava_id(strava_id):
+                print(f"  ⊘ Already exists in database (Strava ID: {strava_id})")
                 skip_count += 1
                 continue
 
-            # Fetch full activity data
+            # Fetch full activity data with streams
             try:
                 activity = client.get_activity(activity_summary.id)
                 streams = client.get_activity_streams(activity_summary.id)
             except Exception as e:
                 logger.exception(f"Failed to fetch activity {activity_summary.id}")
                 print(f"  ✗ Fetch failed: {e}")
+                error_count += 1
                 continue
 
-            # Smart format selection based on available data
-            exportable_formats, skipped_formats = StravaFileExporter.recommend_formats(
-                streams, requested_formats
-            )
-
-            # Inform about skipped formats (only for first activity, to avoid spam)
-            if i == 1 and skipped_formats:
-                for fmt, reason in skipped_formats:
-                    logger.info(
-                        "Format %s will be skipped for activities: %s",
-                        fmt, reason
-                    )
-
-            # Download files
+            # Convert to ActivityData
             try:
-                file_paths = {}
-
-                if "gpx" in exportable_formats:
-                    StravaFileExporter.export_to_gpx(activity, streams, gpx_path)
-                    file_paths["gpx"] = str(gpx_path)
-                    print(f"  ✓ Downloaded: {gpx_path.name}")
-
-                if "json" in exportable_formats:
-                    json_path = Path(output_dir) / f"{base_filename}.json"
-                    StravaFileExporter.export_to_json(activity, streams, json_path)
-                    file_paths["json"] = str(json_path)
-                    print(f"  ✓ Downloaded: {json_path.name}")
-
-                if "hr_csv" in exportable_formats:
-                    csv_path = Path(output_dir) / f"{base_filename}_hr.csv"
-                    StravaFileExporter.export_hr_to_csv(
-                        activity, streams["heartrate"], streams.get("time"), csv_path
-                    )
-                    file_paths["hr_csv"] = str(csv_path)
-                    print(f"  ✓ Downloaded: {csv_path.name}")
-
-                # Show skipped formats for this specific activity
-                if skipped_formats:
-                    for fmt, reason in skipped_formats:
-                        print(f"  ⊘ Skipped {fmt.upper()}: {reason}")
-
-                if file_paths:
-                    success_count += 1
-                else:
-                    print("  ⚠️ No downloads created for this activity")
-
+                activity_data = StravaToActivityConverter.convert(activity, streams)
             except Exception as e:
-                logger.exception(f"Failed to export activity {activity_summary.id}")
-                print(f"  ✗ Export failed: {e}")
+                logger.exception(f"Failed to convert activity {activity_summary.id}")
+                print(f"  ✗ Conversion failed: {e}")
+                error_count += 1
                 continue
 
-            # Auto-import if requested
-            exercise_id = None
-            if auto_import:
-                try:
-                    session = StravaToExerciseConverter.convert(activity, streams)
-                    manager = ExerciseDataManager(db)
-                    stored = manager.store_session(session)
-                    exercise_id = stored.id
-                    print(f"  ✓ Imported (ID: {exercise_id})")
-                    import_count += 1
-                except Exception as e:
-                    logger.exception(f"Failed to import activity {activity_summary.id}")
-                    print(f"  ✗ Import failed: {e}")
-                    continue
+            # Determine if this is an onsen monitoring session
+            is_onsen_monitoring = False
+            visit_id = None
 
-            # Auto-link if requested
-            if auto_link and exercise_id:
-                # Find nearby visits
-                search_start = activity.start_date_local - timedelta(hours=2)
-                search_end = activity.start_date_local + timedelta(hours=2)
+            # Auto-tag based on pattern
+            if auto_tag_pattern and auto_tag_pattern.lower() in activity.name.lower():
+                is_onsen_monitoring = True
+                tagged_count += 1
+                print(f"  🏷️  Auto-tagged as onsen monitoring (pattern: '{auto_tag_pattern}')")
 
-                visits = (
-                    db.query(OnsenVisit)
-                    .filter(OnsenVisit.visit_date >= search_start.date())
-                    .filter(OnsenVisit.visit_date <= search_end.date())
-                    .order_by(
-                        OnsenVisit.visit_date.desc(), OnsenVisit.visit_time.desc()
-                    )
-                    .limit(1)
-                    .all()
+            # Interactive tagging
+            elif interactive:
+                response = input("  ❓ Is this an onsen monitoring session? (y/n): ").lower()
+                if response == "y":
+                    is_onsen_monitoring = True
+                    tagged_count += 1
+
+                    # Ask if they want to link to a visit
+                    if auto_link:
+                        # Search for nearby visits based on activity end time
+                        from src.db.models import OnsenVisit
+                        search_window = timedelta(hours=2)
+                        search_start = activity.start_date_local - search_window
+                        search_end = activity.start_date_local + search_window
+
+                        nearby_visits = (
+                            db.query(OnsenVisit)
+                            .filter(
+                                OnsenVisit.visit_time >= search_start,
+                                OnsenVisit.visit_time <= search_end,
+                            )
+                            .all()
+                        )
+
+                        if nearby_visits:
+                            print("\n  Nearby visits:")
+                            suggestions = []
+                            for visit in nearby_visits:
+                                time_diff = abs(
+                                    (visit.visit_time - activity.start_date_local).total_seconds()
+                                    / 60
+                                )
+                                onsen_name = visit.onsen.name if visit.onsen else "Unknown"
+                                desc = f"{visit.visit_time.strftime('%Y-%m-%d %H:%M')} - {onsen_name}"
+                                suggestions.append((visit.id, desc, int(time_diff)))
+
+                            # Sort by proximity
+                            suggestions.sort(key=lambda x: x[2])
+
+                            for j, (vid, desc, mins) in enumerate(suggestions[:5], 1):
+                                print(f"    {j}. {desc} ({mins} min away)")
+                            print(f"    {len(suggestions) + 1}. Skip linking")
+
+                            link_choice = input(f"  Link to visit (1-{len(suggestions) + 1})?: ")
+                            try:
+                                choice_idx = int(link_choice) - 1
+                                if 0 <= choice_idx < len(suggestions):
+                                    visit_id = suggestions[choice_idx][0]
+                            except (ValueError, IndexError):
+                                pass
+
+            # Store activity
+            try:
+                stored = manager.store_activity(
+                    activity_data,
+                    is_onsen_monitoring=is_onsen_monitoring,
+                    visit_id=visit_id,
                 )
+                success_count += 1
+                print(f"  ✓ Imported (ID: {stored.id}, Strava: {strava_id})")
 
-                if visits:
-                    visit = visits[0]
-                    visit_datetime = datetime.combine(
-                        visit.visit_date, visit.visit_time or datetime.min.time()
-                    )
-                    time_diff = abs(
-                        (visit_datetime - activity.start_date_local).total_seconds()
-                        / 60
-                    )
+                if is_onsen_monitoring:
+                    print(f"  🏷️  Tagged as onsen monitoring")
+                if visit_id:
+                    print(f"  🔗 Linked to visit {visit_id}")
+                    link_count += 1
 
-                    try:
-                        manager = ExerciseDataManager(db)
-                        manager.link_to_visit(exercise_id, visit.id)
-                        print(
-                            f"  ✓ Linked to visit {visit.id} "
-                            f"({time_diff:.0f} min from activity)"
-                        )
-                        link_count += 1
-                    except Exception as e:
-                        logger.exception(
-                            f"Failed to link activity {activity_summary.id}"
-                        )
-                        print(f"  ✗ Link failed: {e}")
+            except ValueError as e:
+                # Activity already exists
+                if "already exists" in str(e):
+                    print(f"  ⊘ Already exists: {e}")
+                    skip_count += 1
+                else:
+                    logger.exception(f"Failed to store activity {activity_summary.id}")
+                    print(f"  ✗ Storage failed: {e}")
+                    error_count += 1
+            except Exception as e:
+                logger.exception(f"Failed to store activity {activity_summary.id}")
+                print(f"  ✗ Storage failed: {e}")
+                error_count += 1
 
-        # Summary
-        print("\n" + "=" * 60)
-        print("Sync Complete")
-        print("=" * 60)
-        print(f"Total activities: {len(activities)}")
-        print(f"Downloaded: {success_count}")
-        print(f"Skipped (already exists): {skip_count}")
-        if auto_import:
-            print(f"Imported: {import_count}")
-        if auto_link:
-            print(f"Linked to visits: {link_count}")
-        print("=" * 60)
+    # Summary
+    print("\n" + "=" * 60)
+    print("Sync Complete")
+    print("=" * 60)
+    print(f"Total activities: {len(activities)}")
+    print(f"Successfully imported: {success_count}")
+    print(f"Skipped (already exists): {skip_count}")
+    print(f"Errors: {error_count}")
+    if tagged_count:
+        print(f"Tagged as onsen monitoring: {tagged_count}")
+    if link_count:
+        print(f"Linked to visits: {link_count}")
+    print("=" * 60)
 
 
 def configure_args(parser):
@@ -322,24 +309,27 @@ def configure_args(parser):
         help="Only sync specific activity type (Run, Ride, Hike, etc.)",
     )
     parser.add_argument(
-        "--auto-import",
+        "--interactive",
         action="store_true",
-        help="Automatically import downloaded activities",
+        help="Prompt to tag activities as onsen monitoring",
+    )
+    parser.add_argument(
+        "--auto-tag-pattern",
+        type=str,
+        help="Auto-tag activities with name matching pattern (case-insensitive)",
     )
     parser.add_argument(
         "--auto-link",
         action="store_true",
-        help="Automatically link imported activities to nearby visits",
+        help="Suggest linking tagged activities to nearby visits",
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Show what would be synced without downloading",
+        help="Show what would be synced without importing",
     )
     parser.add_argument(
-        "--format",
-        type=str,
-        choices=["gpx", "json", "hr_csv", "all"],
-        default="gpx",
-        help="Download format (default: gpx)",
+        "--skip-existing",
+        action="store_true",
+        help="Skip activities that already exist in database",
     )

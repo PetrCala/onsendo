@@ -311,6 +311,70 @@ class ExerciseSession(Base):
     heart_rate = relationship("HeartRateData", foreign_keys=[heart_rate_id])
 
 
+class Activity(Base):
+    """
+    Unified activity model for all Strava-sourced activities.
+
+    Replaces the separate heart_rate_data and exercise_sessions tables with a
+    single unified model. All activities are imported from Strava and can be
+    optionally tagged as onsen monitoring sessions.
+
+    Columns:
+    - id: primary key
+    - strava_id: Strava activity ID (unique, source of truth)
+    - visit_id: optional foreign key to onsen visit (only for onsen monitoring)
+    - is_onsen_monitoring: whether this activity is onsen heart rate monitoring
+    - recording_start: when the activity started
+    - recording_end: when the activity ended
+    - duration_minutes: total duration in minutes
+    - activity_type: type of activity (running, cycling, yoga, etc.)
+    - activity_name: specific activity name from Strava
+    - workout_type: Strava workout type
+    - distance_km: distance covered in kilometers
+    - calories_burned: estimated calories burned
+    - elevation_gain_m: total elevation gain in meters
+    - avg_heart_rate: average heart rate during activity
+    - min_heart_rate: minimum heart rate recorded
+    - max_heart_rate: maximum heart rate recorded
+    - indoor_outdoor: whether activity was indoor or outdoor
+    - weather_conditions: weather during outdoor activity
+    - route_data: JSON-encoded GPS route data (lat/lon points, timestamps)
+    - strava_data_hash: SHA-256 hash of Strava data for sync detection
+    - last_synced_at: timestamp of last sync from Strava
+    - notes: optional notes about the activity
+    - created_at: when this record was created in the database
+    """
+
+    __tablename__ = "activities"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    strava_id = Column(String, unique=True, nullable=False, index=True)
+    visit_id = Column(Integer, ForeignKey("onsen_visits.id"), nullable=True)
+    is_onsen_monitoring = Column(Boolean, default=False, nullable=False)
+    recording_start = Column(DateTime, nullable=False, index=True)
+    recording_end = Column(DateTime, nullable=False)
+    duration_minutes = Column(Integer, nullable=False)
+    activity_type = Column(String, nullable=False, index=True)
+    activity_name = Column(String)
+    workout_type = Column(String)
+    distance_km = Column(Float)
+    calories_burned = Column(Integer)
+    elevation_gain_m = Column(Float)
+    avg_heart_rate = Column(Float)
+    min_heart_rate = Column(Float)
+    max_heart_rate = Column(Float)
+    indoor_outdoor = Column(String)
+    weather_conditions = Column(String)
+    route_data = Column(String)  # JSON string
+    strava_data_hash = Column(String, nullable=False)
+    last_synced_at = Column(DateTime, default=datetime.utcnow)
+    notes = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    visit = relationship("OnsenVisit", foreign_keys=[visit_id])
+
+
 class RuleRevision(Base):
     """
     Rule revisions for the Onsendo challenge ruleset.
