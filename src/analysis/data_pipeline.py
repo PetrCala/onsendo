@@ -221,19 +221,6 @@ class DataPipeline:
                 "filters": {},
                 "joins": [("onsens", "onsen_id", "id")],
             },
-            DataCategory.EXERCISE: {
-                "table": "onsen_visits",
-                "columns": [
-                    "id",
-                    "onsen_id",
-                    "exercise_before_onsen",
-                    "exercise_type",
-                    "exercise_length_minutes",
-                ],
-                "alias": "v",
-                "filters": {},
-                "joins": [("onsens", "onsen_id", "id")],
-            },
             # Unified Activity System categories
             DataCategory.ACTIVITY_ALL: {
                 "table": "activities",
@@ -652,7 +639,6 @@ class DataPipeline:
 
         # Convert boolean columns
         boolean_columns = [
-            "exercise_before_onsen",
             "had_soap",
             "had_sauna",
             "had_outdoor_bath",

@@ -246,7 +246,6 @@ def get_invalid_onsen_retry_inputs() -> list[str]:
         "clear",  # water_color
         "relaxed",  # pre_visit_mood
         "relaxed",  # post_visit_mood
-        "n",  # exercise_before_onsen
         "y",  # had_soap
         "n",  # had_sauna
         "n",  # had_outdoor_bath
@@ -312,7 +311,6 @@ def get_invalid_rating_retry_inputs() -> list[str]:
         "clear",  # water_color
         "relaxed",  # pre_visit_mood
         "relaxed",  # post_visit_mood
-        "n",  # exercise_before_onsen
         "y",  # had_soap
         "n",  # had_sauna
         "n",  # had_outdoor_bath
@@ -389,7 +387,6 @@ def get_multi_onsen_day_inputs() -> list[str]:
         "n",  # sauna_steam
         "n",  # outdoor_bath_visited
         "y",  # multi_onsen_day
-        "",  # exercise_length_minutes (skip)
         "",  # sauna_duration_minutes (skip)
         "",  # previous_location (skip)
         "",  # next_location (skip)
