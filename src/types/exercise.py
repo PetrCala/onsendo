@@ -13,7 +13,8 @@ class ExerciseType(StrEnum):
     Types of exercise activities.
 
     These are the high-level exercise categories used throughout Onsendo,
-    aligned with the challenge rules (running, gym, hiking).
+    aligned with the challenge rules (running, gym, hiking), plus special
+    monitoring activities (onsen heart rate monitoring).
     """
 
     RUNNING = "running"
@@ -23,6 +24,7 @@ class ExerciseType(StrEnum):
     SWIMMING = "swimming"
     WALKING = "walking"
     YOGA = "yoga"
+    ONSEN_MONITORING = "onsen_monitoring"
     OTHER = "other"
 
 

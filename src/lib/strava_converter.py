@@ -17,6 +17,7 @@ from loguru import logger
 from src.lib.exercise_manager import ExercisePoint, ExerciseSession
 from src.lib.heart_rate_manager import HeartRatePoint, HeartRateSession
 from src.lib.activity_manager import ActivityData
+from src.lib.route_data_analyzer import should_classify_as_onsen_monitoring
 from src.types.exercise import DataSource, ExerciseType, IndoorOutdoor
 from src.types.strava import StravaActivityDetail, StravaStream
 
@@ -251,6 +252,10 @@ class StravaToActivityConverter:
         """
         Convert Strava activity to ActivityData for unified activity system.
 
+        Automatically detects onsen monitoring activities based on:
+        - Activity name contains "onsendo" (case-insensitive) AND "88"
+        - Route data shows stationary HR monitoring (no movement, has HR)
+
         Args:
             activity: Strava activity detail
             streams: Optional stream data (GPS, HR, etc.)
@@ -264,7 +269,7 @@ class StravaToActivityConverter:
             >>> activity_data = StravaToActivityConverter.convert(activity, streams)
             >>> manager.store_activity(activity_data)
         """
-        # Map activity type
+        # Map activity type (initial mapping from Strava type)
         exercise_type = StravaActivityTypeMapper.map_type(activity.activity_type)
 
         # Determine indoor/outdoor
@@ -278,8 +283,25 @@ class StravaToActivityConverter:
 
         # Build route data from streams
         route_data = None
+        route_data_json = None
         if streams:
             route_data = cls._build_route_data(streams, activity.start_date)
+            # Convert to JSON string for analysis
+            if route_data:
+                route_data_json = json.dumps(route_data)
+
+        # Auto-detect onsen monitoring activities
+        detection_reason = None
+        should_classify, reason = should_classify_as_onsen_monitoring(
+            activity.name, route_data_json
+        )
+        if should_classify:
+            exercise_type = ExerciseType.ONSEN_MONITORING
+            detection_reason = reason
+            logger.info(
+                f"Auto-detected onsen monitoring activity: '{activity.name}' "
+                f"(reason: {reason})"
+            )
 
         # Calculate elevation gain if not provided
         elevation_gain_m = activity.total_elevation_gain_m

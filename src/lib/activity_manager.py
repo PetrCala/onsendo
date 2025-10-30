@@ -4,8 +4,8 @@ Unified activity management system for Strava-sourced activities.
 This module replaces the separate heart rate and exercise management systems
 with a single unified approach where all activities come from Strava.
 
-Activities can be optionally tagged as "onsen monitoring" sessions and linked
-to onsen visits for heart rate analysis.
+Activities are automatically classified by type (including "onsen_monitoring")
+and can be linked to onsen visits for heart rate analysis.
 """
 
 import hashlib
@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from loguru import logger
 
 from src.db.models import Activity as ActivityModel, OnsenVisit
+from src.types.exercise import ExerciseType
 
 
 @dataclass
@@ -128,7 +129,6 @@ class ActivityManager:
     def store_activity(
         self,
         activity: ActivityData,
-        is_onsen_monitoring: bool = False,
         visit_id: Optional[int] = None,
     ) -> ActivityModel:
         """
@@ -136,18 +136,18 @@ class ActivityManager:
 
         Args:
             activity: ActivityData object with activity details
-            is_onsen_monitoring: Whether this is an onsen monitoring session
-            visit_id: Optional visit ID to link to (requires is_onsen_monitoring=True)
+            visit_id: Optional visit ID to link to (only for onsen monitoring activities)
 
         Returns:
             ActivityModel: The stored activity model
 
         Raises:
-            ValueError: If visit_id is provided without is_onsen_monitoring=True
+            ValueError: If visit_id is provided for non-onsen-monitoring activity
             ValueError: If activity with this strava_id already exists
         """
-        # Validate visit_id requires onsen monitoring tag
-        if visit_id is not None and not is_onsen_monitoring:
+        # Validate visit_id only for onsen monitoring activities
+        is_onsen = activity.activity_type == ExerciseType.ONSEN_MONITORING.value
+        if visit_id is not None and not is_onsen:
             raise ValueError("visit_id can only be set for onsen monitoring activities")
 
         # Check for duplicates
@@ -161,7 +161,6 @@ class ActivityManager:
         activity_model = ActivityModel(
             strava_id=activity.strava_id,
             visit_id=visit_id,
-            is_onsen_monitoring=is_onsen_monitoring,
             recording_start=activity.start_time,
             recording_end=activity.end_time,
             duration_minutes=activity.duration_minutes,
@@ -188,69 +187,13 @@ class ActivityManager:
             self.db_session.refresh(activity_model)
             logger.info(
                 f"Stored activity {activity.strava_id} (ID: {activity_model.id}, "
-                f"Type: {activity.activity_type}, Onsen: {is_onsen_monitoring})"
+                f"Type: {activity.activity_type})"
             )
             return activity_model
         except Exception as e:
             logger.error(f"Error storing activity: {e}")
             self.db_session.rollback()
             raise
-
-    def tag_as_onsen_monitoring(
-        self, activity_id: int, visit_id: Optional[int] = None
-    ) -> bool:
-        """
-        Tag an activity as an onsen monitoring session.
-
-        Args:
-            activity_id: Database ID of the activity
-            visit_id: Optional visit ID to link to
-
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        activity = self.get_by_id(activity_id)
-        if not activity:
-            logger.error(f"Activity with ID {activity_id} not found")
-            return False
-
-        try:
-            activity.is_onsen_monitoring = True
-            if visit_id is not None:
-                activity.visit_id = visit_id
-            self.db_session.commit()
-            logger.info(f"Tagged activity {activity_id} as onsen monitoring")
-            return True
-        except Exception as e:
-            logger.error(f"Error tagging activity: {e}")
-            self.db_session.rollback()
-            return False
-
-    def untag_as_onsen_monitoring(self, activity_id: int) -> bool:
-        """
-        Remove onsen monitoring tag from an activity.
-
-        Args:
-            activity_id: Database ID of the activity
-
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        activity = self.get_by_id(activity_id)
-        if not activity:
-            logger.error(f"Activity with ID {activity_id} not found")
-            return False
-
-        try:
-            activity.is_onsen_monitoring = False
-            activity.visit_id = None  # Also unlink from visit
-            self.db_session.commit()
-            logger.info(f"Removed onsen monitoring tag from activity {activity_id}")
-            return True
-        except Exception as e:
-            logger.error(f"Error untagging activity: {e}")
-            self.db_session.rollback()
-            return False
 
     def link_to_visit(self, activity_id: int, visit_id: int) -> bool:
         """
@@ -268,9 +211,11 @@ class ActivityManager:
             logger.error(f"Activity with ID {activity_id} not found")
             return False
 
-        if not activity.is_onsen_monitoring:
+        # Check if activity is onsen monitoring type
+        if activity.activity_type != ExerciseType.ONSEN_MONITORING.value:
             logger.error(
-                f"Cannot link activity {activity_id} to visit: not tagged as onsen monitoring"
+                f"Cannot link activity {activity_id} to visit: "
+                f"activity type is '{activity.activity_type}', not 'onsen_monitoring'"
             )
             return False
 
@@ -358,10 +303,10 @@ class ActivityManager:
         )
 
     def get_onsen_monitoring_activities(self) -> list[ActivityModel]:
-        """Get all activities tagged as onsen monitoring."""
+        """Get all activities with type onsen_monitoring."""
         return (
             self.db_session.query(ActivityModel)
-            .filter(ActivityModel.is_onsen_monitoring.is_(True))
+            .filter(ActivityModel.activity_type == ExerciseType.ONSEN_MONITORING.value)
             .order_by(ActivityModel.recording_start.desc())
             .all()
         )
@@ -437,7 +382,10 @@ class ActivityManager:
             )
 
         # Onsen monitoring counts
-        onsen_monitoring = [a for a in activities if a.is_onsen_monitoring]
+        onsen_monitoring = [
+            a for a in activities
+            if a.activity_type == ExerciseType.ONSEN_MONITORING.value
+        ]
         linked_visits = [a for a in activities if a.visit_id is not None]
 
         return ActivitySummary(

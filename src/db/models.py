@@ -312,20 +312,19 @@ class Activity(Base):
     Unified activity model for all Strava-sourced activities.
 
     Replaces the separate heart_rate_data and exercise_sessions tables with a
-    single unified model. All activities are imported from Strava and can be
-    optionally tagged as onsen monitoring sessions.
+    single unified model. All activities are imported from Strava. Activities with
+    activity_type='onsen_monitoring' represent onsen heart rate monitoring sessions.
 
     Columns:
     - id: primary key
     - strava_id: Strava activity ID (unique, source of truth)
-    - visit_id: optional foreign key to onsen visit (only for onsen monitoring)
-    - is_onsen_monitoring: whether this activity is onsen heart rate monitoring
-    - recording_start: when the activity started
-    - recording_end: when the activity ended
+    - visit_id: optional foreign key to onsen visit (only for onsen monitoring activities)
+    - recording_start: when the activity started (renamed from start_time for clarity)
+    - recording_end: when the activity ended (renamed from end_time for clarity)
     - duration_minutes: total duration in minutes
-    - activity_type: type of activity (running, cycling, yoga, etc.)
+    - activity_type: type of activity (running, cycling, yoga, onsen_monitoring, etc.)
     - activity_name: specific activity name from Strava
-    - workout_type: Strava workout type
+    - workout_type: Strava workout type (preserved for reference)
     - distance_km: distance covered in kilometers
     - calories_burned: estimated calories burned
     - elevation_gain_m: total elevation gain in meters
@@ -354,7 +353,6 @@ class Activity(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     strava_id = Column(String, unique=True, nullable=False, index=True)
     visit_id = Column(Integer, ForeignKey("onsen_visits.id"), nullable=True)
-    is_onsen_monitoring = Column(Boolean, default=False, nullable=False)
     recording_start = Column(DateTime, nullable=False, index=True)
     recording_end = Column(DateTime, nullable=False)
     duration_minutes = Column(Integer, nullable=False)

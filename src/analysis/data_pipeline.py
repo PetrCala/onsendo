@@ -13,6 +13,7 @@ from loguru import logger
 
 from src.db.models import Onsen, OnsenVisit, HeartRateData, Activity
 from src.types.analysis import DataCategory
+from src.types.exercise import ExerciseType
 
 
 class DataPipeline:
@@ -225,7 +226,6 @@ class DataPipeline:
                     "id",
                     "strava_id",
                     "visit_id",
-                    "is_onsen_monitoring",
                     "recording_start",
                     "recording_end",
                     "duration_minutes",
@@ -262,7 +262,7 @@ class DataPipeline:
                     "notes",
                 ],
                 "alias": "a",
-                "filters": {"is_onsen_monitoring": True},
+                "filters": {"activity_type": "onsen_monitoring"},
                 "joins": [("onsen_visits", "visit_id", "id", "LEFT")],
             },
             DataCategory.ACTIVITY_EXERCISE: {
@@ -282,7 +282,7 @@ class DataPipeline:
                     "indoor_outdoor",
                 ],
                 "alias": "a",
-                "filters": {"is_onsen_monitoring": False},
+                "filters": {"activity_type__ne": "onsen_monitoring"},
                 "joins": [],
             },
             DataCategory.ACTIVITY_METRICS: {
@@ -560,7 +560,7 @@ class DataPipeline:
 
                 # Apply filters based on category
                 if category == DataCategory.ACTIVITY_EXERCISE:
-                    query = query.filter(Activity.is_onsen_monitoring.is_(False))
+                    query = query.filter(Activity.activity_type != ExerciseType.ONSEN_MONITORING.value)
 
                 if time_range:
                     start_time, end_time = time_range
@@ -576,7 +576,7 @@ class DataPipeline:
                 query = (
                     self.session.query(Activity)
                     .outerjoin(OnsenVisit, Activity.visit_id == OnsenVisit.id)
-                    .filter(Activity.is_onsen_monitoring.is_(True))
+                    .filter(Activity.activity_type == ExerciseType.ONSEN_MONITORING.value)
                 )
 
                 if time_range:
