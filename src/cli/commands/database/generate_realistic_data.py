@@ -208,7 +208,6 @@ def generate_realistic_data(args: argparse.Namespace) -> None:
                 cleanliness_rating=visit.cleanliness_rating,
                 main_bath_type=visit.main_bath_type,
                 main_bath_temperature=visit.main_bath_temperature,
-                main_bath_water_type=visit.main_bath_water_type,
                 water_color=visit.water_color,
                 smell_intensity_rating=visit.smell_intensity_rating,
                 changing_room_cleanliness_rating=visit.changing_room_cleanliness_rating,

@@ -407,13 +407,6 @@ def add_visit_interactive(args: argparse.Namespace) -> None:
             "step_title": "Main bath information",
         },
         {
-            "name": "main_bath_water_type",
-            "prompt": "Main bath water type (sulfur/salt/other): ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "step_title": "Main bath information",
-        },
-        {
             "name": "water_color",
             "prompt": "Water color (clear/brown/green/other): ",
             "validator": lambda x: True,
@@ -602,6 +595,22 @@ def add_visit_interactive(args: argparse.Namespace) -> None:
             "prompt": "Crowd level (busy/moderate/quiet/empty): ",
             "validator": lambda x: True,
             "processor": lambda x: x if x else None,
+            "step_title": "Crowd and mood",
+        },
+        {
+            "name": "interacted_with_locals",
+            "prompt": "Did you interact with locals inside the onsen? (y/n): ",
+            "validator": validate_yes_no,
+            "processor": lambda x: x.lower() in ["y", "yes"],
+            "condition": lambda session: session.visit_data.get("crowd_level", "").lower() != "empty",
+            "step_title": "Crowd and mood",
+        },
+        {
+            "name": "local_interaction_quality_rating",
+            "prompt": "How pleasant was the interaction with locals? (1-10): ",
+            "validator": lambda x: not x or validate_rating(x),
+            "processor": lambda x: int(x) if x else None,
+            "condition": lambda session: session.visit_data.get("interacted_with_locals", False),
             "step_title": "Crowd and mood",
         },
         {

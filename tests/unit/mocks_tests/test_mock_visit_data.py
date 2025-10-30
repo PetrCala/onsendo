@@ -37,7 +37,6 @@ class TestMockOnsenVisit:
             cleanliness_rating=9,
             main_bath_type="indoor",
             main_bath_temperature=40.0,
-            main_bath_water_type="sulfur",
             water_color="clear",
             smell_intensity_rating=5,
             changing_room_cleanliness_rating=8,
@@ -86,7 +85,6 @@ class TestMockOnsenVisit:
             cleanliness_rating=9,
             main_bath_type="indoor",
             main_bath_temperature=40.0,
-            main_bath_water_type="sulfur",
             water_color="clear",
             smell_intensity_rating=5,
             changing_room_cleanliness_rating=8,
@@ -133,7 +131,6 @@ class TestMockOnsenVisit:
             cleanliness_rating=9,
             main_bath_type="indoor",
             main_bath_temperature=40.0,
-            main_bath_water_type="sulfur",
             water_color="clear",
             smell_intensity_rating=5,
             changing_room_cleanliness_rating=8,
@@ -179,7 +176,6 @@ class TestMockOnsenVisit:
             cleanliness_rating=9,
             main_bath_type="indoor",
             main_bath_temperature=40.0,
-            main_bath_water_type="sulfur",
             water_color="clear",
             smell_intensity_rating=5,
             changing_room_cleanliness_rating=8,
@@ -233,7 +229,6 @@ class TestMockVisitDataGenerator:
         assert visit.cleanliness_rating in range(1, 11)
         assert visit.main_bath_type in generator.MAIN_BATH_TYPES
         assert isinstance(visit.main_bath_temperature, float)
-        assert visit.main_bath_water_type in generator.WATER_TYPES
         assert visit.water_color in generator.WATER_COLORS
         assert visit.smell_intensity_rating in range(1, 11)
         assert visit.changing_room_cleanliness_rating in range(1, 11)

@@ -95,7 +95,6 @@ class RealisticDataGenerator:
         self.TIME_OF_DAY = ['morning', 'afternoon', 'evening', 'night']
         self.CROWD_LEVELS = ['empty', 'quiet', 'moderate', 'busy', 'crowded']
         self.MAIN_BATH_TYPES = ['indoor', 'open air', 'mixed', 'other']
-        self.WATER_TYPES = ['sulfur', 'salt', 'alkaline', 'acidic', 'neutral']
         self.WATER_COLORS = ['clear', 'brown', 'green', 'blue', 'milky']
         self.MOODS = ['relaxed', 'stressed', 'anxious', 'tired', 'energetic', 'excited']
         self.EXERCISE_TYPES = ['running', 'walking', 'cycling', 'swimming', 'hiking']
@@ -466,7 +465,6 @@ class RealisticDataGenerator:
             accessibility_rating=ratings['accessibility_rating'],
             main_bath_type=main_bath_type,
             main_bath_temperature=main_bath_temp,
-            main_bath_water_type=random.choice(self.WATER_TYPES),
             water_color=random.choice(self.WATER_COLORS),
             smell_intensity_rating=ratings['smell_intensity_rating'],
             changing_room_cleanliness_rating=ratings['changing_room_cleanliness_rating'],

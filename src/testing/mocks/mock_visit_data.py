@@ -54,7 +54,6 @@ class MockOnsenVisit:
     # Main bath information
     main_bath_type: str
     main_bath_temperature: float
-    main_bath_water_type: str
     water_color: str
     smell_intensity_rating: int
 
@@ -102,6 +101,8 @@ class MockOnsenVisit:
     visit_order: Optional[int] = None
     previous_location: Optional[int] = None
     next_location: Optional[int] = None
+    interacted_with_locals: Optional[bool] = None
+    local_interaction_quality_rating: Optional[int] = None
 
     def __post_init__(self):
         """Validate and adjust data based on logic chains."""
@@ -111,6 +112,7 @@ class MockOnsenVisit:
         self._validate_food_service_logic()
         self._validate_exercise_logic()
         self._validate_multi_onsen_logic()
+        self._validate_local_interaction_logic()
 
     def _validate_sauna_logic(self):
         """Ensure sauna-related data is consistent."""
@@ -177,6 +179,17 @@ class MockOnsenVisit:
             self.previous_location = None
             self.next_location = None
 
+    def _validate_local_interaction_logic(self):
+        """Ensure local interaction data is consistent."""
+        if self.crowd_level == "empty":
+            self.interacted_with_locals = False
+            self.local_interaction_quality_rating = None
+        elif self.interacted_with_locals is None:
+            # If not empty, randomly decide if interacted with locals
+            self.interacted_with_locals = random.choice([True, False])
+            if not self.interacted_with_locals:
+                self.local_interaction_quality_rating = None
+
 
 class MockVisitDataGenerator:
     """Generator for realistic mock onsen visit data."""
@@ -196,7 +209,6 @@ class MockVisitDataGenerator:
         self.EXERCISE_TYPES = ["running", "walking", "cycling", "swimming", "hiking"]
         self.CROWD_LEVELS = ["empty", "quiet", "moderate", "busy", "crowded"]
         self.MAIN_BATH_TYPES = ["indoor", "open air", "mixed", "other"]
-        self.WATER_TYPES = ["sulfur", "salt", "alkaline", "acidic", "neutral"]
         self.WATER_COLORS = ["clear", "brown", "green", "blue", "milky"]
         self.MOODS = ["relaxed", "stressed", "anxious", "tired", "energetic", "excited"]
 
@@ -363,7 +375,6 @@ class MockVisitDataGenerator:
             "cleanliness_rating": self._get_realistic_ratings("cleanliness"),
             "main_bath_type": main_bath_type,
             "main_bath_temperature": main_bath_temp,
-            "main_bath_water_type": random.choice(self.WATER_TYPES),
             "water_color": random.choice(self.WATER_COLORS),
             "smell_intensity_rating": random.randint(3, 8),
             "changing_room_cleanliness_rating": self._get_realistic_ratings(

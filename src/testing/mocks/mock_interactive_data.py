@@ -55,7 +55,6 @@ def get_complete_flow_inputs() -> list[str]:
         "",  # exercise_type (skip)
         "moderate",  # crowd_level
         "open air",  # main_bath_type
-        "sulfur",  # main_bath_water_type
         "clear",  # water_color
         "relaxed",  # pre_visit_mood
         "very relaxed",  # post_visit_mood
@@ -122,7 +121,6 @@ def get_exercise_flow_inputs() -> list[str]:
         "running",  # exercise_type
         "quiet",  # crowd_level
         "indoor",  # main_bath_type
-        "salt",  # main_bath_water_type
         "brown",  # water_color
         "stressed",  # pre_visit_mood
         "relaxed",  # post_visit_mood
@@ -187,7 +185,6 @@ def get_minimal_flow_inputs() -> list[str]:
         "",  # exercise_type (skip)
         "quiet",  # crowd_level
         "indoor",  # main_bath_type
-        "sulfur",  # main_bath_water_type
         "clear",  # water_color
         "tired",  # pre_visit_mood
         "relaxed",  # post_visit_mood
@@ -255,7 +252,6 @@ def get_invalid_onsen_retry_inputs() -> list[str]:
         "",  # exercise_type (skip)
         "moderate",  # crowd_level
         "open air",  # main_bath_type
-        "sulfur",  # main_bath_water_type
         "clear",  # water_color
         "relaxed",  # pre_visit_mood
         "relaxed",  # post_visit_mood
@@ -323,7 +319,6 @@ def get_invalid_rating_retry_inputs() -> list[str]:
         "",  # exercise_type (skip)
         "moderate",  # crowd_level
         "open air",  # main_bath_type
-        "sulfur",  # main_bath_water_type
         "clear",  # water_color
         "relaxed",  # pre_visit_mood
         "relaxed",  # post_visit_mood
@@ -389,7 +384,6 @@ def get_multi_onsen_day_inputs() -> list[str]:
         "",  # exercise_type (skip)
         "busy",  # crowd_level
         "open air",  # main_bath_type
-        "salt",  # main_bath_water_type
         "brown",  # water_color
         "relaxed",  # pre_visit_mood
         "very relaxed",  # post_visit_mood

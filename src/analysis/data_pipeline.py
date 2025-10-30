@@ -128,7 +128,6 @@ class DataPipeline:
                     "crowd_level",
                     "main_bath_type",
                     "main_bath_temperature",
-                    "main_bath_water_type",
                     "water_color",
                     "smell_intensity_rating",
                 ],
