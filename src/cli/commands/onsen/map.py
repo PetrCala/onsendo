@@ -30,8 +30,9 @@ def map_onsens(args: argparse.Namespace) -> None:
         print(f"Generating map with {len(onsens)} onsen(s)...")
 
         try:
-            # Generate the map with visit status
-            map_path = generate_all_onsens_map(onsens, db)
+            # Generate the map with visit status and locations
+            show_locations = not getattr(args, "no_show_locations", False)
+            map_path = generate_all_onsens_map(onsens, db, show_locations=show_locations)
 
             print("=" * 60)
             print("Interactive Onsen Map Generated!")

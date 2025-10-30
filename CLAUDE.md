@@ -483,12 +483,30 @@ poetry run onsendo system calculate-milestones "Beppu Station" --update-engine
 # Get recommendations
 poetry run onsendo onsen recommend --location "Beppu Station" --distance "close" --exclude-visited
 
+# Generate interactive map of all onsens (includes all user locations by default)
+poetry run onsendo onsen map
+
+# Generate map without location markers
+poetry run onsendo onsen map --no-show-locations
+
+# Get recommendations with map (includes all user locations, reference location shown in red)
+poetry run onsendo onsen recommend --location "Home" --distance "close" --open-map
+
+# Get recommendations without location markers on map
+poetry run onsendo onsen recommend --location "Home" --distance "close" --no-show-locations
+
 # Scrape latest onsen data
 poetry run onsendo onsen scrape-data
 
 # Get onsen info
 poetry run onsendo onsen print-summary --ban-number "123"
 ```
+
+**Map Behavior:**
+- By default, all maps display user location markers (pink home icons)
+- Recommendation maps also show the reference location in red
+- Use `--no-show-locations` to hide all location markers
+- Location markers show name on hover and details (coordinates, description) on click
 
 ### Visit Recording
 

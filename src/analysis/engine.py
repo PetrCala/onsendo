@@ -78,7 +78,8 @@ class AnalysisEngine:
 
         # Initialize components with analysis-specific paths
         self.visualization_engine = VisualizationEngine(
-            self.output_dir / "visualizations"
+            self.output_dir / "visualizations",
+            db_session=self.session
         )
         self.model_engine = ModelEngine(self.output_dir / "models")
 
@@ -1065,6 +1066,7 @@ class AnalysisEngine:
                 # Main overview map
                 overview_map = map_generator.create_comprehensive_onsen_map(
                     data=enhanced_data,
+                    db_session=self.session,
                     map_name="onsen_overview.html",
                 )
                 if overview_map:

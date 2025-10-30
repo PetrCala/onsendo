@@ -9,9 +9,11 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 from loguru import logger
+from sqlalchemy.orm import Session
 
 from src.types.analysis import VisualizationType, VisualizationConfig
 from src.analysis.metrics import MetricsCalculator
+from src.lib.map_generator import _add_location_markers
 
 
 class VisualizationEngine:
@@ -19,10 +21,11 @@ class VisualizationEngine:
     Engine for creating various types of visualizations.
     """
 
-    def __init__(self, save_dir: Optional[str] = None):
+    def __init__(self, save_dir: Optional[str] = None, db_session: Optional[Session] = None):
         self.save_dir = Path(save_dir) if save_dir else Path("output/visualizations")
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.metrics_calculator = MetricsCalculator()
+        self.db_session = db_session
 
     def _get_matplotlib(self):
         # pylint: disable=import-outside-toplevel
@@ -828,6 +831,10 @@ class VisualizationEngine:
             location=[center_lat, center_lon], zoom_start=10, tiles="OpenStreetMap"
         )
 
+        # Add location markers if db_session is available
+        if self.db_session:
+            _add_location_markers(m, self.db_session, reference_location_id=None)
+
         # Add points
         for _, row in map_data.iterrows():
             popup_text = f"<b>{row.get('name', 'Unknown')}</b><br>"
@@ -881,6 +888,10 @@ class VisualizationEngine:
             location=[center_lat, center_lon], zoom_start=10, tiles="OpenStreetMap"
         )
 
+        # Add location markers if db_session is available
+        if self.db_session:
+            _add_location_markers(m, self.db_session, reference_location_id=None)
+
         # Prepare heat map data
         heat_data = []
         for _, row in map_data.iterrows():
@@ -930,6 +941,11 @@ class VisualizationEngine:
         m = folium.Map(
             location=[center_lat, center_lon], zoom_start=10, tiles="OpenStreetMap"
         )
+
+        # Add location markers if db_session is available
+        if self.db_session:
+            _add_location_markers(m, self.db_session, reference_location_id=None)
+
         marker_cluster = MarkerCluster().add_to(m)
 
         # Add points to cluster

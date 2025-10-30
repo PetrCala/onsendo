@@ -11,6 +11,9 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from loguru import logger
+from sqlalchemy.orm import Session
+
+from src.lib.map_generator import _add_location_markers
 
 
 class InteractiveMapGenerator:
@@ -31,9 +34,11 @@ class InteractiveMapGenerator:
     def create_comprehensive_onsen_map(
         self,
         data: pd.DataFrame,
+        db_session: Session,
         map_name: str = "onsen_overview.html",
         center: Optional[tuple[float, float]] = None,
         zoom_start: int = 12,
+        show_locations: bool = True,
     ) -> Path:
         # pylint: disable=too-complex,too-many-locals
         # Complexity justified: creates multiple map layers with detailed popups
@@ -44,9 +49,11 @@ class InteractiveMapGenerator:
 
         Args:
             data: DataFrame with onsen data including latitude, longitude, ratings, etc.
+            db_session: Database session for querying locations
             map_name: Name for the output HTML file
             center: Optional (lat, lon) tuple for map center
             zoom_start: Initial zoom level
+            show_locations: Whether to show user location markers (default: True)
 
         Returns:
             Path to generated HTML map
@@ -78,6 +85,10 @@ class InteractiveMapGenerator:
         folium.TileLayer('Stamen Terrain', name='Terrain').add_to(m)
         folium.TileLayer('Stamen Toner', name='Toner').add_to(m)
         folium.TileLayer('CartoDB positron', name='Light').add_to(m)
+
+        # Add location markers (all in pink, no reference location)
+        if show_locations:
+            _add_location_markers(m, db_session, reference_location_id=None)
 
         # Layer 1: Individual markers with detailed popups
         marker_layer = folium.FeatureGroup(name='Onsen Details', show=True)

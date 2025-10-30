@@ -287,6 +287,10 @@ CLI_COMMANDS = {
                 action="store_true",
                 help="Do not automatically open map in browser (default: auto-open)",
             ),
+            "no-show-locations": ArgumentConfig(
+                action="store_true",
+                help="Do not show user location markers on map (default: show locations)",
+            ),
         },
     ),
     "onsen-recommend": CommandConfig(
@@ -337,6 +341,10 @@ CLI_COMMANDS = {
             "open-map": ArgumentConfig(
                 action="store_true",
                 help="Automatically open map in browser after generation",
+            ),
+            "no-show-locations": ArgumentConfig(
+                action="store_true",
+                help="Do not show user location markers on map (default: show locations)",
             ),
         },
     ),

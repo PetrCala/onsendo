@@ -2,7 +2,6 @@
 
 import os
 from datetime import datetime
-from pathlib import Path
 import folium
 from folium import IFrame
 from loguru import logger
@@ -16,6 +15,81 @@ from src.lib.apple_reminders import (
     is_reminders_available,
     format_onsen_details_for_reminder
 )
+
+
+def _add_location_markers(
+    folium_map: folium.Map,
+    db_session: Session,
+    reference_location_id: int | None = None
+) -> None:
+    """
+    Add location markers to a folium map.
+
+    Queries all locations from the database and adds them as markers.
+    Reference location (if specified) is shown in red, all others in pink.
+
+    Args:
+        folium_map: The folium Map object to add markers to
+        db_session: Database session for querying locations
+        reference_location_id: Optional ID of reference location (shown in red)
+
+    Returns:
+        None (modifies folium_map in place)
+    """
+    try:
+        # Query all locations from database
+        locations = db_session.query(Location).all()
+
+        for location in locations:
+            # Skip locations without coordinates
+            if location.latitude is None or location.longitude is None:
+                continue
+
+            # Determine color: red for reference, pink for others
+            is_reference = (reference_location_id is not None and
+                          location.id == reference_location_id)
+            color = "red" if is_reference else "pink"
+
+            # Build popup HTML
+            popup_html = f"""
+            <div style="font-family: Arial, sans-serif; width: 280px;">
+                <h3 style="margin-top: 0; color: #2c3e50;">
+                    {location.name}
+                </h3>
+                <hr style="margin: 10px 0;">
+
+                <p style="margin: 5px 0;">
+                    <b>Coordinates:</b> {location.latitude:.6f}, {location.longitude:.6f}
+                </p>
+
+                {f'<p style="margin: 5px 0;"><b>Description:</b> {location.description}</p>'
+                 if location.description else ''}
+
+                {f'<p style="margin: 10px 0 5px 0; padding: 8px; background-color: #ffe4e4; border-radius: 4px; font-size: 12px;"><b>📍 Reference Location</b></p>'
+                 if is_reference else ''}
+            </div>
+            """
+
+            # Tooltip text (shown on hover)
+            tooltip_text = f"{location.name}"
+            if is_reference:
+                tooltip_text += " (Reference Location)"
+
+            # Create popup with iframe
+            iframe = IFrame(html=popup_html, width=300, height=250)
+            popup = folium.Popup(iframe, max_width=300)
+
+            # Add marker to map
+            folium.Marker(
+                location=[location.latitude, location.longitude],
+                popup=popup,
+                tooltip=tooltip_text,
+                icon=folium.Icon(color=color, icon="home", prefix="fa"),
+            ).add_to(folium_map)
+
+    except Exception as e:
+        # Log error but don't fail map generation
+        logger.warning(f"Failed to add location markers to map: {e}")
 
 
 def format_single_onsen_for_reminder(
@@ -98,17 +172,21 @@ def format_single_onsen_for_reminder(
 def generate_recommendation_map(
     recommendations: list[tuple[Onsen, float, dict]],
     location: Location,
+    db_session: Session,
     output_filename: str | None = None,
     target_time: datetime | None = None,
+    show_locations: bool = True,
 ) -> str:
     """
     Generate an interactive HTML map showing recommended onsens.
 
     Args:
         recommendations: List of tuples (onsen, distance_km, metadata)
-        location: User's location (used as map center)
+        location: User's location (used as map center and marked as reference)
+        db_session: Database session for querying locations
         output_filename: Optional filename for the map (default: timestamped)
         target_time: Optional target time for onsen visit (enables reminder button)
+        show_locations: Whether to show location markers on map (default: True)
 
     Returns:
         Absolute path to the generated HTML file
@@ -159,13 +237,9 @@ def generate_recommendation_map(
         tiles="OpenStreetMap",
     )
 
-    # Add user location marker
-    folium.Marker(
-        location=[center_lat, center_lon],
-        popup=f"<b>{location.name}</b><br>Your Location",
-        tooltip=f"{location.name} (Your Location)",
-        icon=folium.Icon(color="red", icon="home", prefix="fa"),
-    ).add_to(m)
+    # Add location markers (including reference location)
+    if show_locations:
+        _add_location_markers(m, db_session, reference_location_id=location.id)
 
     # Add onsen markers
     for i, (onsen, distance, metadata) in enumerate(recommendations, 1):
@@ -312,7 +386,7 @@ def generate_recommendation_map(
         ).add_to(m)
 
     # Add legend
-    legend_html = """
+    legend_html = f"""
     <div style="position: fixed;
                 bottom: 50px;
                 right: 50px;
@@ -325,9 +399,8 @@ def generate_recommendation_map(
                 border-radius: 5px;
                 box-shadow: 2px 2px 6px rgba(0,0,0,0.3);">
         <h4 style="margin-top: 0;">Legend</h4>
-        <p style="margin: 5px 0;">
-            <i class="fa fa-home" style="color: red;"></i> Your Location
-        </p>
+        {'<p style="margin: 5px 0;"><i class="fa fa-home" style="color: red;"></i> Reference Location</p>' if show_locations else ''}
+        {'<p style="margin: 5px 0;"><i class="fa fa-home" style="color: pink;"></i> Other Locations</p>' if show_locations else ''}
         <p style="margin: 5px 0;">
             <i class="fa fa-tint" style="color: blue;"></i> Available Onsen
         </p>
@@ -513,14 +586,16 @@ def generate_all_onsens_map(
     onsens: list[Onsen],
     db_session: Session,
     output_filename: str | None = None,
+    show_locations: bool = True,
 ) -> str:
     """
     Generate an interactive HTML map showing all onsens in the database.
 
     Args:
         onsens: List of all onsens to display
-        db_session: Database session to query visit status
+        db_session: Database session to query visit status and locations
         output_filename: Optional filename for the map (default: timestamped)
+        show_locations: Whether to show location markers on map (default: True)
 
     Returns:
         Absolute path to the generated HTML file
@@ -562,6 +637,10 @@ def generate_all_onsens_map(
         zoom_start=12,
         tiles="OpenStreetMap",
     )
+
+    # Add location markers (all in pink, no reference location)
+    if show_locations:
+        _add_location_markers(m, db_session, reference_location_id=None)
 
     # Add onsen markers
     for i, onsen in enumerate(onsens, 1):
@@ -656,6 +735,7 @@ def generate_all_onsens_map(
                 border-radius: 5px;
                 box-shadow: 2px 2px 6px rgba(0,0,0,0.3);">
         <h4 style="margin-top: 0;">All Onsens Map</h4>
+        {'<p style="margin: 5px 0;"><i class="fa fa-home" style="color: pink;"></i> User Locations</p>' if show_locations else ''}
         <p style="margin: 5px 0;">
             <i class="fa fa-tint" style="color: blue;"></i> Unvisited ({unvisited_count})
         </p>

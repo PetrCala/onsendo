@@ -109,8 +109,10 @@ def recommend_onsen(args: argparse.Namespace) -> None:
 
         if should_generate_map:
             try:
+                show_locations = not getattr(args, "no_show_locations", False)
                 map_path = generate_recommendation_map(
-                    recommendations, location, target_time=target_time
+                    recommendations, location, db, target_time=target_time,
+                    show_locations=show_locations
                 )
                 print("=" * 60)
                 print("Interactive Map Generated!")
