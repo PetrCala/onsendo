@@ -280,6 +280,89 @@ poetry run onsendo exercise stats --week 2025-11-03 --type running
 - **JSON** - Generic JSON format
 - **CSV** - Simple CSV format with timestamps and metrics
 
+### Weight Management
+
+All weight operations can be invoked via Makefile:
+
+```bash
+# Import single file
+make weight-import FILE=path/to/weight.csv
+make weight-import FILE=path/to/weight.csv FORMAT=apple_health NOTES="Morning weigh-in"
+
+# Add measurement manually
+make weight-add WEIGHT=72.5
+make weight-add WEIGHT=72.5 CONDITIONS=fasted TIME_OF_DAY=morning NOTES="After workout"
+
+# List measurements
+make weight-list                                    # All measurements
+make weight-list DATE_RANGE=2025-11-01,2025-11-30  # Date range
+make weight-list LIMIT=10                           # Limit results
+
+# Delete measurement
+make weight-delete ID=123                           # Delete by ID
+make weight-delete                                  # Interactive mode
+
+# Show statistics
+make weight-stats WEEK=2025-11-03                   # Weekly stats
+make weight-stats MONTH=11 YEAR=2025                # Monthly stats
+make weight-stats ALL_TIME=true                     # All-time stats
+
+# Export data
+make weight-export FORMAT=csv OUTPUT=weights.csv    # CSV export
+make weight-export FORMAT=json                      # JSON export (default path)
+```
+
+**Weight CLI Commands:**
+
+```bash
+# Import single measurement or file
+poetry run onsendo weight import path/to/weight.csv
+poetry run onsendo weight import weight.json --format json --notes "Post-workout"
+
+# Add measurement manually (interactive or via flags)
+poetry run onsendo weight add                       # Interactive mode
+poetry run onsendo weight add --weight 72.5 --conditions fasted --notes "Morning"
+
+# List and query measurements
+poetry run onsendo weight list --date-range 2025-11-01,2025-11-30
+poetry run onsendo weight list --limit 20
+poetry run onsendo weight list --format json
+
+# Delete measurements
+poetry run onsendo weight delete 123                # Delete by ID
+poetry run onsendo weight delete                    # Interactive selection
+
+# Weekly/monthly statistics
+poetry run onsendo weight stats --week 2025-11-03
+poetry run onsendo weight stats --month 11 --year 2025
+poetry run onsendo weight stats --all-time
+
+# Export measurements
+poetry run onsendo weight export --format csv --output weights.csv
+poetry run onsendo weight export --format json --date-range 2025-11-01,2025-11-30
+```
+
+**Supported Import Formats:**
+
+- **CSV** - Simple CSV with timestamp, weight_kg, and optional metadata columns
+- **JSON** - Structured JSON format with measurement details
+- **Apple Health** - CSV/XML exports from Apple Health app (BodyMass records)
+
+**Measurement Conditions:**
+
+- `fasted` - Fasted state (typical for morning weigh-ins)
+- `after_meal` - After eating
+- `post_workout` - After exercise
+- `before_workout` - Before exercise
+- `normal` - Standard conditions
+
+**Time of Day Options:**
+
+- `morning` - Morning measurement
+- `afternoon` - Afternoon measurement
+- `evening` - Evening measurement
+- `night` - Night measurement
+
 ### Heart Rate Management (Original)
 
 All heart rate operations can be invoked via Makefile:

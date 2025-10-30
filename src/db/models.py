@@ -371,6 +371,41 @@ class Activity(Base):
     visit = relationship("OnsenVisit", foreign_keys=[visit_id])
 
 
+class WeightMeasurement(Base):
+    """
+    Weight measurement tracking for the Onsendo challenge.
+
+    Tracks body weight over time to monitor health trends during the challenge.
+    Measurements can be manually entered or imported from various sources
+    (smart scales, Apple Health, etc.).
+
+    Columns:
+    - id: primary key
+    - measurement_time: when the weight was measured (with timezone awareness)
+    - weight_kg: body weight in kilograms
+    - measurement_conditions: conditions at time of measurement (e.g., "fasted", "after_meal", "post_workout")
+    - time_of_day: general time of day (e.g., "morning", "afternoon", "evening")
+    - data_source: source of the measurement (manual, scale, apple_health, etc.)
+    - data_file_path: path to original data file if imported
+    - data_hash: SHA-256 hash of data file for integrity verification
+    - notes: optional notes about the measurement
+    - created_at: when this record was created in the database
+    """
+
+    __tablename__ = "weight_measurements"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    measurement_time = Column(DateTime, nullable=False, index=True)
+    weight_kg = Column(Float, nullable=False)
+    measurement_conditions = Column(String)  # Optional: fasted, after_meal, post_workout, etc.
+    time_of_day = Column(String)  # Optional: morning, afternoon, evening
+    data_source = Column(String, nullable=False)  # manual, scale, apple_health, etc.
+    data_file_path = Column(String)  # Optional: path if imported from file
+    data_hash = Column(String)  # Optional: SHA-256 hash for file integrity
+    notes = Column(String)  # Optional: additional notes
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class RuleRevision(Base):
     """
     Rule revisions for the Onsendo challenge ruleset.

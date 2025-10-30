@@ -578,6 +578,137 @@ poetry run onsendo strava auth --reauth
 
 **For workflow examples**: See [docs/STRAVA_WORKFLOWS.md](docs/STRAVA_WORKFLOWS.md)
 
+### Weight Tracking
+
+Monitor body weight trends during the Onsendo Challenge to track health and fitness progress.
+
+#### Adding Measurements
+
+```bash
+# Interactive manual entry
+poetry run onsendo weight add
+
+# Quick entry via flags
+poetry run onsendo weight add --weight 72.5 --conditions fasted --notes "Morning weigh-in"
+
+# With full metadata
+poetry run onsendo weight add \
+  --weight 72.5 \
+  --conditions fasted \
+  --time-of-day morning \
+  --notes "After workout"
+```
+
+#### Importing from Files
+
+```bash
+# Import from CSV
+poetry run onsendo weight import weights.csv
+
+# Import from JSON
+poetry run onsendo weight import data.json --format json
+
+# Import from Apple Health export
+poetry run onsendo weight import export.xml --format apple_health
+
+# Add notes to all imported measurements
+poetry run onsendo weight import weights.csv --notes "Imported from scale"
+
+# Validate without importing
+poetry run onsendo weight import weights.csv --validate-only
+```
+
+#### Supported Formats
+
+**CSV**:
+```csv
+timestamp,weight_kg,conditions,time_of_day,notes
+2025-11-01 07:30:00,72.5,fasted,morning,After workout
+2025-11-02 07:30:00,72.3,fasted,morning,
+```
+
+**JSON**:
+```json
+[
+  {
+    "timestamp": "2025-11-01T07:30:00",
+    "weight_kg": 72.5,
+    "conditions": "fasted",
+    "time_of_day": "morning",
+    "notes": "After workout"
+  }
+]
+```
+
+**Apple Health**: Automatically extracts BodyMass records from Health app XML exports.
+
+#### Querying Measurements
+
+```bash
+# List all measurements
+poetry run onsendo weight list
+
+# Filter by date range
+poetry run onsendo weight list --date-range 2025-11-01,2025-11-30
+
+# Limit results
+poetry run onsendo weight list --limit 20
+
+# JSON output
+poetry run onsendo weight list --format json
+```
+
+#### Statistics and Trends
+
+```bash
+# Weekly summary
+poetry run onsendo weight stats --week 2025-11-03
+
+# Monthly summary
+poetry run onsendo weight stats --month 11 --year 2025
+
+# All-time statistics
+poetry run onsendo weight stats --all-time
+```
+
+**Statistics include**:
+- Total measurements
+- Average, minimum, maximum weight
+- Weight change (first to last)
+- 7-day and 30-day moving averages
+- Trend detection (stable, gaining, losing)
+- Measurements by source
+- Recommendations for tracking consistency
+
+#### Exporting Data
+
+```bash
+# Export to CSV
+poetry run onsendo weight export --format csv --output weights.csv
+
+# Export to JSON
+poetry run onsendo weight export --format json
+
+# Export specific date range
+poetry run onsendo weight export --format csv --date-range 2025-11-01,2025-11-30
+```
+
+#### Measurement Best Practices
+
+- **Consistency**: Weigh yourself at the same time each day (morning is best)
+- **Conditions**: Track fasted measurements for most accurate trends
+- **Frequency**: Daily measurements provide better trend data than weekly
+- **Same scale**: Use the same scale for all measurements
+- **After bathroom**: Weigh yourself after using the bathroom, before eating
+
+#### Validation Features
+
+- Weight range enforcement (40-200 kg)
+- Future timestamp detection
+- Valid condition and time-of-day validation
+- Automatic data source normalization
+- SHA-256 file integrity for imported data
+
 ### Rules & Weekly Reviews
 
 Track challenge compliance and manage rule revisions.
@@ -855,6 +986,15 @@ See [.env.example](.env.example) for detailed setup instructions.
 - `exercise link` - Link to visit or heart rate data
 - `exercise stats` - Show weekly/monthly statistics
 
+**Weight Commands**:
+
+- `weight import` - Import weight data from file
+- `weight add` - Add measurement manually (interactive or flags)
+- `weight list` - List all measurements
+- `weight delete` - Remove measurement
+- `weight stats` - Show statistics and trends
+- `weight export` - Export to CSV or JSON
+
 **Rules Commands**:
 
 - `rules print` - View current rules
@@ -905,6 +1045,14 @@ See [.env.example](.env.example) for detailed setup instructions.
 | Apple Health | `.xml`, `.csv` | iPhone/Watch | Workout summaries with auto type detection |
 | JSON | `.json` | Generic | Flexible workout format |
 | CSV | `.csv` | Generic | Simple tabular format |
+
+#### Weight Formats
+
+| Format | File Extension | Source | Format |
+|--------|---------------|---------|--------|
+| CSV | `.csv` | Generic | `timestamp,weight_kg,conditions,time_of_day,notes` |
+| JSON | `.json` | Generic | Structured measurement data with metadata |
+| Apple Health | `.xml` | iPhone/Watch | BodyMass records from Health export |
 
 ### File Organization Best Practices
 

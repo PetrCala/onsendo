@@ -1,0 +1,1 @@
+"""Weight management CLI commands."""

@@ -1002,6 +1002,143 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    # Weight commands
+    "weight-import": CommandConfig(
+        func=lazy_command("src.cli.commands.weight.import_", "import_weight_data"),
+        help="Import weight data from a file",
+        args={
+            "file-path": ArgumentConfig(
+                type=str,
+                required=True,
+                help="Path to weight data file",
+                positional=True,
+            ),
+            "format": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Force specific file format (csv, json, apple_health)",
+            ),
+            "notes": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Optional notes about the measurement(s)",
+            ),
+            "validate-only": ArgumentConfig(
+                action="store_true", help="Only validate data without importing"
+            ),
+        },
+    ),
+    "weight-add": CommandConfig(
+        func=lazy_command("src.cli.commands.weight.add", "add_weight_measurement"),
+        help="Manually add a weight measurement",
+        args={
+            "weight": ArgumentConfig(
+                type=float,
+                required=False,
+                help="Weight in kilograms",
+            ),
+            "time": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Measurement time (YYYY-MM-DD HH:MM:SS, defaults to now)",
+            ),
+            "conditions": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Measurement conditions (fasted, after_meal, post_workout, etc.)",
+            ),
+            "time-of-day": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Time of day (morning, afternoon, evening, night)",
+            ),
+            "notes": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Optional notes",
+            ),
+        },
+    ),
+    "weight-list": CommandConfig(
+        func=lazy_command("src.cli.commands.weight.list", "list_weight_measurements"),
+        help="List weight measurements",
+        args={
+            "date-range": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Date range in format 'YYYY-MM-DD,YYYY-MM-DD'",
+            ),
+            "limit": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Limit number of results",
+            ),
+            "format": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output format (table, json)",
+            ),
+        },
+    ),
+    "weight-delete": CommandConfig(
+        func=lazy_command("src.cli.commands.weight.delete", "delete_weight_measurement"),
+        help="Delete a weight measurement",
+        args={
+            "id": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Measurement ID to delete",
+                positional=True,
+            ),
+        },
+    ),
+    "weight-stats": CommandConfig(
+        func=lazy_command("src.cli.commands.weight.stats", "show_weight_stats"),
+        help="Show weight statistics and trends",
+        args={
+            "week": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Week start date (YYYY-MM-DD) for weekly summary",
+            ),
+            "month": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Month number (1-12) for monthly summary",
+            ),
+            "year": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Year for monthly summary (defaults to current year)",
+            ),
+            "all-time": ArgumentConfig(
+                action="store_true",
+                help="Show all-time statistics",
+            ),
+        },
+    ),
+    "weight-export": CommandConfig(
+        func=lazy_command("src.cli.commands.weight.export", "export_weight_data"),
+        help="Export weight measurements to file",
+        args={
+            "format": ArgumentConfig(
+                type=str,
+                required=False,
+                default="csv",
+                help="Export format (csv, json)",
+            ),
+            "output": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output file path",
+            ),
+            "date-range": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Date range to export 'YYYY-MM-DD,YYYY-MM-DD'",
+            ),
+        },
+    ),
     # Analysis commands
     "analysis-run": CommandConfig(
         func=lazy_command("src.cli.commands.analysis.run_analysis", "run_analysis"),

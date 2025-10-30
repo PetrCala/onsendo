@@ -201,6 +201,61 @@ exercise-stats: ## Show exercise statistics (Usage: make exercise-stats WEEK=202
 		$(if $(YEAR),--year $(YEAR),) \
 		$(if $(TYPE),--type $(TYPE),)
 
+##@ Weight Management
+
+weight-import: ## Import single weight file (Usage: make weight-import FILE=path/to/file.csv [ENV=dev|prod] [FORMAT=csv] [NOTES="notes"])
+	@if [ -z "$(FILE)" ]; then \
+		echo "$(RED)[ERROR]$(NC) FILE not specified. Usage: make weight-import FILE=path/to/file.csv"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[INFO]$(NC) Importing weight data to $(ENV) database: $(FILE)"
+	@poetry run onsendo --env $(ENV) weight import "$(FILE)" \
+		$(if $(FORMAT),--format $(FORMAT),) \
+		$(if $(NOTES),--notes "$(NOTES)",)
+
+weight-add: ## Add weight measurement manually (Usage: make weight-add WEIGHT=72.5 [ENV=dev|prod] [CONDITIONS=fasted] [NOTES="notes"])
+	@if [ -z "$(WEIGHT)" ]; then \
+		echo "$(YELLOW)[INFO]$(NC) Starting interactive mode..."; \
+		poetry run onsendo --env $(ENV) weight add; \
+	else \
+		echo "$(BLUE)[INFO]$(NC) Adding weight measurement to $(ENV) database: $(WEIGHT) kg"; \
+		poetry run onsendo --env $(ENV) weight add --weight $(WEIGHT) \
+			$(if $(CONDITIONS),--conditions $(CONDITIONS),) \
+			$(if $(TIME_OF_DAY),--time-of-day $(TIME_OF_DAY),) \
+			$(if $(NOTES),--notes "$(NOTES)",); \
+	fi
+
+weight-list: ## List weight measurements (Usage: make weight-list [ENV=dev|prod] [DATE_RANGE=2025-11-01,2025-11-30] [LIMIT=20])
+	@echo "$(BLUE)[INFO]$(NC) Listing weight measurements from $(ENV) database..."
+	@poetry run onsendo --env $(ENV) weight list \
+		$(if $(DATE_RANGE),--date-range $(DATE_RANGE),) \
+		$(if $(LIMIT),--limit $(LIMIT),) \
+		$(if $(FORMAT),--format $(FORMAT),)
+
+weight-delete: ## Delete weight measurement (Usage: make weight-delete ID=123 [ENV=dev|prod])
+	@if [ -z "$(ID)" ]; then \
+		echo "$(YELLOW)[INFO]$(NC) Starting interactive mode..."; \
+		poetry run onsendo --env $(ENV) weight delete; \
+	else \
+		echo "$(BLUE)[INFO]$(NC) Deleting weight measurement $(ID) from $(ENV) database..."; \
+		poetry run onsendo --env $(ENV) weight delete $(ID); \
+	fi
+
+weight-stats: ## Show weight statistics (Usage: make weight-stats WEEK=2025-11-03 [ENV=dev|prod] or MONTH=11 YEAR=2025 or ALL_TIME=true)
+	@echo "$(BLUE)[INFO]$(NC) Fetching weight statistics from $(ENV) database..."
+	@poetry run onsendo --env $(ENV) weight stats \
+		$(if $(WEEK),--week $(WEEK),) \
+		$(if $(MONTH),--month $(MONTH),) \
+		$(if $(YEAR),--year $(YEAR),) \
+		$(if $(ALL_TIME),--all-time,)
+
+weight-export: ## Export weight data (Usage: make weight-export [FORMAT=csv] [OUTPUT=path/to/output.csv] [ENV=dev|prod])
+	@echo "$(BLUE)[INFO]$(NC) Exporting weight data from $(ENV) database..."
+	@poetry run onsendo --env $(ENV) weight export \
+		$(if $(FORMAT),--format $(FORMAT),) \
+		$(if $(OUTPUT),--output "$(OUTPUT)",) \
+		$(if $(DATE_RANGE),--date-range $(DATE_RANGE),)
+
 ##@ Backup Operations
 
 backup: ## Create local database backup with timestamp
