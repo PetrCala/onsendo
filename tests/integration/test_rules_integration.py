@@ -8,7 +8,7 @@ import pytest
 
 from src.db.conn import get_db
 from src.db.models import RuleRevision
-from src.const import CONST
+from src.config import get_database_url
 
 
 @pytest.mark.integration
@@ -17,7 +17,7 @@ class TestRuleRevisionDatabase:
 
     def test_create_rule_revision(self):
         """Test creating a rule revision in the database."""
-        with get_db(url=CONST.DATABASE_URL) as db:
+        with get_db(url=get_database_url()) as db:
             # Create a test revision
             revision = RuleRevision(
                 version_number=999,  # Use high number to avoid conflicts
@@ -55,7 +55,7 @@ class TestRuleRevisionDatabase:
 
     def test_query_revisions(self):
         """Test querying revisions from database."""
-        with get_db(url=CONST.DATABASE_URL) as db:
+        with get_db(url=get_database_url()) as db:
             # Get count of revisions
             count = db.query(RuleRevision).count()
             assert count >= 0
