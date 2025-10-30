@@ -18,7 +18,7 @@ ENV ?= $(if $(ONSENDO_ENV),$(ONSENDO_ENV),dev)
 DB_FILE := data/db/onsen.$(ENV).db
 
 # Backup configuration
-KEEP_BACKUPS ?= 50
+KEEP_BACKUPS ?= 10
 BACKUP_DIR := artifacts/db/backups
 TIMESTAMP := $(shell date +%Y%m%d_%H%M%S)
 BACKUP_FILE := $(BACKUP_DIR)/onsen_backup_$(ENV)_$(TIMESTAMP).db

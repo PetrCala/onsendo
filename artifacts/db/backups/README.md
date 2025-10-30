@@ -58,7 +58,7 @@ shasum -a 256 -c onsen_backup_20251010_120000.db.sha256
 make backup-cleanup
 
 # Keep 100 most recent
-make backup-cleanup KEEP_BACKUPS=100
+make backup-cleanup KEEP_BACKUPS=10
 ```
 
 ## Retention Policy
@@ -106,7 +106,7 @@ cd /path/to/onsendo
 source .venv/bin/activate
 
 make backup
-make backup-cleanup KEEP_BACKUPS=50
+make backup-cleanup KEEP_BACKUPS=10
 make backup-cloud || echo "Cloud sync failed, backup still saved locally"
 ```
 

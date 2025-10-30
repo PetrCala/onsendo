@@ -48,12 +48,14 @@ poetry run onsendo --help
 The project supports multiple database environments (dev/prod) to separate development and production data.
 
 **Environment Selection Priority (for CLI):**
+
 1. Explicit path: `--database /path/to/db.db`
 2. CLI flag: `--env prod`
 3. Environment variable: `ONSENDO_ENV=prod`
 4. Default: `dev`
 
 **Environment Selection Priority (for Makefile):**
+
 1. ENV parameter: `make backup ENV=prod`
 2. Environment variable: `ONSENDO_ENV=prod` (set via `eval $(make use-prod)`)
 3. Default: `dev`
@@ -88,12 +90,14 @@ poetry run onsendo --database /custom/path.db visit list
 ```
 
 **Safety Features:**
+
 - Tests automatically blocked from accessing production (`ONSENDO_ENV=prod` fails tests)
 - Destructive operations show production warnings and require confirmation
 - Database banners displayed for production operations
 - Migrations show environment-specific warnings
 
 **Database Files:**
+
 - Dev: `data/db/onsen.dev.db`
 - Prod: `data/db/onsen.prod.db`
 - Test: In-memory (not persisted)
@@ -177,7 +181,7 @@ make backup-verify
 
 # Clean up old backups (keeps 50 most recent by default)
 make backup-cleanup
-make backup-cleanup KEEP_BACKUPS=100  # Keep 100 backups
+make backup-cleanup KEEP_BACKUPS=10  # Keep 100 backups
 
 # Restore from backup (interactive)
 make backup-restore
@@ -804,6 +808,7 @@ Closes #123
 The README follows a **9-section hierarchy** with maximum depth of h3 (###) for major features:
 
 **Section Structure**:
+
 1. **Overview** - What/why/key features
 2. **Quick Start** - Installation → first commands
 3. **Core Concepts** - Six main entities explained concisely
@@ -815,12 +820,14 @@ The README follows a **9-section hierarchy** with maximum depth of h3 (###) for 
 9. **Additional Resources** - Links, troubleshooting, license
 
 **Header Depth Rules**:
+
 - h2 (`##`) for major sections (9 top-level sections)
 - h3 (`###`) for features and subsections
 - h4 (`####`) for specific commands or sub-features
 - **Never use h5 or h6** - restructure content if you need deeper nesting
 
 **Progressive Disclosure Principle**:
+
 - Essential information first (Quick Start, Core Concepts)
 - Daily-use commands in Basic Usage
 - Advanced features clearly separated
@@ -830,12 +837,14 @@ The README follows a **9-section hierarchy** with maximum depth of h3 (###) for 
 ### When to Update README vs Create Separate Docs
 
 **Add to README** when:
+
 - New CLI command in existing command group
 - New feature that fits existing section structure
 - Quick reference information (command syntax, flags)
 - Common workflows or examples
 
 **Create separate doc** when:
+
 - Comprehensive system documentation (like `docs/heart_rate_system.md`)
 - Architecture deep dives
 - Migration guides or tutorials
@@ -847,12 +856,14 @@ The README follows a **9-section hierarchy** with maximum depth of h3 (###) for 
 When adding new commands to README, follow this structure:
 
 **In "Reference > Command Index" section**:
+
 ```markdown
 **{Group} Commands**:
 - `{command} {subcommand}` - Brief description (5-10 words)
 ```
 
 **In appropriate usage section** (Basic Usage or Advanced Features):
+
 ```markdown
 #### {Feature Name}
 
@@ -867,8 +878,10 @@ poetry run onsendo {command} {subcommand} --flag value
 ```
 
 **Output/behavior description** (if relevant):
+
 - Key point 1
 - Key point 2
+
 ```
 
 **Example**:
@@ -886,6 +899,7 @@ poetry run onsendo exercise import workout.tcx --format tcx
 ```
 
 **Supported formats**: GPX, TCX, Apple Health, JSON, CSV
+
 ```
 
 ### Content Organization Rules
@@ -957,11 +971,13 @@ poetry run onsendo exercise stats --week 2025-11-10 --type running
 ```
 
 **Bad** - Creating deep nesting:
+
 ```markdown
 ##### Specific Edge Case For Rare Scenario  # Too deep!
 ```
 
 **Good** - Restructuring instead:
+
 ```markdown
 #### Statistics Options
 
@@ -971,9 +987,11 @@ poetry run onsendo exercise stats --week 2025-11-10
 ```
 
 **Filtered by type**:
+
 ```bash
 poetry run onsendo exercise stats --week 2025-11-10 --type running
 ```
+
 ```
 
 **Good** - Separating verbose content:

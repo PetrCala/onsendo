@@ -77,7 +77,7 @@ make run-cli ARGS="visit list"
 make run-cli ARGS="heart-rate import file.csv --format apple_health"
 
 # Customize backup retention
-make backup-cleanup KEEP_BACKUPS=100
+make backup-cleanup KEEP_BACKUPS=10
 
 # Heart rate with options
 make hr-import FILE=data.csv FORMAT=apple_health NOTES="Morning workout"
