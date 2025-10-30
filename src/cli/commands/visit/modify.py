@@ -7,6 +7,13 @@ from src.db.conn import get_db
 from src.db.models import OnsenVisit, Onsen
 from src.config import get_database_config
 from src.lib.cli_display import show_database_banner, confirm_destructive_operation
+from src.cli.commands.visit.interactive import (
+    InteractiveSession,
+    visit_to_dict,
+    update_visit_from_dict,
+    get_visit_steps,
+    execute_workflow,
+)
 
 
 def modify_visit(args: argparse.Namespace) -> None:
@@ -16,8 +23,8 @@ def modify_visit(args: argparse.Namespace) -> None:
 
     # Get database configuration
     config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
+        env_override=getattr(args, "env", None),
+        path_override=getattr(args, "database", None),
     )
 
     # Show banner for destructive operation
@@ -69,8 +76,8 @@ def modify_visit_interactive(args: argparse.Namespace) -> None:
 
     # Get database configuration
     config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
+        env_override=getattr(args, "env", None),
+        path_override=getattr(args, "database", None),
     )
 
     # Show banner for destructive operation
@@ -119,9 +126,15 @@ def modify_visit_interactive(args: argparse.Namespace) -> None:
             except ValueError:
                 print("Please enter a valid number.")
 
-        print(f"\nModifying visit to: {selected_onsen.name} (Visit ID: {selected_visit.id})")
-        print("Note: Onsen selection cannot be changed. All other fields can be edited.")
-        print("💡 Tip: Press Enter to keep current value, or type 'back' to navigate.\n")
+        print(
+            f"\nModifying visit to: {selected_onsen.name} (Visit ID: {selected_visit.id})"
+        )
+        print(
+            "Note: Onsen selection cannot be changed. All other fields can be edited."
+        )
+        print(
+            "💡 Tip: Press Enter to keep current value, or type 'back' to navigate.\n"
+        )
 
         # Import shared workflow functions
         from src.cli.commands.visit.interactive import (
@@ -129,7 +142,7 @@ def modify_visit_interactive(args: argparse.Namespace) -> None:
             visit_to_dict,
             update_visit_from_dict,
             get_visit_steps,
-            execute_workflow
+            execute_workflow,
         )
 
         # Create session and pre-populate with current visit data
@@ -155,6 +168,8 @@ def modify_visit_interactive(args: argparse.Namespace) -> None:
 
         # Save changes
         db.commit()
-        print(f"\n✅ Successfully updated visit to '{selected_onsen.name}' (Visit ID: {selected_visit.id})")
+        print(
+            f"\n✅ Successfully updated visit to '{selected_onsen.name}' (Visit ID: {selected_visit.id})"
+        )
         print(f"Visit time: {selected_visit.visit_time}")
         print(f"Personal rating: {selected_visit.personal_rating}/10")
