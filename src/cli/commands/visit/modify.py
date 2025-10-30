@@ -61,7 +61,10 @@ def modify_visit(args: argparse.Namespace) -> None:
 
 
 def modify_visit_interactive(args: argparse.Namespace) -> None:
-    """Modify a visit using interactive prompts."""
+    """
+    Modify a visit using interactive prompts with full workflow access.
+    Uses the same comprehensive workflow as add_visit but with pre-populated current values.
+    """
     print("=== Modify Visit ===")
 
     # Get database configuration
@@ -116,75 +119,42 @@ def modify_visit_interactive(args: argparse.Namespace) -> None:
             except ValueError:
                 print("Please enter a valid number.")
 
-        print(
-            f"\nModifying visit to: {selected_onsen.name} (Visit ID: {selected_visit.id})"
+        print(f"\nModifying visit to: {selected_onsen.name} (Visit ID: {selected_visit.id})")
+        print("Note: Onsen selection cannot be changed. All other fields can be edited.")
+        print("💡 Tip: Press Enter to keep current value, or type 'back' to navigate.\n")
+
+        # Import shared workflow functions
+        from src.cli.commands.visit.interactive import (
+            InteractiveSession,
+            visit_to_dict,
+            update_visit_from_dict,
+            get_visit_steps,
+            execute_workflow
         )
-        print("Current values:")
-        print(f"  Entry fee: {selected_visit.entry_fee_yen} yen")
-        print(f"  Stay length: {selected_visit.stay_length_minutes} minutes")
-        print(f"  Personal rating: {selected_visit.personal_rating}/10")
-        print(f"  Weather: {selected_visit.weather or '(none)'}")
-        print(f"  Travel mode: {selected_visit.travel_mode or '(none)'}")
-        print(f"  Notes: {selected_visit.notes or '(none)'}")
 
-        # Get new values
-        print("\nEnter new values (press Enter to keep current value):")
+        # Create session and pre-populate with current visit data
+        session = InteractiveSession()
+        visit_dict = visit_to_dict(selected_visit)
 
-        # Entry fee
-        fee_input = input(f"Entry fee (yen) [{selected_visit.entry_fee_yen}]: ").strip()
-        if fee_input:
-            try:
-                selected_visit.entry_fee_yen = int(fee_input)
-            except ValueError:
-                print("Invalid number for entry fee. Keeping current value.")
+        # Pre-populate session with existing values
+        session.visit_data = visit_dict.copy()
 
-        # Stay length
-        stay_input = input(
-            f"Stay length (minutes) [{selected_visit.stay_length_minutes}]: "
-        ).strip()
-        if stay_input:
-            try:
-                selected_visit.stay_length_minutes = int(stay_input)
-            except ValueError:
-                print("Invalid number for stay length. Keeping current value.")
+        # Pre-populate history for navigation
+        for field_name, value in visit_dict.items():
+            if field_name not in ("id", "onsen_id"):  # Skip non-editable fields
+                session.add_to_history(field_name, value, "")
 
-        # Personal rating
-        rating_input = input(
-            f"Personal rating (1-10) [{selected_visit.personal_rating}]: "
-        ).strip()
-        if rating_input:
-            try:
-                rating = int(rating_input)
-                if 1 <= rating <= 10:
-                    selected_visit.personal_rating = rating
-                else:
-                    print("Rating must be between 1 and 10. Keeping current value.")
-            except ValueError:
-                print("Invalid number for rating. Keeping current value.")
+        # Get workflow steps (skip onsen selection since we can't change it)
+        steps = get_visit_steps(skip_onsen_selection=True)
 
-        # Weather
-        weather_input = input(
-            f"Weather [{selected_visit.weather or '(none)'}]: "
-        ).strip()
-        if weather_input:
-            selected_visit.weather = weather_input
+        # Execute the complete workflow
+        session = execute_workflow(session, steps, db=None)
 
-        # Travel mode
-        travel_input = input(
-            f"Travel mode [{selected_visit.travel_mode or '(none)'}]: "
-        ).strip()
-        if travel_input:
-            selected_visit.travel_mode = travel_input
-
-        # Notes
-        notes_input = input(
-            f"Notes [{selected_visit.notes or '(none)'}]: "
-        ).strip()
-        if notes_input:
-            selected_visit.notes = notes_input
+        # Update the visit from the session data
+        update_visit_from_dict(selected_visit, session.visit_data)
 
         # Save changes
         db.commit()
-        print(
-            f"\nSuccessfully updated visit to '{selected_onsen.name}' (Visit ID: {selected_visit.id})"
-        )
+        print(f"\n✅ Successfully updated visit to '{selected_onsen.name}' (Visit ID: {selected_visit.id})")
+        print(f"Visit time: {selected_visit.visit_time}")
+        print(f"Personal rating: {selected_visit.personal_rating}/10")

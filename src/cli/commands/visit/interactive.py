@@ -153,39 +153,59 @@ class InteractiveSession:
                 print("This field cannot be empty. Please provide a value.")
 
 
-def add_visit_interactive(args: argparse.Namespace) -> None:
+def visit_to_dict(visit: OnsenVisit) -> dict:
     """
-    Interactive version of add_visit that guides users through a series of questions.
-    Supports navigation back to previous answers.
+    Convert an OnsenVisit ORM object to a dictionary for editing.
+    Handles special conversions like visit_time → visit_date + visit_time_str.
     """
-    # Get database configuration
-    config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
-    )
+    data = {}
 
-    # Show banner for destructive operation
-    show_database_banner(config, operation="Add visit")
+    # Copy all non-None attributes
+    for column in visit.__table__.columns:
+        value = getattr(visit, column.name)
+        if value is not None:
+            data[column.name] = value
 
-    print("🌊 Welcome to the Interactive Onsen Visit Recorder! 🌊")
-    print("I'll guide you through recording your onsen visit experience.")
-    print("💡 Tip: Type 'back' to go back one step, or 'back N' to go back N steps.\n")
+    # Special handling for visit_time: split into date and time strings
+    if "visit_time" in data and data["visit_time"]:
+        visit_dt = data["visit_time"]
+        data["visit_date"] = visit_dt
+        data["visit_time_str"] = visit_dt.strftime("%H:%M")
 
-    session = InteractiveSession()
+    return data
 
-    # Helper validation functions
+
+def update_visit_from_dict(visit: OnsenVisit, data: dict) -> None:
+    """
+    Update an OnsenVisit ORM object from a dictionary.
+    Handles special conversions like visit_date + visit_time_str → visit_time.
+    """
+    for key, value in data.items():
+        # Skip internal fields that shouldn't be updated
+        if key in ("id", "visit_date", "visit_time_str"):
+            continue
+
+        # Only update if the attribute exists on the model
+        if hasattr(visit, key):
+            setattr(visit, key, value)
+
+
+def get_visit_steps(skip_onsen_selection: bool = False) -> list[dict]:
+    """
+    Get the complete list of steps for the visit workflow.
+
+    Args:
+        skip_onsen_selection: If True, skips the onsen_id step (for modify mode)
+
+    Returns:
+        List of step dictionaries with name, prompt, validator, processor, etc.
+    """
+    # Helper validation functions (defined inline for closure access)
     def validate_onsen_id(input_str: str) -> bool:
-        """Validate onsen ID input."""
+        """Validate onsen ID input - note: needs db access, handled by caller"""
         try:
-            onsen_id = int(input_str)
-            # Check if onsen exists
-            with get_db(url=config.url) as db:
-                onsen = db.query(Onsen).filter(Onsen.id == onsen_id).first()
-                if not onsen:
-                    print(f"No onsen found with ID {onsen_id}")
-                    return False
-                print(f"Found onsen: {onsen.name}")
-                return True
+            int(input_str)
+            return True
         except ValueError:
             return False
 
@@ -239,14 +259,20 @@ def add_visit_interactive(args: argparse.Namespace) -> None:
         except ValueError:
             return False
 
-    steps = [
-        {
+    steps = []
+
+    # Onsen selection step (only if not skipped)
+    if not skip_onsen_selection:
+        steps.append({
             "name": "onsen_id",
             "prompt": "Enter the onsen ID: ",
             "validator": validate_onsen_id,
             "processor": lambda x: int(x),
             "step_title": "Select the onsen",
-        },
+        })
+
+    # All other steps (full workflow continues below)
+    steps.extend([
         {
             "name": "entry_fee_yen",
             "prompt": "What was the entry fee in yen? (0 if free): ",
@@ -692,9 +718,23 @@ def add_visit_interactive(args: argparse.Namespace) -> None:
             "processor": lambda x: x if x else None,
             "step_title": "Additional notes",
         },
-    ]
+    ])
 
-    # Execute the workflow
+    return steps
+
+
+def execute_workflow(session: InteractiveSession, steps: list[dict], db=None) -> InteractiveSession:
+    """
+    Execute the step-by-step workflow for collecting visit data.
+
+    Args:
+        session: InteractiveSession instance (may be pre-populated for modify mode)
+        steps: List of step dictionaries from get_visit_steps()
+        db: Optional database session for onsen_id validation
+
+    Returns:
+        The session with visit_data populated
+    """
     current_step_index = 0
     last_step_title = None
     step_number = 1
@@ -755,6 +795,19 @@ def add_visit_interactive(args: argparse.Namespace) -> None:
                     )
                     continue
 
+            # Special validation for onsen_id (requires db access)
+            if step["name"] == "onsen_id" and db:
+                try:
+                    onsen_id = int(user_input)
+                    onsen = db.query(Onsen).filter(Onsen.id == onsen_id).first()
+                    if not onsen:
+                        print(f"No onsen found with ID {onsen_id}")
+                        continue
+                    print(f"Found onsen: {onsen.name}")
+                except ValueError:
+                    print("Invalid onsen ID")
+                    continue
+
             # Validate input (allow empty input for all fields)
             if step["validator"](user_input):
                 # Process the input
@@ -792,6 +845,35 @@ def add_visit_interactive(args: argparse.Namespace) -> None:
 
         session.visit_data["visit_time"] = visit_time
 
+    return session
+
+
+def add_visit_interactive(args: argparse.Namespace) -> None:
+    """
+    Interactive version of add_visit that guides users through a series of questions.
+    Supports navigation back to previous answers.
+    """
+    # Get database configuration
+    config = get_database_config(
+        env_override=getattr(args, 'env', None),
+        path_override=getattr(args, 'database', None)
+    )
+
+    # Show banner for destructive operation
+    show_database_banner(config, operation="Add visit")
+
+    print("🌊 Welcome to the Interactive Onsen Visit Recorder! 🌊")
+    print("I'll guide you through recording your onsen visit experience.")
+    print("💡 Tip: Type 'back' to go back one step, or 'back N' to go back N steps.\n")
+
+    # Create session and get steps
+    session = InteractiveSession()
+    steps = get_visit_steps(skip_onsen_selection=False)
+
+    # Execute workflow with database for onsen validation
+    with get_db(url=config.url) as db:
+        session = execute_workflow(session, steps, db=db)
+
     # Save the visit
     print("Saving visit data...")
     with get_db(url=config.url) as db:
@@ -804,6 +886,6 @@ def add_visit_interactive(args: argparse.Namespace) -> None:
 
         print(f"✅ Successfully recorded visit to {onsen.name}!")
         print(f"Visit ID: {visit.id}")
-
         print(f"Visit time: {visit.visit_time}")
         print(f"Personal rating: {visit.personal_rating}/10")
+
