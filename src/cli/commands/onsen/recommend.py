@@ -207,12 +207,16 @@ def recommend_onsen_interactive(args: argparse.Namespace) -> None:
             print(f"  5: Any distance")
 
         while True:
-            distance_choice = input("Choose distance category (1-5): ").strip()
+            distance_choice = input("Choose distance category (1-5, default: any): ").strip()
             distance_map = {"1": "very_close", "2": "close", "3": "medium", "4": "far", "5": "any"}
+            if not distance_choice:
+                # Empty input defaults to "any distance"
+                distance_category = "any"
+                break
             if distance_choice in distance_map:
                 distance_category = distance_map[distance_choice]
                 break
-            print("Please enter a number between 1 and 5.")
+            print("Please enter a number between 1 and 5, or press Enter for any distance.")
 
         # Get filters
         exclude_closed = (
