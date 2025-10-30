@@ -474,9 +474,16 @@ The codebase follows a layered architecture with clear separation of concerns:
 - `Location` - User-defined locations for distance calculations
 - `Onsen` - Hot spring facilities with detailed metadata (ban_number, coordinates, facilities, hours)
 - `OnsenVisit` - Visit records with ratings, health metrics, logistics, weather, and optional notes
-- `HeartRateData` - Physiological data linked to visits via foreign key
-- `ExerciseSession` - Exercise/workout data with GPS routes, metrics, and links to visits/heart rate
+- `HeartRateData` - **ARCHIVED** - Legacy heart rate data (see Activity model for current HR tracking)
+- `ExerciseSession` - **ARCHIVED** - Legacy exercise data (see Activity model for current activity tracking)
+- `Activity` - **CURRENT** Unified Strava-sourced activity model with comprehensive time-series data:
+  - GPS routes with lat/lon/elevation per point
+  - **Heart rate time-series**: Second-by-second HR data stored in `route_data` JSON
+  - Performance metrics (distance, calories, elevation gain)
+  - Onsen monitoring support with optional visit linkage
+  - All physiological and route data in single unified model
 - `RuleRevision` - Rule revision tracking with weekly review data and rule modifications
+- `WeightMeasurement` - Weight tracking for health monitoring during the challenge
 
 **Path Management** (`src/paths.py`):
 
@@ -508,6 +515,7 @@ The codebase follows a layered architecture with clear separation of concerns:
 
 **Exercise System** (`src/lib/exercise_manager.py`):
 
+- **ARCHIVED** - Legacy exercise import system
 - Supports multiple formats: GPX, TCX, Apple Health (XML/CSV), JSON, CSV
 - Comprehensive validation: duration, pace, heart rate, elevation, GPS consistency
 - GPS route parsing with Haversine distance calculation
@@ -517,6 +525,32 @@ The codebase follows a layered architecture with clear separation of concerns:
 - Smart timestamp-based linking to visits and heart rate data
 - Weekly/monthly statistics aggregation for rule compliance
 - Auto-detection of workout types from Apple Health
+
+**Activity System** (`src/lib/activity_manager.py`, `src/lib/strava_converter.py`):
+
+- **CURRENT** - Unified Strava-based activity tracking system
+- Replaces separate HeartRateData and ExerciseSession tables
+- **Heart Rate Time-Series Storage**:
+  - HR data stored within `route_data` JSON column as unified time-series
+  - Format: `[{"timestamp": "ISO8601", "lat": 33.279, "lon": 131.500, "elevation": 50, "hr": 120, "speed_mps": 3.5}, ...]`
+  - Each data point includes timestamp, GPS coordinates (if outdoor), elevation, HR (if available), and speed
+  - Enables second-by-second HR analysis without separate table joins
+- **Strava Integration**:
+  - Auto-fetches activity streams (GPS, HR, elevation, speed) from Strava API
+  - `StravaToActivityConverter` transforms Strava data to Activity model
+  - Supports all Strava activity types (running, cycling, yoga, gym, etc.)
+- **Data Access for Analysis**:
+  - `DataCategory.ACTIVITY_HR_TIMESERIES` in data pipeline
+  - Parser expands JSON to DataFrame with one row per HR measurement
+  - Columns: activity_id, timestamp, time_offset, hr, lat, lon, elevation, speed_mps
+- **Visualization Helpers** (`src/analysis/visualizations.py`):
+  - `plot_hr_timeseries()` - Plot HR over time with average line
+  - `plot_hr_zones()` - Time spent in HR zones (Recovery/Easy/Aerobic/Threshold/Max)
+  - `calculate_hr_metrics()` - Comprehensive HR metrics (avg/min/max/variability/peaks)
+- **Onsen Monitoring**:
+  - Activities can be tagged as `is_onsen_monitoring=True`
+  - Optional linkage to `OnsenVisit` via `visit_id`
+  - Enables physiological analysis during onsen sessions
 
 **Recommendation Engine** (`src/lib/recommendation.py`):
 

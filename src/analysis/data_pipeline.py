@@ -302,6 +302,21 @@ class DataPipeline:
                 "filters": {},
                 "joins": [],
             },
+            DataCategory.ACTIVITY_HR_TIMESERIES: {
+                "table": "activities",
+                "columns": [
+                    "id",
+                    "strava_id",
+                    "activity_type",
+                    "activity_name",
+                    "recording_start",
+                    "route_data",  # JSON column with HR timeseries
+                ],
+                "alias": "a",
+                "filters": {"avg_heart_rate__notnull": True},  # Only activities with HR data
+                "joins": [],
+                "parser": "_parse_hr_timeseries",  # Custom parser for JSON expansion
+            },
         }
 
     def get_data_for_categories(
@@ -459,6 +474,17 @@ class DataPipeline:
 
             # Clean and preprocess the data
             df = self._clean_dataframe(df)
+
+            # Apply custom parser if specified for the main category
+            if "parser" in main_config:
+                parser_method_name = main_config["parser"]
+                if hasattr(self, parser_method_name):
+                    parser_method = getattr(self, parser_method_name)
+                    df = parser_method(df)
+                else:
+                    logger.warning(
+                        f"Parser method {parser_method_name} not found for {main_category}"
+                    )
 
             return df
 
@@ -799,6 +825,92 @@ class DataPipeline:
             # Broad exception justified: any query error should return empty DataFrame
             logger.error(f"Error getting spatial analysis data: {e}")
             return pd.DataFrame()
+
+    def _parse_hr_timeseries(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Parse heart rate time-series JSON from route_data into expanded DataFrame.
+
+        Transforms route_data JSON column into individual rows with HR measurements.
+        Each row represents one time point with HR data from an activity.
+
+        Args:
+            df: DataFrame with route_data JSON column
+
+        Returns:
+            Expanded DataFrame with one row per HR measurement point:
+                - activity_id: Original activity ID
+                - strava_id: Strava activity ID
+                - activity_type: Type of activity
+                - activity_name: Activity name
+                - timestamp: ISO timestamp of measurement
+                - time_offset: Seconds from activity start
+                - hr: Heart rate in bpm
+                - lat: Latitude (optional)
+                - lon: Longitude (optional)
+                - elevation: Elevation in meters (optional)
+                - speed_mps: Speed in m/s (optional)
+        """
+        import json
+
+        rows = []
+        for _, row in df.iterrows():
+            if pd.isna(row["route_data"]) or not row["route_data"]:
+                continue
+
+            try:
+                route_points = json.loads(row["route_data"])
+
+                # Filter to only points with HR data
+                for point in route_points:
+                    if "hr" not in point:
+                        continue
+
+                    # Calculate time offset from activity start
+                    point_timestamp = pd.to_datetime(point["timestamp"])
+                    activity_start = pd.to_datetime(row["recording_start"])
+                    time_offset = (point_timestamp - activity_start).total_seconds()
+
+                    # Build expanded row
+                    expanded_row = {
+                        "activity_id": row["id"],
+                        "strava_id": row["strava_id"],
+                        "activity_type": row["activity_type"],
+                        "activity_name": row.get("activity_name"),
+                        "timestamp": point["timestamp"],
+                        "time_offset": time_offset,
+                        "hr": point["hr"],
+                    }
+
+                    # Add optional fields if present
+                    if "lat" in point:
+                        expanded_row["lat"] = point["lat"]
+                    if "lon" in point:
+                        expanded_row["lon"] = point["lon"]
+                    if "elevation" in point:
+                        expanded_row["elevation"] = point["elevation"]
+                    if "speed_mps" in point:
+                        expanded_row["speed_mps"] = point["speed_mps"]
+
+                    rows.append(expanded_row)
+
+            except json.JSONDecodeError as e:
+                logger.warning(
+                    f"Failed to parse route_data for activity {row['id']}: {e}"
+                )
+                continue
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                logger.warning(
+                    f"Error processing HR timeseries for activity {row['id']}: {e}"
+                )
+                continue
+
+        if not rows:
+            logger.warning("No HR timeseries data found in activities")
+            return pd.DataFrame()
+
+        result_df = pd.DataFrame(rows)
+        result_df["timestamp"] = pd.to_datetime(result_df["timestamp"])
+        return result_df
 
     def clear_cache(self) -> None:
         """Clear the data cache."""

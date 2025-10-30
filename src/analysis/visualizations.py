@@ -1126,3 +1126,183 @@ class VisualizationEngine:
 
         _plt_local.tight_layout()
         return fig
+
+
+# ============================================================================
+# Heart Rate Time-Series Visualization Helpers
+# ============================================================================
+
+
+def plot_hr_timeseries(
+    hr_data: pd.DataFrame, activity_name: str = "Activity", output_path: Optional[str] = None
+) -> Any:
+    """
+    Plot heart rate over time for an activity.
+
+    Args:
+        hr_data: DataFrame with 'time_offset' and 'hr' columns from DataPipeline
+        activity_name: Name of the activity for plot title
+        output_path: Optional path to save the plot
+
+    Returns:
+        matplotlib Figure object
+
+    Example:
+        >>> pipeline = DataPipeline(session)
+        >>> hr_data = pipeline.get_data_for_categories([DataCategory.ACTIVITY_HR_TIMESERIES])
+        >>> hr_data_activity = hr_data[hr_data['activity_id'] == 42]
+        >>> plot_hr_timeseries(hr_data_activity, "Morning Run")
+    """
+    import matplotlib.pyplot as plt
+
+    if hr_data.empty:
+        raise ValueError("No HR data provided")
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    # Plot HR time-series
+    ax.plot(
+        hr_data["time_offset"] / 60,  # Convert to minutes
+        hr_data["hr"],
+        linewidth=2,
+        color="#d2691e",
+        label="Heart Rate",
+    )
+
+    # Add average line
+    avg_hr = hr_data["hr"].mean()
+    ax.axhline(y=avg_hr, color="blue", linestyle="--", alpha=0.5, label=f"Avg ({avg_hr:.0f} bpm)")
+
+    # Labels and formatting
+    ax.set_xlabel("Time (minutes)", fontsize=12)
+    ax.set_ylabel("Heart Rate (bpm)", fontsize=12)
+    ax.set_title(f"Heart Rate - {activity_name}", fontsize=14, fontweight="bold")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+
+    plt.tight_layout()
+
+    if output_path:
+        plt.savefig(output_path, dpi=150, bbox_inches="tight")
+
+    return fig
+
+
+def plot_hr_zones(
+    hr_data: pd.DataFrame,
+    activity_name: str = "Activity",
+    max_hr: int = 190,
+    output_path: Optional[str] = None,
+) -> Any:
+    """
+    Plot time spent in heart rate zones.
+
+    HR zones based on percentage of max HR:
+    - Recovery (<60%): Very light activity
+    - Easy (60-70%): Light cardio
+    - Aerobic (70-80%): Moderate cardio
+    - Threshold (80-90%): Hard cardio
+    - Max (>90%): Maximum effort
+
+    Args:
+        hr_data: DataFrame with 'hr' column from DataPipeline
+        activity_name: Name of the activity for plot title
+        max_hr: Maximum heart rate for zone calculation (default: 190)
+        output_path: Optional path to save the plot
+
+    Returns:
+        matplotlib Figure object
+
+    Example:
+        >>> plot_hr_zones(hr_data_activity, "Morning Run", max_hr=185)
+    """
+    import matplotlib.pyplot as plt
+
+    if hr_data.empty:
+        raise ValueError("No HR data provided")
+
+    # Define HR zones
+    zones = {
+        "Recovery\n(<60%)": (0, max_hr * 0.6),
+        "Easy\n(60-70%)": (max_hr * 0.6, max_hr * 0.7),
+        "Aerobic\n(70-80%)": (max_hr * 0.7, max_hr * 0.8),
+        "Threshold\n(80-90%)": (max_hr * 0.8, max_hr * 0.9),
+        "Max\n(>90%)": (max_hr * 0.9, 250),
+    }
+
+    # Calculate time in each zone
+    zone_times = {}
+    for zone_name, (lower, upper) in zones.items():
+        count = len(hr_data[(hr_data["hr"] >= lower) & (hr_data["hr"] < upper)])
+        zone_times[zone_name] = count
+
+    # Create bar plot
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    bars = ax.bar(zone_times.keys(), zone_times.values(), color="#d2691e", alpha=0.7)
+
+    # Add value labels on bars
+    for bar in bars:
+        height = bar.get_height()
+        ax.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            height,
+            f"{int(height)}",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+        )
+
+    # Labels and formatting
+    ax.set_xlabel("Heart Rate Zone", fontsize=12)
+    ax.set_ylabel("Time (data points)", fontsize=12)
+    ax.set_title(f"HR Zones - {activity_name}", fontsize=14, fontweight="bold")
+    ax.grid(True, axis="y", alpha=0.3)
+
+    plt.tight_layout()
+
+    if output_path:
+        plt.savefig(output_path, dpi=150, bbox_inches="tight")
+
+    return fig
+
+
+def calculate_hr_metrics(hr_data: pd.DataFrame) -> dict[str, float]:
+    """
+    Calculate comprehensive HR metrics from time-series data.
+
+    Args:
+        hr_data: DataFrame with 'hr' column from DataPipeline
+
+    Returns:
+        Dictionary of HR metrics:
+            - avg_hr: Average heart rate
+            - min_hr: Minimum heart rate
+            - max_hr: Maximum heart rate
+            - hr_variability: Standard deviation of HR
+            - peak_count: Number of HR peaks (local maxima)
+
+    Example:
+        >>> metrics = calculate_hr_metrics(hr_data_activity)
+        >>> print(f"Average HR: {metrics['avg_hr']:.1f} bpm")
+    """
+    if hr_data.empty:
+        return {}
+
+    metrics = {
+        "avg_hr": float(hr_data["hr"].mean()),
+        "min_hr": float(hr_data["hr"].min()),
+        "max_hr": float(hr_data["hr"].max()),
+        "hr_variability": float(hr_data["hr"].std()),
+        "data_points": len(hr_data),
+    }
+
+    # Calculate peak count (simple local maxima detection)
+    hr_values = hr_data["hr"].values
+    peaks = 0
+    for i in range(1, len(hr_values) - 1):
+        if hr_values[i] > hr_values[i - 1] and hr_values[i] > hr_values[i + 1]:
+            peaks += 1
+    metrics["peak_count"] = peaks
+
+    return metrics

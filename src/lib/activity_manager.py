@@ -26,6 +26,41 @@ class ActivityData:
 
     This class has many attributes to comprehensively represent
     activity data from Strava.
+
+    Attributes:
+        strava_id: Strava activity ID (unique identifier)
+        start_time: Activity start timestamp
+        end_time: Activity end timestamp
+        activity_type: Type of activity (running, cycling, etc.)
+        activity_name: Name/title of the activity
+        workout_type: Strava workout type classification
+        distance_km: Total distance covered in kilometers
+        calories_burned: Estimated calories burned
+        elevation_gain_m: Total elevation gain in meters
+        avg_heart_rate: Average heart rate during activity
+        min_heart_rate: Minimum heart rate recorded
+        max_heart_rate: Maximum heart rate recorded
+        indoor_outdoor: Location type (indoor/outdoor/unknown)
+        weather_conditions: Weather description (e.g., "15°C")
+        route_data: Time-series GPS and physiological data as list of dictionaries.
+            Each point contains:
+            - timestamp (str): ISO 8601 timestamp
+            - lat (float, optional): Latitude coordinate
+            - lon (float, optional): Longitude coordinate
+            - elevation (float, optional): Elevation in meters
+            - hr (int, optional): Heart rate in beats per minute
+            - speed_mps (float, optional): Speed in meters per second
+            Example:
+                [
+                    {
+                        "timestamp": "2025-10-30T10:00:00",
+                        "lat": 33.279, "lon": 131.500,
+                        "elevation": 50.0, "hr": 120, "speed_mps": 3.5
+                    },
+                    ...
+                ]
+        notes: Optional activity notes/description
+        strava_data_hash: SHA-256 hash for sync detection
     """
 
     # pylint: disable=too-many-instance-attributes

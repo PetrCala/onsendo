@@ -140,6 +140,7 @@ class DataCategory(StrEnum):
     ACTIVITY_ONSEN = "activity_onsen"  # Activities tagged as onsen monitoring
     ACTIVITY_EXERCISE = "activity_exercise"  # Non-onsen activities (runs, gym, etc.)
     ACTIVITY_METRICS = "activity_metrics"  # Activity performance metrics
+    ACTIVITY_HR_TIMESERIES = "activity_hr_timeseries"  # Heart rate time-series from activities
 
 
 class ReportFormat(StrEnum):

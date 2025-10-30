@@ -334,7 +334,15 @@ class Activity(Base):
     - max_heart_rate: maximum heart rate recorded
     - indoor_outdoor: whether activity was indoor or outdoor
     - weather_conditions: weather during outdoor activity
-    - route_data: JSON-encoded GPS route data (lat/lon points, timestamps)
+    - route_data: JSON-encoded time-series data including GPS coordinates, elevation,
+      heart rate, and speed. Each point in the array contains:
+        * timestamp: ISO 8601 timestamp
+        * lat/lon: GPS coordinates (optional, for outdoor activities)
+        * elevation: Elevation in meters (optional)
+        * hr: Heart rate in beats per minute (optional, enables detailed HR analysis)
+        * speed_mps: Speed in meters per second (optional)
+      Format: JSON string of list[dict], e.g.:
+        '[{"timestamp":"2025-10-30T10:00:00","lat":33.279,"lon":131.500,"elevation":50,"hr":120,"speed_mps":3.5},...]'
     - strava_data_hash: SHA-256 hash of Strava data for sync detection
     - last_synced_at: timestamp of last sync from Strava
     - notes: optional notes about the activity
