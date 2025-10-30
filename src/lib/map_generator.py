@@ -27,14 +27,12 @@ def _add_location_markers(
 
     Queries all locations from the database and adds them as markers.
     Reference location (if specified) is shown in red, all others in pink.
+    Modifies folium_map in place.
 
     Args:
         folium_map: The folium Map object to add markers to
         db_session: Database session for querying locations
         reference_location_id: Optional ID of reference location (shown in red)
-
-    Returns:
-        None (modifies folium_map in place)
     """
     try:
         # Query all locations from database
@@ -71,7 +69,7 @@ def _add_location_markers(
             """
 
             # Tooltip text (shown on hover)
-            tooltip_text = f"{location.name}"
+            tooltip_text = location.name
             if is_reference:
                 tooltip_text += " (Reference Location)"
 
