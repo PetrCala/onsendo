@@ -6,6 +6,7 @@ Onsendo-compatible formats (ExerciseSession, HeartRateSession) and
 standard file formats (GPX, JSON, CSV).
 """
 
+import hashlib
 import json
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
@@ -316,8 +317,6 @@ class StravaToActivityConverter:
                 min_heart_rate = float(min(hr_data))
 
         # Calculate data hash for sync detection
-        import hashlib
-        import json
         activity_dict = {
             "id": activity.id,
             "name": activity.name,
@@ -346,9 +345,9 @@ class StravaToActivityConverter:
             min_heart_rate=min_heart_rate,
             max_heart_rate=activity.max_heartrate,
             indoor_outdoor=indoor_outdoor,
-            weather_conditions=f"{activity.average_temp}°C"
-            if activity.average_temp
-            else None,
+            weather_conditions=(
+                f"{activity.average_temp}°C" if activity.average_temp else None
+            ),
             route_data=route_data,
             notes=activity.description,
             strava_data_hash=data_hash,
@@ -393,7 +392,9 @@ class StravaToActivityConverter:
                 point_data["hr"] = streams["heartrate"].data[i]
 
             # Add speed if available
-            if "velocity_smooth" in streams and i < len(streams["velocity_smooth"].data):
+            if "velocity_smooth" in streams and i < len(
+                streams["velocity_smooth"].data
+            ):
                 point_data["speed_mps"] = streams["velocity_smooth"].data[i]
 
             route_points.append(point_data)
@@ -580,9 +581,7 @@ class StravaFileExporter:
         # minimum viable export to capture all available data
         if not exportable:
             exportable.append("json")
-            logger.info(
-                "No requested formats available, falling back to JSON export"
-            )
+            logger.info("No requested formats available, falling back to JSON export")
 
         return exportable, skipped
 
@@ -626,14 +625,17 @@ class StravaFileExporter:
         hr_stream = streams.get("heartrate")
 
         # Create GPX XML structure
-        gpx = ET.Element("gpx", {
-            "version": "1.1",
-            "creator": "Onsendo Strava Integration",
-            "xmlns": "http://www.topografix.com/GPX/1/1",
-            "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-            "xsi:schemaLocation": "http://www.topografix.com/GPX/1/1 "
-            "http://www.topografix.com/GPX/1/1/gpx.xsd",
-        })
+        gpx = ET.Element(
+            "gpx",
+            {
+                "version": "1.1",
+                "creator": "Onsendo Strava Integration",
+                "xmlns": "http://www.topografix.com/GPX/1/1",
+                "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                "xsi:schemaLocation": "http://www.topografix.com/GPX/1/1 "
+                "http://www.topografix.com/GPX/1/1/gpx.xsd",
+            },
+        )
 
         # Metadata
         metadata = ET.SubElement(gpx, "metadata")
@@ -662,10 +664,14 @@ class StravaFileExporter:
                 continue
 
             lat, lon = latlng[0], latlng[1]
-            trkpt = ET.SubElement(trkseg, "trkpt", {
-                "lat": str(lat),
-                "lon": str(lon),
-            })
+            trkpt = ET.SubElement(
+                trkseg,
+                "trkpt",
+                {
+                    "lat": str(lat),
+                    "lon": str(lon),
+                },
+            )
 
             # Elevation
             if altitude_stream and i < len(altitude_stream.data):
@@ -814,10 +820,12 @@ class StravaFileExporter:
                 # Estimate based on index
                 timestamp = activity.start_date_local + timedelta(seconds=i)
 
-            rows.append({
-                "timestamp": timestamp.isoformat(),
-                "heart_rate": int(hr_value),
-            })
+            rows.append(
+                {
+                    "timestamp": timestamp.isoformat(),
+                    "heart_rate": int(hr_value),
+                }
+            )
 
         # Write to file
         try:
