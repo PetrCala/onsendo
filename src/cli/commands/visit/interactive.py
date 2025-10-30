@@ -658,26 +658,6 @@ def get_visit_steps(skip_onsen_selection: bool = False) -> list[dict]:
             "step_title": "Multi-onsen day",
         },
         {
-            "name": "previous_location",
-            "prompt": "What is the ID of the previous onsen visit?: ",
-            "validator": lambda x: not x or validate_integer(x) and int(x) > 0,
-            "processor": lambda x: int(x) if x else None,
-            "condition": lambda session: session.visit_data.get(
-                "multi_onsen_day", False
-            ),
-            "step_title": "Multi-onsen day",
-        },
-        {
-            "name": "next_location",
-            "prompt": "What is the ID of the next onsen visit?: ",
-            "validator": lambda x: not x or validate_integer(x) and int(x) > 0,
-            "processor": lambda x: int(x) if x else None,
-            "condition": lambda session: session.visit_data.get(
-                "multi_onsen_day", False
-            ),
-            "step_title": "Multi-onsen day",
-        },
-        {
             "name": "personal_rating",
             "prompt": "Personal overall rating (1-10): ",
             "validator": lambda x: not x or validate_rating(x),

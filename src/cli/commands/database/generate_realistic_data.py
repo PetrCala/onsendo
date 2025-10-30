@@ -231,8 +231,6 @@ def generate_realistic_data(args: argparse.Namespace) -> None:
                 post_visit_mood=visit.post_visit_mood,
                 energy_level_change=visit.energy_level_change,
                 hydration_level=visit.hydration_level,
-                previous_location=visit.previous_location,
-                next_location=visit.next_location,
                 multi_onsen_day=visit.multi_onsen_day,
                 visit_order=visit.visit_order,
                 atmosphere_rating=visit.atmosphere_rating,

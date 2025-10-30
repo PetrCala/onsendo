@@ -150,8 +150,6 @@ class TestMockOnsenVisit:
         # Verify multi-onsen logic
         assert visit.multi_onsen_day is False
         assert visit.visit_order is None
-        assert visit.previous_location is None
-        assert visit.next_location is None
 
 
 class TestMockVisitDataGenerator:

@@ -90,8 +90,6 @@ FIELD_GROUPS = {
     "Multi-onsen day": [
         ("multi_onsen_day", "Multi-onsen day"),
         ("visit_order", "Visit order"),
-        ("previous_location", "Previous visit ID"),
-        ("next_location", "Next visit ID"),
     ],
     "Personal rating and notes": [
         ("personal_rating", "Personal rating"),

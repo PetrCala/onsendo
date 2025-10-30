@@ -70,8 +70,6 @@ def get_complete_flow_inputs() -> list[str]:
         "y",  # outdoor_bath_visited
         "n",  # multi_onsen_day
         "15",  # sauna_duration_minutes
-        "",  # previous_location (skip)
-        "",  # next_location (skip)
         "",  # visit_order (skip)
     ]
 
@@ -388,7 +386,5 @@ def get_multi_onsen_day_inputs() -> list[str]:
         "n",  # outdoor_bath_visited
         "y",  # multi_onsen_day
         "",  # sauna_duration_minutes (skip)
-        "",  # previous_location (skip)
-        "",  # next_location (skip)
         "2",  # visit_order
     ]

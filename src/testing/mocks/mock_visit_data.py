@@ -96,8 +96,6 @@ class MockOnsenVisit:
     food_quality_rating: Optional[int] = None
     multi_onsen_day: bool = False
     visit_order: Optional[int] = None
-    previous_location: Optional[int] = None
-    next_location: Optional[int] = None
     interacted_with_locals: Optional[bool] = None
     local_interaction_quality_rating: Optional[int] = None
 
@@ -166,8 +164,6 @@ class MockOnsenVisit:
         """Ensure multi-onsen day data is consistent."""
         if not self.multi_onsen_day:
             self.visit_order = None
-            self.previous_location = None
-            self.next_location = None
 
     def _validate_local_interaction_logic(self):
         """Ensure local interaction data is consistent."""
@@ -424,12 +420,6 @@ class MockVisitDataGenerator:
                 visit_order=i + 1,
                 **kwargs,
             )
-
-            # Set previous/next location references
-            if i > 0:
-                visit.previous_location = visits[i - 1].onsen_id
-            if i < len(onsen_ids) - 1:
-                visit.next_location = onsen_ids[i + 1]
 
             visits.append(visit)
 
