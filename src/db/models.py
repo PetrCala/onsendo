@@ -97,9 +97,6 @@ class OnsenVisit(Base):
     - travel_mode: how I got to the onsen (e.g., "car", "train", "bus", "walk", "run", "bike", "other")
     - travel_time_minutes: how long it took to get to the onsen
     - accessibility_rating: how easy it was to find / enter the onsen (1-10)
-    - exercise_before_onsen: whether I exercised before the onsen
-    - exercise_type: the type of exercise I did before the onsen (e.g., "running", "walking", "cycling", "other")
-    - exercise_length_minutes: how long I exercised before the onsen
     - crowd_level: the crowd level at the onsen ("busy", "moderate", "quiet", "empty")
     - interacted_with_locals: whether I talked with locals inside the onsen
     - local_interaction_quality_rating: how pleasant the interaction with locals was (1-10)
@@ -158,9 +155,6 @@ class OnsenVisit(Base):
     travel_mode = Column(String)
     travel_time_minutes = Column(Integer)
     accessibility_rating = Column(Integer)
-    exercise_before_onsen = Column(Boolean)
-    exercise_type = Column(String)
-    exercise_length_minutes = Column(Integer)
     crowd_level = Column(String)
     interacted_with_locals = Column(Boolean)
     local_interaction_quality_rating = Column(Integer)

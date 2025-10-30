@@ -43,8 +43,7 @@ class MockOnsenVisit:
     travel_mode: str
     travel_time_minutes: int
 
-    # Exercise information
-    exercise_before_onsen: bool
+    # Ratings
     accessibility_rating: int
     crowd_level: str
     view_rating: int
@@ -83,8 +82,6 @@ class MockOnsenVisit:
     notes: Optional[str] = None
 
     # Optional fields with defaults
-    exercise_type: Optional[str] = None
-    exercise_length_minutes: Optional[int] = None
     sauna_visited: Optional[bool] = None
     sauna_temperature: Optional[float] = None
     sauna_steam: Optional[bool] = None
@@ -110,7 +107,6 @@ class MockOnsenVisit:
         self._validate_outdoor_bath_logic()
         self._validate_rest_area_logic()
         self._validate_food_service_logic()
-        self._validate_exercise_logic()
         self._validate_multi_onsen_logic()
         self._validate_local_interaction_logic()
 
@@ -165,12 +161,6 @@ class MockOnsenVisit:
             self.food_service_used = random.choice([True, False])
             if not self.food_service_used:
                 self.food_quality_rating = None
-
-    def _validate_exercise_logic(self):
-        """Ensure exercise-related data is consistent."""
-        if not self.exercise_before_onsen:
-            self.exercise_type = None
-            self.exercise_length_minutes = None
 
     def _validate_multi_onsen_logic(self):
         """Ensure multi-onsen day data is consistent."""
@@ -309,7 +299,6 @@ class MockVisitDataGenerator:
         weather: Optional[str] = None,
         visited_with: Optional[str] = None,
         travel_mode: Optional[str] = None,
-        exercise_before: Optional[bool] = None,
         **kwargs,
     ) -> MockOnsenVisit:
         """Generate a single realistic onsen visit."""
@@ -329,9 +318,6 @@ class MockVisitDataGenerator:
 
         if travel_mode is None:
             travel_mode = random.choice(self.TRAVEL_MODES)
-
-        if exercise_before is None:
-            exercise_before = random.choice([True, False])
 
         # Determine season and generate realistic temperatures
         season = self._get_season(visit_date)
@@ -362,13 +348,6 @@ class MockVisitDataGenerator:
             "visited_with": visited_with,
             "travel_mode": travel_mode,
             "travel_time_minutes": random.randint(5, 60),
-            "exercise_before_onsen": exercise_before,
-            "exercise_type": (
-                random.choice(self.EXERCISE_TYPES) if exercise_before else None
-            ),
-            "exercise_length_minutes": (
-                random.randint(15, 60) if exercise_before else None
-            ),
             "crowd_level": random.choice(self.CROWD_LEVELS),
             "view_rating": self._get_realistic_ratings("view"),
             "navigability_rating": random.randint(6, 10),

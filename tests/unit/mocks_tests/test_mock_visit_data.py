@@ -29,7 +29,6 @@ class TestMockOnsenVisit:
             visited_with="alone",
             travel_mode="car",
             travel_time_minutes=15,
-            exercise_before_onsen=False,
             accessibility_rating=8,
             crowd_level="moderate",
             view_rating=8,
@@ -77,7 +76,6 @@ class TestMockOnsenVisit:
             visited_with="alone",
             travel_mode="car",
             travel_time_minutes=15,
-            exercise_before_onsen=False,
             accessibility_rating=8,
             crowd_level="moderate",
             view_rating=8,
@@ -109,51 +107,6 @@ class TestMockOnsenVisit:
         assert visit.outdoor_bath_temperature is None
         assert visit.outdoor_bath_rating is None
 
-    def test_exercise_logic_validation(self):
-        """Test that exercise-related data is consistent when no exercise before onsen."""
-        visit = MockOnsenVisit(
-            onsen_id=1,
-            entry_fee_yen=500,
-            payment_method="cash",
-            weather="sunny",
-            time_of_day="afternoon",
-            temperature_outside_celsius=25.0,
-            visit_time=datetime.now(),
-            stay_length_minutes=60,
-            visited_with="alone",
-            travel_mode="car",
-            travel_time_minutes=15,
-            exercise_before_onsen=False,  # No exercise
-            accessibility_rating=8,
-            crowd_level="moderate",
-            view_rating=8,
-            navigability_rating=7,
-            cleanliness_rating=9,
-            main_bath_type="indoor",
-            main_bath_temperature=40.0,
-            water_color="clear",
-            smell_intensity_rating=5,
-            changing_room_cleanliness_rating=8,
-            locker_availability_rating=7,
-            had_soap=True,
-            had_sauna=True,
-            had_outdoor_bath=True,
-            had_rest_area=True,
-            had_food_service=False,
-            massage_chair_available=False,
-            pre_visit_mood="relaxed",
-            post_visit_mood="very relaxed",
-            energy_level_change=1,
-            hydration_level=7,
-            atmosphere_rating=8,
-            personal_rating=8,
-        )
-
-        # Verify exercise logic
-        assert visit.exercise_before_onsen is False
-        assert visit.exercise_type is None
-        assert visit.exercise_length_minutes is None
-
     def test_multi_onsen_logic_validation(self):
         """Test that multi-onsen day data is consistent when not a multi-onsen day."""
         visit = MockOnsenVisit(
@@ -168,7 +121,6 @@ class TestMockOnsenVisit:
             visited_with="alone",
             travel_mode="car",
             travel_time_minutes=15,
-            exercise_before_onsen=False,
             accessibility_rating=8,
             crowd_level="moderate",
             view_rating=8,
@@ -221,7 +173,6 @@ class TestMockVisitDataGenerator:
         assert visit.visited_with in generator.VISITED_WITH
         assert visit.travel_mode in generator.TRAVEL_MODES
         assert isinstance(visit.travel_time_minutes, int)
-        assert isinstance(visit.exercise_before_onsen, bool)
         assert visit.accessibility_rating in range(1, 11)
         assert visit.crowd_level in generator.CROWD_LEVELS
         assert visit.view_rating in range(1, 11)

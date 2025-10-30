@@ -52,13 +52,11 @@ def get_complete_flow_inputs() -> list[str]:
         "afternoon",  # time_of_day
         "alone",  # visited_with
         "car",  # travel_mode
-        "",  # exercise_type (skip)
         "moderate",  # crowd_level
         "open air",  # main_bath_type
         "clear",  # water_color
         "relaxed",  # pre_visit_mood
         "very relaxed",  # post_visit_mood
-        "n",  # exercise_before_onsen
         "y",  # had_soap
         "y",  # had_sauna
         "y",  # had_outdoor_bath
@@ -71,7 +69,6 @@ def get_complete_flow_inputs() -> list[str]:
         "y",  # sauna_steam
         "y",  # outdoor_bath_visited
         "n",  # multi_onsen_day
-        "30",  # exercise_length_minutes
         "15",  # sauna_duration_minutes
         "",  # previous_location (skip)
         "",  # next_location (skip)
@@ -118,13 +115,11 @@ def get_exercise_flow_inputs() -> list[str]:
         "morning",  # time_of_day
         "friend",  # visited_with
         "walk",  # travel_mode
-        "running",  # exercise_type
         "quiet",  # crowd_level
         "indoor",  # main_bath_type
         "brown",  # water_color
         "stressed",  # pre_visit_mood
         "relaxed",  # post_visit_mood
-        "y",  # exercise_before_onsen
         "n",  # had_soap
         "n",  # had_sauna
         "n",  # had_outdoor_bath
@@ -135,7 +130,6 @@ def get_exercise_flow_inputs() -> list[str]:
         "n",  # sauna_steam
         "n",  # outdoor_bath_visited
         "n",  # multi_onsen_day
-        "30",  # exercise_length_minutes
         "",  # sauna_duration_minutes (skip)
         "",  # previous_location (skip)
         "",  # next_location (skip)
@@ -182,13 +176,11 @@ def get_minimal_flow_inputs() -> list[str]:
         "evening",  # time_of_day
         "alone",  # visited_with
         "train",  # travel_mode
-        "",  # exercise_type (skip)
         "quiet",  # crowd_level
         "indoor",  # main_bath_type
         "clear",  # water_color
         "tired",  # pre_visit_mood
         "relaxed",  # post_visit_mood
-        "n",  # exercise_before_onsen
         "y",  # had_soap
         "n",  # had_sauna
         "n",  # had_outdoor_bath
@@ -201,7 +193,6 @@ def get_minimal_flow_inputs() -> list[str]:
         "n",  # sauna_steam
         "n",  # outdoor_bath_visited
         "n",  # multi_onsen_day
-        "",  # exercise_length_minutes (skip)
         "",  # sauna_duration_minutes (skip)
         "",  # previous_location (skip)
         "",  # next_location (skip)
@@ -268,7 +259,6 @@ def get_invalid_onsen_retry_inputs() -> list[str]:
         "n",  # sauna_steam
         "n",  # outdoor_bath_visited
         "n",  # multi_onsen_day
-        "",  # exercise_length_minutes (skip)
         "",  # sauna_duration_minutes (skip)
         "",  # previous_location (skip)
         "",  # next_location (skip)
@@ -335,7 +325,6 @@ def get_invalid_rating_retry_inputs() -> list[str]:
         "n",  # sauna_steam
         "n",  # outdoor_bath_visited
         "n",  # multi_onsen_day
-        "",  # exercise_length_minutes (skip)
         "",  # sauna_duration_minutes (skip)
         "",  # previous_location (skip)
         "",  # next_location (skip)

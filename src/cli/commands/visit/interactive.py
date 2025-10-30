@@ -357,33 +357,6 @@ def get_visit_steps(skip_onsen_selection: bool = False) -> list[dict]:
             "step_title": "Travel information",
         },
         {
-            "name": "exercise_before_onsen",
-            "prompt": "Did you exercise before the onsen? (y/n): ",
-            "validator": validate_yes_no,
-            "processor": lambda x: x.lower() in ["y", "yes"],
-            "step_title": "Exercise information",
-        },
-        {
-            "name": "exercise_type",
-            "prompt": "Exercise type (running, walking, cycling, other): ",
-            "validator": lambda x: True,
-            "processor": lambda x: x if x else None,
-            "condition": lambda session: session.visit_data.get(
-                "exercise_before_onsen", True
-            ),
-            "step_title": "Exercise information",
-        },
-        {
-            "name": "exercise_length_minutes",
-            "prompt": "Exercise duration in minutes: ",
-            "validator": lambda x: not x or validate_integer(x),
-            "processor": lambda x: int(x) if x else None,
-            "condition": lambda session: session.visit_data.get(
-                "exercise_before_onsen", True
-            ),
-            "step_title": "Exercise information",
-        },
-        {
             "name": "accessibility_rating",
             "prompt": "Accessibility rating (1-10): ",
             "validator": lambda x: not x or validate_rating(x),

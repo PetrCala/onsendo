@@ -35,11 +35,6 @@ FIELD_GROUPS = {
         ("travel_mode", "Travel mode"),
         ("travel_time_minutes", "Travel time"),
     ],
-    "Exercise information": [
-        ("exercise_before_onsen", "Exercise before onsen"),
-        ("exercise_type", "Exercise type"),
-        ("exercise_length_minutes", "Exercise duration"),
-    ],
     "Facility ratings": [
         ("accessibility_rating", "Accessibility rating"),
         ("cleanliness_rating", "Cleanliness rating"),
@@ -108,7 +103,6 @@ FIELD_GROUPS = {
 GROUP_SHORTCUTS = {
     "basic": "Basic visit information",
     "travel": "Travel information",
-    "exercise": "Exercise information",
     "ratings": "Facility ratings",
     "bath": "Main bath information",
     "changing": "Changing room and facilities",
@@ -275,8 +269,6 @@ def execute_selective_workflow(
                 elif "had_food_service" in str(step.get("condition", "")):
                     has_conditional_selections["had_food_service"] = True
                     has_conditional_selections["food_service_used"] = True
-                elif "exercise_before_onsen" in str(step.get("condition", "")):
-                    has_conditional_selections["exercise_before_onsen"] = True
                 elif "multi_onsen_day" in str(step.get("condition", "")):
                     has_conditional_selections["multi_onsen_day"] = True
                 elif "interacted_with_locals" in str(step.get("condition", "")):

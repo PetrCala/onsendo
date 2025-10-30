@@ -54,15 +54,9 @@ def generate_heart_rate_for_visit(
 
     hr_generator = MockHeartRateDataGenerator()
 
-    # Determine base heart rate
-    if visit.exercise_before_onsen:
-        # Elevated from exercise, recovering
-        base_hr = random.randint(85, 110)
-        scenario = 'recovery'
-    else:
-        # Normal resting
-        base_hr = random.randint(65, 80)
-        scenario = 'resting'
+    # Determine base heart rate (resting scenario)
+    base_hr = random.randint(65, 80)
+    scenario = 'resting'
 
     # Calculate recording duration
     # Usually slightly longer than stay (arrive early, leave late)

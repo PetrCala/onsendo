@@ -412,11 +412,6 @@ class RealisticDataGenerator:
         )[0]
         travel_time = random.randint(*profile.typical_travel_time_range)
 
-        # Exercise
-        exercise_before = random.random() < profile.exercise_probability
-        exercise_type = random.choice(self.EXERCISE_TYPES) if exercise_before else None
-        exercise_length = random.randint(20, 60) if exercise_before else None
-
         # Social
         visited_with = random.choices(
             list(profile.social_preference.keys()),
@@ -455,9 +450,6 @@ class RealisticDataGenerator:
             visited_with=visited_with,
             travel_mode=travel_mode,
             travel_time_minutes=travel_time,
-            exercise_before_onsen=exercise_before,
-            exercise_type=exercise_type,
-            exercise_length_minutes=exercise_length,
             crowd_level=crowd_level,
             view_rating=ratings['view_rating'],
             navigability_rating=ratings['navigability_rating'],
@@ -551,8 +543,6 @@ class RealisticDataGenerator:
                     'outdoor_bath_rating',
                     'rest_area_rating',
                     'food_quality_rating',
-                    'exercise_type',
-                    'exercise_length_minutes',
                 ]
                 field = random.choice(optional_fields)
                 setattr(visit, field, None)
