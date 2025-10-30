@@ -1,6 +1,7 @@
 """
 Create a new rule revision with interactive workflow.
 """
+
 # pylint: disable=bad-builtin  # input() is appropriate for CLI interaction
 
 import argparse
@@ -10,9 +11,8 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from src.db.conn import get_db
-from src.lib.cli_display import show_database_banner
 from src.db.models import RuleRevision
-from src.config import get_database_config
+from src.config import get_database_url
 from src.paths import PATHS
 from src.lib.rule_manager import (
     RuleParser,
@@ -47,7 +47,9 @@ def create_revision(args: argparse.Namespace) -> None:
     print("RULE REVISION CREATION - Rule Review Sunday")
     print("=" * 80)
     print()
-    print("This interactive workflow will guide you through creating a new rule revision.")
+    print(
+        "This interactive workflow will guide you through creating a new rule revision."
+    )
     print("You will complete the weekly review and optionally modify rules.")
     print()
 
@@ -67,7 +69,7 @@ def create_revision(args: argparse.Namespace) -> None:
         # Auto-fetch statistics if requested
         auto_fetched_metrics = None
         # Note: argparse converts --auto-fetch to auto_fetch attribute
-        auto_fetch_enabled = getattr(args, 'auto_fetch', False)
+        auto_fetch_enabled = getattr(args, "auto_fetch", False)
         if auto_fetch_enabled:
             print()
             print("Auto-fetching statistics from database...")
@@ -106,7 +108,13 @@ def create_revision(args: argparse.Namespace) -> None:
         print()
 
         if not show_preview_and_confirm(
-            week_dates, metrics, health, reflections, next_week, adjustment, modifications
+            week_dates,
+            metrics,
+            health,
+            reflections,
+            next_week,
+            adjustment,
+            modifications,
         ):
             print("Operation cancelled.")
             return
@@ -118,7 +126,13 @@ def create_revision(args: argparse.Namespace) -> None:
         print()
 
         create_and_save_revision(
-            week_dates, metrics, health, reflections, next_week, adjustment, modifications
+            week_dates,
+            metrics,
+            health,
+            reflections,
+            next_week,
+            adjustment,
+            modifications,
         )
 
         print()
@@ -131,13 +145,12 @@ def create_revision(args: argparse.Namespace) -> None:
     except Exception as e:
         print(f"\nError creating revision: {e}")
         import traceback
+
         traceback.print_exc()
 
 
 def auto_fetch_week_statistics(
-    week_start: str,
-    week_end: str,
-    database_url: Optional[str] = None
+    week_start: str, week_end: str, database_url: Optional[str] = None
 ) -> Optional[WeeklyReviewMetrics]:
     """
     Automatically fetch weekly statistics from the database.
@@ -163,8 +176,7 @@ def auto_fetch_week_statistics(
         if database_url:
             url = database_url
         else:
-            config = get_database_config()
-            url = config.url
+            url = get_database_url()
 
         with get_db(url=url) as db:
             # Query onsen visits
@@ -182,7 +194,9 @@ def auto_fetch_week_statistics(
             metrics.sauna_sessions_count = len(sauna_sessions)
 
             # Calculate total soaking time (only if data exists)
-            soaking_times = [v.stay_length_minutes for v in onsen_visits if v.stay_length_minutes]
+            soaking_times = [
+                v.stay_length_minutes for v in onsen_visits if v.stay_length_minutes
+            ]
             if soaking_times:
                 metrics.total_soaking_hours = sum(soaking_times) / 60.0
 
@@ -200,7 +214,9 @@ def auto_fetch_week_statistics(
                 for s in running_sessions
                 if s.exercise_type == ExerciseType.RUNNING.value and s.distance_km
             )
-            metrics.running_distance_km = round(running_distance, 2) if running_distance > 0 else None
+            metrics.running_distance_km = (
+                round(running_distance, 2) if running_distance > 0 else None
+            )
 
             # Gym sessions
             gym_count = sessions_by_type.get(ExerciseType.GYM.value, 0)
@@ -213,7 +229,8 @@ def auto_fetch_week_statistics(
             # Check for long running sessions
             all_sessions = exercise_manager.get_by_date_range(start_date, end_date)
             long_run_count = sum(
-                1 for s in all_sessions
+                1
+                for s in all_sessions
                 if s.exercise_type == ExerciseType.RUNNING.value
                 and (
                     (s.distance_km is not None and s.distance_km >= 15.0)
@@ -267,7 +284,9 @@ def collect_week_dates() -> Optional[tuple[str, str, datetime, datetime]]:
 
     print()
     print("Revision Date (typically today, the Rule Review Sunday):")
-    revision_date_str = input("Revision date (YYYY-MM-DD, or press Enter for today): ").strip()
+    revision_date_str = input(
+        "Revision date (YYYY-MM-DD, or press Enter for today): "
+    ).strip()
     if not revision_date_str:
         revision_date = datetime.now()
     else:
@@ -279,7 +298,9 @@ def collect_week_dates() -> Optional[tuple[str, str, datetime, datetime]]:
 
     print()
     print("Effective Date (when rule changes take effect):")
-    effective_date_str = input("Effective date (YYYY-MM-DD, or press Enter for today): ").strip()
+    effective_date_str = input(
+        "Effective date (YYYY-MM-DD, or press Enter for today): "
+    ).strip()
     if not effective_date_str:
         effective_date = datetime.now()
     else:
@@ -310,7 +331,9 @@ def collect_summary_metrics(
     print()
 
     if auto_fetched_metrics:
-        print("(Auto-fetched values shown in [brackets]. Press Enter to accept, or type new value)")
+        print(
+            "(Auto-fetched values shown in [brackets]. Press Enter to accept, or type new value)"
+        )
         print()
 
     metrics = WeeklyReviewMetrics()
@@ -326,7 +349,11 @@ def collect_summary_metrics(
         try:
             return int(value)
         except ValueError:
-            print("Invalid number, using auto-fetched value." if auto_value else "Invalid number, skipping.")
+            print(
+                "Invalid number, using auto-fetched value."
+                if auto_value
+                else "Invalid number, skipping."
+            )
             return auto_value
 
     def get_float(prompt: str, auto_value: Optional[float] = None) -> Optional[float]:
@@ -340,7 +367,11 @@ def collect_summary_metrics(
         try:
             return float(value)
         except ValueError:
-            print("Invalid number, using auto-fetched value." if auto_value else "Invalid number, skipping.")
+            print(
+                "Invalid number, using auto-fetched value."
+                if auto_value
+                else "Invalid number, skipping."
+            )
             return auto_value
 
     def get_bool(prompt: str, auto_value: Optional[bool] = None) -> Optional[bool]:
@@ -355,21 +386,34 @@ def collect_summary_metrics(
         return value in ["y", "yes", "true", "1"]
 
     # Get auto-fetched values if available
-    auto_onsen = auto_fetched_metrics.onsen_visits_count if auto_fetched_metrics else None
-    auto_soaking = auto_fetched_metrics.total_soaking_hours if auto_fetched_metrics else None
-    auto_sauna = auto_fetched_metrics.sauna_sessions_count if auto_fetched_metrics else None
-    auto_running = auto_fetched_metrics.running_distance_km if auto_fetched_metrics else None
+    auto_onsen = (
+        auto_fetched_metrics.onsen_visits_count if auto_fetched_metrics else None
+    )
+    auto_soaking = (
+        auto_fetched_metrics.total_soaking_hours if auto_fetched_metrics else None
+    )
+    auto_sauna = (
+        auto_fetched_metrics.sauna_sessions_count if auto_fetched_metrics else None
+    )
+    auto_running = (
+        auto_fetched_metrics.running_distance_km if auto_fetched_metrics else None
+    )
     auto_gym = auto_fetched_metrics.gym_sessions_count if auto_fetched_metrics else None
-    auto_long_ex = auto_fetched_metrics.long_exercise_completed if auto_fetched_metrics else None
+    auto_long_ex = (
+        auto_fetched_metrics.long_exercise_completed if auto_fetched_metrics else None
+    )
     auto_rest = auto_fetched_metrics.rest_days_count if auto_fetched_metrics else None
 
     metrics.onsen_visits_count = get_int("Onsen visits this week: ", auto_onsen)
-    metrics.total_soaking_hours = get_float("Total soaking time (hours): ", auto_soaking)
+    metrics.total_soaking_hours = get_float(
+        "Total soaking time (hours): ", auto_soaking
+    )
     metrics.sauna_sessions_count = get_int("Sauna sessions: ", auto_sauna)
     metrics.running_distance_km = get_float("Running distance (km): ", auto_running)
     metrics.gym_sessions_count = get_int("Gym sessions: ", auto_gym)
     metrics.long_exercise_completed = get_bool(
-        "Long exercise session completed (hike or long run >= 15km/2.5hr) (y/n): ", auto_long_ex
+        "Long exercise session completed (hike or long run >= 15km/2.5hr) (y/n): ",
+        auto_long_ex,
     )
     metrics.rest_days_count = get_int("Rest days: ", auto_rest)
 
@@ -398,9 +442,13 @@ def collect_health_wellbeing() -> HealthWellbeingData:
         except ValueError:
             pass
 
-    health.sleep_quality_rating = input("Sleep quality rating (subjective): ").strip() or None
+    health.sleep_quality_rating = (
+        input("Sleep quality rating (subjective): ").strip() or None
+    )
     health.soreness_notes = input("Soreness, pain, warning signs: ").strip() or None
-    health.hydration_nutrition_notes = input("Hydration & nutrition adherence: ").strip() or None
+    health.hydration_nutrition_notes = (
+        input("Hydration & nutrition adherence: ").strip() or None
+    )
     health.mood_mental_state = input("Mood / mental state: ").strip() or None
 
     print()
@@ -427,7 +475,8 @@ def collect_reflections() -> ReflectionData:
         input("Which onsens stood out, and why?\n> ").strip() or None
     )
     reflections.reflection_routine_notes = (
-        input("Which elements of the routine felt natural or forced?\n> ").strip() or None
+        input("Which elements of the routine felt natural or forced?\n> ").strip()
+        or None
     )
 
     print()
@@ -441,7 +490,9 @@ def collect_next_week_plans() -> NextWeekPlan:
 
     next_week = NextWeekPlan()
 
-    next_week.next_week_focus = input("Focus (e.g., recovery, pace stabilization): ").strip() or None
+    next_week.next_week_focus = (
+        input("Focus (e.g., recovery, pace stabilization): ").strip() or None
+    )
     next_week.next_week_goals = input("Intentional goals: ").strip() or None
 
     sauna_limit_input = input("Sauna limit for the week: ").strip()
@@ -458,7 +509,9 @@ def collect_next_week_plans() -> NextWeekPlan:
         except ValueError:
             pass
 
-    next_week.next_week_hike_destination = input("Hike destination idea: ").strip() or None
+    next_week.next_week_hike_destination = (
+        input("Hike destination idea: ").strip() or None
+    )
 
     print()
     return next_week
@@ -519,7 +572,9 @@ def collect_adjustment_context() -> Optional[RuleAdjustmentContext]:
     print("  2. Permanent")
     duration_choice = input("Select duration (1-2): ").strip()
     expected_duration = (
-        RevisionDurationEnum.TEMPORARY if duration_choice == "1" else RevisionDurationEnum.PERMANENT
+        RevisionDurationEnum.TEMPORARY
+        if duration_choice == "1"
+        else RevisionDurationEnum.PERMANENT
     )
 
     print()
@@ -725,13 +780,7 @@ def create_and_save_revision(
     print(f"Saved revision markdown: {markdown_file_path}")
 
     # Save to database
-# Get database configuration
-    config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
-    )
-
-    with get_db(url=config.url) as db:
+    with get_db(url=get_database_url()) as db:
         db_revision = RuleRevision(
             version_number=version_number,
             revision_date=revision_date,
@@ -777,5 +826,7 @@ def create_and_save_revision(
     # Update main rules file if there are modifications
     if modifications:
         updater = RuleFileUpdater()
-        updater.apply_modifications(modifications, version_number, revision_date, revision_summary)
+        updater.apply_modifications(
+            modifications, version_number, revision_date, revision_summary
+        )
         print(f"Updated main rules file: {PATHS.RULES_FILE}")

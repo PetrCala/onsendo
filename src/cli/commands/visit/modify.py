@@ -144,7 +144,7 @@ def select_fields_to_modify(visit: OnsenVisit, onsen: Onsen) -> list[str]:
     Returns:
         List of field names selected for modification
     """
-    print(f"\n=== Select Fields to Modify ===")
+    print("\n=== Select Fields to Modify ===")
     print(f"Visit: {onsen.name} on {visit.visit_time}")
     print(f"Current rating: {visit.personal_rating}/10\n")
 
@@ -160,10 +160,16 @@ def select_fields_to_modify(visit: OnsenVisit, onsen: Onsen) -> list[str]:
             # Get current value
             if field_name == "visit_time_str":
                 # Special handling for time
-                current_value = visit.visit_time.strftime("%H:%M") if visit.visit_time else "(none)"
+                current_value = (
+                    visit.visit_time.strftime("%H:%M") if visit.visit_time else "(none)"
+                )
             elif field_name == "visit_date":
                 # Special handling for date
-                current_value = visit.visit_time.strftime("%Y-%m-%d") if visit.visit_time else "(none)"
+                current_value = (
+                    visit.visit_time.strftime("%Y-%m-%d")
+                    if visit.visit_time
+                    else "(none)"
+                )
             else:
                 current_value = format_field_value(getattr(visit, field_name, None))
 
@@ -189,7 +195,11 @@ def select_fields_to_modify(visit: OnsenVisit, onsen: Onsen) -> list[str]:
 
         if user_input.lower() == "all":
             # Return all field names
-            return [field_name for _, fields in FIELD_GROUPS.items() for field_name, _ in fields]
+            return [
+                field_name
+                for _, fields in FIELD_GROUPS.items()
+                for field_name, _ in fields
+            ]
 
         # Parse selection
         selected_fields = set()
@@ -275,7 +285,10 @@ def execute_selective_workflow(
     # Add conditional parent fields if their children were selected
     for step in all_steps:
         field_name = step["name"]
-        if field_name in has_conditional_selections and field_name not in selected_fields:
+        if (
+            field_name in has_conditional_selections
+            and field_name not in selected_fields
+        ):
             # Insert at appropriate position (before first child)
             filtered_steps.insert(0, step)
 
@@ -400,7 +413,9 @@ def modify_visit_interactive(args: argparse.Namespace) -> None:
             print("No fields selected. Operation cancelled.")
             return
 
-        print("\n💡 Tip: Press Enter to keep current value, or type 'back' to navigate.\n")
+        print(
+            "\n💡 Tip: Press Enter to keep current value, or type 'back' to navigate.\n"
+        )
 
         # Create session and pre-populate with current visit data
         session = InteractiveSession()

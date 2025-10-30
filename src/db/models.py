@@ -208,7 +208,11 @@ class OnsenVisit(Base):
 
 class HeartRateData(Base):
     """
-    Heart rate data recorded during onsen visits or other activities.
+    Heart rate data recorded during onsen visits or other activities (ARCHIVED).
+
+    NOTE: This table has been archived. The data now lives in 'heart_rate_data_archived'.
+    This model remains for backwards compatibility and to access archived data.
+    New heart rate data from Strava should use the Activity model instead.
 
     Columns:
     - id: primary key
@@ -226,7 +230,7 @@ class HeartRateData(Base):
     - created_at: when this record was created in the database
     """
 
-    __tablename__ = "heart_rate_data"
+    __tablename__ = "heart_rate_data_archived"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     visit_id = Column(Integer, ForeignKey("onsen_visits.id"), nullable=True)
@@ -248,7 +252,11 @@ class HeartRateData(Base):
 
 class ExerciseSession(Base):
     """
-    Exercise session data recorded during various activities.
+    Exercise session data recorded during various activities (ARCHIVED).
+
+    NOTE: This table has been archived. The data now lives in 'exercise_sessions_archived'.
+    This model remains for backwards compatibility and to access archived data.
+    New Strava-based activities should use the Activity model instead.
 
     Comprehensive tracking of workout sessions from various sources
     (Apple Watch, Garmin, manual entry) with support for GPS routes,
@@ -280,11 +288,11 @@ class ExerciseSession(Base):
     - created_at: when this record was created in the database
     """
 
-    __tablename__ = "exercise_sessions"
+    __tablename__ = "exercise_sessions_archived"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     visit_id = Column(Integer, ForeignKey("onsen_visits.id"), nullable=True)
-    heart_rate_id = Column(Integer, ForeignKey("heart_rate_data.id"), nullable=True)
+    heart_rate_id = Column(Integer, ForeignKey("heart_rate_data_archived.id"), nullable=True)
     recording_start = Column(DateTime, nullable=False, index=True)
     recording_end = Column(DateTime, nullable=False)
     duration_minutes = Column(Integer, nullable=False)

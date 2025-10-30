@@ -10,7 +10,7 @@ import shutil
 from datetime import datetime
 from loguru import logger
 from src.lib.utils import open_folder_dialog
-from src.config import get_database_config
+from src.config import get_database_path
 from src.paths import PATHS
 
 
@@ -26,12 +26,7 @@ def backup_db(args: argparse.Namespace) -> None:
     Use --to-latest-artifact (-a) to skip the prompt and backup directly to the artifact.
     """
     # Get database configuration
-    config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
-    )
-
-    database_path = config.path if config.path else None
+    database_path = get_database_path()
     if not database_path:
         logger.error("Cannot backup in-memory database (test environment)")
         return

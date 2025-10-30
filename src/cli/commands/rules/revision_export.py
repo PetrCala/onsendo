@@ -24,10 +24,10 @@ def export_revisions(args: argparse.Namespace) -> None:
             - include_weekly_reviews: Include full weekly review data
     """
     # Get revisions to export
-# Get database configuration
+    # Get database configuration
     config = get_database_config(
-        env_override=getattr(args, 'env', None),
-        path_override=getattr(args, 'database', None)
+        env_override=getattr(args, "env", None),
+        path_override=getattr(args, "database", None),
     )
 
     with get_db(url=config.url) as db:
@@ -41,7 +41,9 @@ def export_revisions(args: argparse.Namespace) -> None:
                 print(f"Error: Revision v{args.version} not found.")
                 return
         else:
-            revisions = db.query(RuleRevision).order_by(RuleRevision.version_number.asc()).all()
+            revisions = (
+                db.query(RuleRevision).order_by(RuleRevision.version_number.asc()).all()
+            )
 
         if not revisions:
             print("No revisions found to export.")
@@ -80,13 +82,17 @@ def export_revisions(args: argparse.Namespace) -> None:
     elif export_format == "markdown":
         export_markdown(revisions, output_path, include_weekly)
     else:
-        print(f"Error: Unsupported format '{export_format}'. Use json, csv, or markdown.")
+        print(
+            f"Error: Unsupported format '{export_format}'. Use json, csv, or markdown."
+        )
         return
 
     print(f"Exported {len(revisions)} revision(s) to: {output_path}")
 
 
-def export_json(revisions: list[RuleRevision], output_path: str, include_weekly: bool) -> None:
+def export_json(
+    revisions: list[RuleRevision], output_path: str, include_weekly: bool
+) -> None:
     """Export revisions to JSON format."""
     data = []
 
@@ -147,7 +153,9 @@ def export_json(revisions: list[RuleRevision], output_path: str, include_weekly:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-def export_csv(revisions: list[RuleRevision], output_path: str, include_weekly: bool) -> None:
+def export_csv(
+    revisions: list[RuleRevision], output_path: str, include_weekly: bool
+) -> None:
     """Export revisions to CSV format."""
     fieldnames = [
         "version_number",
@@ -215,7 +223,9 @@ def export_csv(revisions: list[RuleRevision], output_path: str, include_weekly: 
             writer.writerow(row)
 
 
-def export_markdown(revisions: list[RuleRevision], output_path: str, include_weekly: bool) -> None:
+def export_markdown(
+    revisions: list[RuleRevision], output_path: str, include_weekly: bool
+) -> None:
     """Export revisions to consolidated markdown format."""
     lines = []
 
