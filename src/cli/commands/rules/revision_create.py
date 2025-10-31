@@ -31,7 +31,7 @@ from src.types.rules import (
     AdjustmentReasonEnum,
     RevisionDurationEnum,
 )
-from src.lib.exercise_manager import ExerciseDataManager
+from src.db.models import Activity
 from src.db.models import OnsenVisit
 from src.types.exercise import ExerciseType
 
@@ -200,41 +200,45 @@ def auto_fetch_week_statistics(
             if soaking_times:
                 metrics.total_soaking_hours = sum(soaking_times) / 60.0
 
-            # Query exercise data
-            exercise_manager = ExerciseDataManager(db)
-            exercise_summary = exercise_manager.get_weekly_summary(start_date, end_date)
+            # Query activity data from unified Activity table
+            activities = (
+                db.query(Activity)
+                .filter(Activity.recording_start >= start_date)
+                .filter(Activity.recording_start < end_date)
+                .filter(Activity.activity_type != "onsen_monitoring")  # Exclude onsen monitoring
+                .all()
+            )
 
-            # Extract exercise metrics
-            sessions_by_type = exercise_summary.sessions_by_type or {}
-
-            # Running distance (sum all running sessions)
-            running_sessions = exercise_manager.get_by_date_range(start_date, end_date)
+            # Running distance (sum all running activities)
             running_distance = sum(
-                s.distance_km
-                for s in running_sessions
-                if s.exercise_type == ExerciseType.RUNNING.value and s.distance_km
+                a.distance_km
+                for a in activities
+                if a.activity_type == ExerciseType.RUNNING.value and a.distance_km
             )
             metrics.running_distance_km = (
                 round(running_distance, 2) if running_distance > 0 else None
             )
 
-            # Gym sessions
-            gym_count = sessions_by_type.get(ExerciseType.GYM.value, 0)
+            # Gym sessions (count activities with gym type)
+            gym_count = sum(
+                1 for a in activities if a.activity_type == ExerciseType.GYM.value
+            )
             metrics.gym_sessions_count = gym_count if gym_count > 0 else None
 
             # Long exercise session completed (hike or long run)
             # Criteria: hiking session OR running session >= 15km OR >= 2.5hr (150 min)
-            hike_count = sessions_by_type.get(ExerciseType.HIKING.value, 0)
+            hike_count = sum(
+                1 for a in activities if a.activity_type == ExerciseType.HIKING.value
+            )
 
             # Check for long running sessions
-            all_sessions = exercise_manager.get_by_date_range(start_date, end_date)
             long_run_count = sum(
                 1
-                for s in all_sessions
-                if s.exercise_type == ExerciseType.RUNNING.value
+                for a in activities
+                if a.activity_type == ExerciseType.RUNNING.value
                 and (
-                    (s.distance_km is not None and s.distance_km >= 15.0)
-                    or s.duration_minutes >= 150
+                    (a.distance_km is not None and a.distance_km >= 15.0)
+                    or a.duration_minutes >= 150
                 )
             )
 

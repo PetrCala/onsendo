@@ -2,8 +2,7 @@
 Strava data conversion utilities.
 
 This module provides converters for transforming Strava API data into
-Onsendo-compatible formats (ExerciseSession, HeartRateSession) and
-standard file formats (GPX, JSON, CSV).
+Onsendo-compatible Activity format and standard file formats (GPX, JSON, CSV).
 """
 
 import hashlib
@@ -15,8 +14,6 @@ from typing import Mapping, Optional
 
 from loguru import logger
 
-from src.lib.exercise_manager import ExercisePoint, ExerciseSession
-from src.lib.heart_rate_manager import HeartRatePoint, HeartRateSession
 from src.lib.activity_manager import ActivityData
 from src.lib.route_data_analyzer import should_classify_as_onsen_monitoring
 from src.types.exercise import DataSource, ExerciseType, IndoorOutdoor
@@ -80,165 +77,6 @@ class StravaActivityTypeMapper:
             ExerciseType.GYM
         """
         return cls.TYPE_MAPPING.get(strava_type, ExerciseType.OTHER)
-
-
-class StravaToExerciseConverter:
-    """Converts Strava activities to ExerciseSession objects."""
-
-    @classmethod
-    def convert(
-        cls,
-        activity: StravaActivityDetail,
-        streams: Optional[dict[str, StravaStream]] = None,
-    ) -> ExerciseSession:
-        """
-        Convert Strava activity to ExerciseSession.
-
-        Args:
-            activity: Strava activity detail
-            streams: Optional stream data (GPS, HR, etc.)
-
-        Returns:
-            ExerciseSession object ready for database storage
-
-        Example:
-            >>> activity = client.get_activity(12345678)
-            >>> streams = client.get_activity_streams(12345678)
-            >>> session = StravaToExerciseConverter.convert(activity, streams)
-            >>> manager.store_session(session)
-        """
-        # Map activity type
-        exercise_type = StravaActivityTypeMapper.map_type(activity.activity_type)
-
-        # Determine indoor/outdoor
-        indoor_outdoor = IndoorOutdoor.UNKNOWN
-        if "Virtual" in activity.activity_type or "Indoor" in activity.activity_type:
-            indoor_outdoor = IndoorOutdoor.INDOOR
-        elif activity.start_latlng or streams and "latlng" in streams:
-            indoor_outdoor = IndoorOutdoor.OUTDOOR
-
-        # Build data points from streams
-        data_points = []
-        if streams:
-            data_points = cls._build_data_points(streams, activity.start_date)
-
-        # Calculate elevation gain if not provided
-        elevation_gain_m = activity.total_elevation_gain_m
-        if elevation_gain_m is None and streams and "altitude" in streams:
-            elevation_gain_m = cls._calculate_elevation_gain(streams["altitude"])
-
-        return ExerciseSession(
-            start_time=activity.start_date_local,
-            end_time=activity.start_date_local
-            + timedelta(seconds=activity.elapsed_time_s),
-            exercise_type=exercise_type,
-            data_source=DataSource.STRAVA,
-            source_file=f"strava_activity_{activity.id}",
-            activity_name=activity.name,
-            workout_type=activity.sport_type,
-            distance_km=activity.distance_km,
-            calories_burned=activity.calories,
-            elevation_gain_m=elevation_gain_m,
-            avg_heart_rate=activity.average_heartrate,
-            min_heart_rate=None,  # Strava doesn't provide min HR in activity details
-            max_heart_rate=activity.max_heartrate,
-            indoor_outdoor=indoor_outdoor,
-            weather_conditions=None,  # Could add temp if available
-            data_points=data_points if data_points else None,
-            notes=activity.description,
-        )
-
-    @classmethod
-    def _build_data_points(
-        cls, streams: dict[str, StravaStream], start_time: datetime
-    ) -> list[ExercisePoint]:
-        """
-        Build ExercisePoint objects from Strava streams.
-
-        Combines time, latlng, altitude, heartrate, and velocity
-        streams into unified data points.
-
-        Args:
-            streams: Dictionary of stream data
-            start_time: Activity start time
-
-        Returns:
-            List of ExercisePoint objects
-        """
-        points = []
-
-        # Get stream data
-        time_stream = streams.get("time")
-        latlng_stream = streams.get("latlng")
-        altitude_stream = streams.get("altitude")
-        hr_stream = streams.get("heartrate")
-        distance_stream = streams.get("distance")
-        velocity_stream = streams.get("velocity_smooth")
-
-        if not time_stream:
-            return []
-
-        # Build points from time stream (common basis)
-        for i, time_offset in enumerate(time_stream.data):
-            timestamp = start_time + timedelta(seconds=time_offset)
-
-            # Extract data from each stream at index i
-            lat, lon = None, None
-            if latlng_stream and i < len(latlng_stream.data):
-                latlng = latlng_stream.data[i]
-                if latlng and len(latlng) >= 2:
-                    lat, lon = float(latlng[0]), float(latlng[1])
-
-            elevation = None
-            if altitude_stream and i < len(altitude_stream.data):
-                elevation = float(altitude_stream.data[i])
-
-            hr = None
-            if hr_stream and i < len(hr_stream.data):
-                hr = float(hr_stream.data[i])
-
-            speed = None
-            if velocity_stream and i < len(velocity_stream.data):
-                speed = float(velocity_stream.data[i])
-
-            distance = None
-            if distance_stream and i < len(distance_stream.data):
-                distance = float(distance_stream.data[i]) / 1000  # Convert to km
-
-            point = ExercisePoint(
-                timestamp=timestamp,
-                latitude=lat,
-                longitude=lon,
-                elevation_m=elevation,
-                heart_rate=hr,
-                speed_mps=speed,
-                distance_km=distance,
-            )
-            points.append(point)
-
-        return points
-
-    @classmethod
-    def _calculate_elevation_gain(cls, altitude_stream: StravaStream) -> float:
-        """
-        Calculate total elevation gain from altitude data.
-
-        Args:
-            altitude_stream: Altitude stream data
-
-        Returns:
-            Total elevation gain in meters
-        """
-        if not altitude_stream or not altitude_stream.data:
-            return 0.0
-
-        elevation_gain = 0.0
-        for i in range(1, len(altitude_stream.data)):
-            diff = altitude_stream.data[i] - altitude_stream.data[i - 1]
-            if diff > 0:
-                elevation_gain += diff
-
-        return elevation_gain
 
 
 class StravaToActivityConverter:
@@ -424,89 +262,6 @@ class StravaToActivityConverter:
             prev_altitude = altitude
 
         return elevation_gain
-
-
-class StravaToHeartRateConverter:
-    """Converts Strava activities to HeartRateSession objects."""
-
-    @classmethod
-    def convert(
-        cls, activity: StravaActivityDetail, hr_stream: StravaStream
-    ) -> HeartRateSession:
-        """
-        Convert Strava activity with HR data to HeartRateSession.
-
-        Args:
-            activity: Strava activity detail
-            hr_stream: Heart rate stream data
-
-        Returns:
-            HeartRateSession object ready for database storage
-
-        Example:
-            >>> activity = client.get_activity(12345678)
-            >>> streams = client.get_activity_streams(12345678, ["heartrate", "time"])
-            >>> if "heartrate" in streams:
-            ...     hr_session = StravaToHeartRateConverter.convert(
-            ...         activity, streams["heartrate"]
-            ...     )
-        """
-        # Get time stream for timestamps
-        time_stream = None
-        if hasattr(hr_stream, "time_stream"):
-            time_stream = hr_stream.time_stream
-
-        # Build HR data points
-        hr_points = cls._build_hr_points(
-            hr_stream, time_stream, activity.start_date_local
-        )
-
-        return HeartRateSession(
-            start_time=activity.start_date_local,
-            end_time=activity.start_date_local
-            + timedelta(seconds=activity.elapsed_time_s),
-            data_points=hr_points,
-            format="strava",
-            source_file=f"strava_activity_{activity.id}_hr",
-            notes=f"Heart rate data from Strava activity: {activity.name}",
-        )
-
-    @classmethod
-    def _build_hr_points(
-        cls,
-        hr_stream: StravaStream,
-        time_stream: Optional[StravaStream],
-        start_time: datetime,
-    ) -> list[HeartRatePoint]:
-        """
-        Build HeartRatePoint objects from heart rate stream.
-
-        Args:
-            hr_stream: Heart rate stream
-            time_stream: Time stream (for timestamps)
-            start_time: Activity start time
-
-        Returns:
-            List of HeartRatePoint objects
-        """
-        points = []
-
-        if not hr_stream or not hr_stream.data:
-            return points
-
-        for i, hr_value in enumerate(hr_stream.data):
-            # Calculate timestamp
-            if time_stream and i < len(time_stream.data):
-                time_offset = time_stream.data[i]
-                timestamp = start_time + timedelta(seconds=time_offset)
-            else:
-                # Estimate based on index (assume 1 second intervals)
-                timestamp = start_time + timedelta(seconds=i)
-
-            point = HeartRatePoint(timestamp=timestamp, heart_rate=float(hr_value))
-            points.append(point)
-
-        return points
 
 
 class StravaFileExporter:

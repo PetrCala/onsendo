@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from loguru import logger
 
-from src.db.models import Onsen, OnsenVisit, HeartRateData, Activity
+from src.db.models import Onsen, OnsenVisit, Activity
 from src.types.analysis import DataCategory
 from src.types.exercise import ExerciseType
 
@@ -167,24 +167,6 @@ class DataPipeline:
                 "alias": "v",
                 "filters": {},
                 "joins": [("onsens", "onsen_id", "id")],
-            },
-            DataCategory.HEART_RATE: {
-                "table": "heart_rate_data",
-                "columns": [
-                    "id",
-                    "visit_id",
-                    "recording_start",
-                    "recording_end",
-                    "average_heart_rate",
-                    "min_heart_rate",
-                    "max_heart_rate",
-                    "total_recording_minutes",
-                    "data_points_count",
-                    "notes",
-                ],
-                "alias": "h",
-                "filters": {},
-                "joins": [("onsen_visits", "visit_id", "id")],
             },
             DataCategory.SPATIAL: {
                 "table": "onsens",
@@ -526,7 +508,6 @@ class DataPipeline:
                 DataCategory.VISIT_PHYSICAL,
                 DataCategory.TEMPORAL,
                 DataCategory.WEATHER,
-                DataCategory.EXERCISE,
             ]:
                 query = self.session.query(OnsenVisit).join(Onsen)
 
@@ -543,11 +524,6 @@ class DataPipeline:
                         Onsen.longitude.between(min_lon, max_lon),
                     )
 
-                df = pd.read_sql(query.statement, self.session.bind)
-                dfs.append(df)
-
-            elif category == DataCategory.HEART_RATE:
-                query = self.session.query(HeartRateData).join(OnsenVisit, isouter=True)
                 df = pd.read_sql(query.statement, self.session.bind)
                 dfs.append(df)
 

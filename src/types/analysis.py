@@ -129,11 +129,9 @@ class DataCategory(StrEnum):
     VISIT_EXPERIENCE = "visit_experience"  # Experience-related fields
     VISIT_LOGISTICS = "visit_logistics"  # Travel and timing
     VISIT_PHYSICAL = "visit_physical"  # Physical aspects (temperature, etc.)
-    HEART_RATE = "heart_rate"  # Heart rate data (deprecated - archived table)
     SPATIAL = "spatial"  # Location and distance data
     TEMPORAL = "temporal"  # Time-based data
     WEATHER = "weather"  # Weather-related data
-    EXERCISE = "exercise"  # Exercise-related data (deprecated - see ACTIVITY)
 
     # Unified Activity System (Strava-sourced activities)
     ACTIVITY_ALL = "activity_all"  # All activities from Strava

@@ -10,9 +10,9 @@ import pytest
 
 from src.cli.commands.rules.revision_create import auto_fetch_week_statistics
 from src.db.conn import get_db
-from src.db.models import OnsenVisit, ExerciseSession, Onsen
+from src.db.models import OnsenVisit, Activity, Onsen
 from src.config import get_database_url
-from src.types.exercise import ExerciseType, DataSource
+from src.types.exercise import ExerciseType
 
 
 @pytest.mark.integration
@@ -73,45 +73,37 @@ class TestAutoFetchWeekStatisticsIntegration:
             )
             db.add_all([visit1, visit2, visit3])
 
-            # Create exercise sessions
-            run1 = ExerciseSession(
-                exercise_type=ExerciseType.RUNNING.value,
-                data_source=DataSource.MANUAL.value,
+            # Create activity records (unified Activity model)
+            run1 = Activity(
+                activity_type=ExerciseType.RUNNING.value,
                 recording_start=week_start_dt + timedelta(days=2),
                 recording_end=week_start_dt + timedelta(days=2, hours=0, minutes=30),
                 duration_minutes=30,
                 distance_km=5.0,
-                data_file_path="test_integration",
-                data_hash="test_hash_1",
+                activity_name="Test Run 1",
             )
-            run2 = ExerciseSession(
-                exercise_type=ExerciseType.RUNNING.value,
-                data_source=DataSource.MANUAL.value,
+            run2 = Activity(
+                activity_type=ExerciseType.RUNNING.value,
                 recording_start=week_start_dt + timedelta(days=4),
                 recording_end=week_start_dt + timedelta(days=4, hours=0, minutes=48),
                 duration_minutes=48,
                 distance_km=8.0,
-                data_file_path="test_integration",
-                data_hash="test_hash_2",
+                activity_name="Test Run 2",
             )
-            gym = ExerciseSession(
-                exercise_type=ExerciseType.GYM.value,
-                data_source=DataSource.MANUAL.value,
+            gym = Activity(
+                activity_type=ExerciseType.GYM.value,
                 recording_start=week_start_dt + timedelta(days=3),
                 recording_end=week_start_dt + timedelta(days=3, hours=1),
                 duration_minutes=60,
-                data_file_path="test_integration",
-                data_hash="test_hash_3",
+                activity_name="Test Gym Session",
             )
-            hike = ExerciseSession(
-                exercise_type=ExerciseType.HIKING.value,
-                data_source=DataSource.MANUAL.value,
+            hike = Activity(
+                activity_type=ExerciseType.HIKING.value,
                 recording_start=week_start_dt + timedelta(days=6),
                 recording_end=week_start_dt + timedelta(days=6, hours=3),
                 duration_minutes=180,
                 distance_km=12.0,
-                data_file_path="test_integration",
-                data_hash="test_hash_4",
+                activity_name="Test Hike",
             )
             db.add_all([run1, run2, gym, hike])
             db.commit()
@@ -138,10 +130,10 @@ class TestAutoFetchWeekStatisticsIntegration:
                     OnsenVisit.visit_time >= week_start_dt
                 ).filter(OnsenVisit.visit_time <= week_end_dt).delete()
 
-                # Delete test exercise sessions
-                db.query(ExerciseSession).filter(
-                    ExerciseSession.data_file_path == "test_integration"
-                ).delete()
+                # Delete test activity records
+                db.query(Activity).filter(
+                    Activity.recording_start >= week_start_dt
+                ).filter(Activity.recording_start < week_end_dt).delete()
 
                 db.commit()
 
