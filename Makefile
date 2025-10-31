@@ -113,10 +113,6 @@ show-env: ## Show current database environment
 		echo "$(BLUE)Current environment:$(NC) dev (default)"; \
 	fi
 
-##@ Heart Rate Management
-
-##@ Exercise Management
-
 ##@ Weight Management
 
 weight-import: ## Import single weight file (Usage: make weight-import FILE=path/to/file.csv [ENV=dev|prod] [FORMAT=csv] [NOTES="notes"])
