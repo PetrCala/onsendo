@@ -5,7 +5,6 @@ This command creates analysis-ready datasets with:
 - User profile-based behavioral patterns
 - Realistic correlations (price-quality, weather effects, etc.)
 - Econometric relationships for regression analysis
-- Optional heart rate data integration
 - Pre-configured scenarios for different analysis types
 
 NOTE: This command is blocked from production database access for safety.
@@ -15,16 +14,8 @@ import argparse
 from loguru import logger
 
 from src.db.conn import get_db
-from src.db.models import OnsenVisit, Onsen, HeartRateData
+from src.db.models import OnsenVisit, Onsen
 from src.config import get_database_config
-
-from src.testing.mocks.integrated_scenario import (
-    create_integrated_dataset,
-    create_heart_rate_analysis_dataset,
-    create_pricing_analysis_dataset,
-    create_spatial_analysis_dataset,
-    create_temporal_analysis_dataset,
-)
 from src.testing.mocks.scenario_builder import (
     create_analysis_ready_dataset,
     create_econometric_test_dataset,
@@ -75,7 +66,6 @@ def generate_realistic_data(args: argparse.Namespace) -> None:
                 num_visits=num_visits,
                 days=args.days or 90,
             )
-            hr_data = []
 
         elif scenario == 'econometric':
             # Optimized for regression analysis
@@ -85,18 +75,6 @@ def generate_realistic_data(args: argparse.Namespace) -> None:
                 onsen_ids=onsen_ids,
                 num_visits=num_visits,
             )
-            hr_data = []
-
-        elif scenario == 'heart_rate':
-            # With heart rate integration
-            logger.info("Creating heart rate analysis dataset...")
-            logger.info("Features: High HR coverage (85%), health-focused profiles")
-            integrated_data = create_heart_rate_analysis_dataset(
-                onsen_ids=onsen_ids,
-                num_visits=num_visits,
-            )
-            visits = [item.visit for item in integrated_data]
-            hr_data = [item.heart_rate_session for item in integrated_data if item.heart_rate_session]
 
         elif scenario == 'pricing':
             # Pricing/value analysis
@@ -106,7 +84,6 @@ def generate_realistic_data(args: argparse.Namespace) -> None:
                 onsen_ids=onsen_ids,
                 num_visits=num_visits,
             )
-            hr_data = []
 
         elif scenario == 'spatial':
             # Geographic patterns
@@ -116,7 +93,6 @@ def generate_realistic_data(args: argparse.Namespace) -> None:
                 onsen_ids=onsen_ids,
                 num_visits=num_visits,
             )
-            hr_data = []
 
         elif scenario == 'temporal':
             # Time-based patterns
@@ -127,7 +103,6 @@ def generate_realistic_data(args: argparse.Namespace) -> None:
                 num_visits=num_visits,
                 months=args.months or 12,
             )
-            hr_data = []
 
         elif scenario == 'tourist':
             # Intensive tourist trip
@@ -138,7 +113,6 @@ def generate_realistic_data(args: argparse.Namespace) -> None:
                 trip_days=args.trip_days or 7,
                 visits_per_day=args.visits_per_day or 3,
             )
-            hr_data = []
 
         elif scenario == 'local_regular':
             # Long-term local visitor
@@ -148,21 +122,7 @@ def generate_realistic_data(args: argparse.Namespace) -> None:
                 onsen_ids=onsen_ids,
                 months=args.months or 12,
             )
-            hr_data = []
 
-        elif scenario == 'integrated':
-            # Visits + HR data with configurable coverage
-            logger.info("Creating integrated dataset (visits + heart rate)...")
-            hr_coverage = args.hr_coverage or 0.6
-            logger.info(f"Heart rate coverage: {hr_coverage*100:.0f}%")
-            integrated_data = create_integrated_dataset(
-                onsen_ids=onsen_ids,
-                num_visits=num_visits,
-                days=args.days or 90,
-                hr_coverage=hr_coverage,
-            )
-            visits = [item.visit for item in integrated_data]
-            hr_data = [item.heart_rate_session for item in integrated_data if item.heart_rate_session]
 
         else:
             logger.error(f"Unknown scenario: {scenario}")
@@ -170,13 +130,11 @@ def generate_realistic_data(args: argparse.Namespace) -> None:
             print("\nAvailable scenarios:")
             print("  comprehensive    - All-around testing (mix of profiles)")
             print("  econometric      - Optimized for regression analysis")
-            print("  heart_rate       - With HR data integration (85% coverage)")
             print("  pricing          - Price/quality analysis (wide range)")
             print("  spatial          - Geographic patterns (explorers, tourists)")
             print("  temporal         - Seasonal trends (12-month coverage)")
             print("  tourist          - Intensive trip (multi-onsen days)")
             print("  local_regular    - Long-term local visitor")
-            print("  integrated       - Custom HR coverage (specify --hr-coverage)")
             return
 
         logger.info(f"Generated {len(visits)} visits")
@@ -240,30 +198,6 @@ def generate_realistic_data(args: argparse.Namespace) -> None:
         # Insert visits
         logger.info("Inserting visits into database...")
         db.add_all(db_visits)
-        db.flush()  # Get IDs without committing
-
-        # Insert heart rate data if available
-        if hr_data:
-            logger.info(f"Inserting {len(hr_data)} heart rate sessions...")
-            db_hr_records = []
-
-            for i, hr_session in enumerate(hr_data):
-                # Link to corresponding visit
-                db_hr = HeartRateData(
-                    visit_id=db_visits[i].id,
-                    recording_start=hr_session.start_time,
-                    recording_end=hr_session.end_time,
-                    average_heart_rate=int(hr_session.average_heart_rate),
-                    min_heart_rate=int(hr_session.min_heart_rate),
-                    max_heart_rate=int(hr_session.max_heart_rate),
-                    total_recording_minutes=hr_session.duration_minutes,
-                    data_points_count=hr_session.data_points_count,
-                    notes=hr_session.notes,
-                )
-                db_hr_records.append(db_hr)
-
-            db.add_all(db_hr_records)
-
         db.commit()
 
         # Show statistics
@@ -272,10 +206,6 @@ def generate_realistic_data(args: argparse.Namespace) -> None:
         logger.info("="*50)
         logger.info(f"Scenario: {scenario}")
         logger.info(f"Total visits: {len(db_visits)}")
-
-        if hr_data:
-            hr_coverage_pct = (len(hr_data) / len(db_visits)) * 100
-            logger.info(f"Heart rate sessions: {len(hr_data)} ({hr_coverage_pct:.1f}% coverage)")
 
         # Rating statistics
         avg_rating = sum(v.personal_rating for v in db_visits) / len(db_visits)
@@ -380,19 +310,6 @@ def show_scenario_info(args: argparse.Namespace) -> None:
             'ideal_for': ['Enjoyment drivers analysis', 'Pricing optimization', 'Causal inference'],
             'default_size': 200,
         },
-        'heart_rate': {
-            'name': 'Heart Rate Analysis Dataset',
-            'description': 'Visits with integrated physiological data',
-            'features': [
-                '85% heart rate coverage',
-                'Health Enthusiast profiles dominant (60%)',
-                'Temperature-HR correlations',
-                'Sauna effects on HR',
-                'Exercise variation',
-            ],
-            'ideal_for': ['Physiological impact analysis', 'Health benefits research', 'HR-rating correlations'],
-            'default_size': 150,
-        },
         'pricing': {
             'name': 'Pricing Analysis Dataset',
             'description': 'Price-quality tradeoffs and value optimization',
@@ -455,18 +372,6 @@ def show_scenario_info(args: argparse.Namespace) -> None:
             ],
             'ideal_for': ['Loyalty analysis', 'Long-term health tracking', 'Habit formation'],
             'default_size': 144,
-        },
-        'integrated': {
-            'name': 'Integrated Dataset (Custom HR Coverage)',
-            'description': 'Flexible visits + heart rate with configurable coverage',
-            'features': [
-                'Configurable HR coverage (--hr-coverage)',
-                'Mix of all profiles',
-                'Realistic correlations',
-                'Profile-adjusted HR tracking probability',
-            ],
-            'ideal_for': ['Custom HR analysis', 'Flexible testing', 'Coverage experiments'],
-            'default_size': 100,
         },
     }
 

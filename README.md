@@ -2,7 +2,7 @@
   <h1 style="color: #d2691e; font-size: 2.5em; font-weight: bold; margin-bottom: 0px;">別府八湯温泉道️</h1>
   <h5 style="margin-bottom: 20px; font-weight: normal;">♨️ 大なる温泉の道 ♨️</h5>
   <p style="font-weight: normal;">
-    A Python application for tracking and analyzing onsen (hot spring) visits in Beppu, Japan. Combines database management, health tracking, exercise monitoring, and data analysis to support the 88 Onsen Challenge.
+    A Python application for tracking and analyzing onsen (hot spring) visits in Beppu, Japan. Combines database management, Strava activity tracking, weight monitoring, and data analysis to support the 88 Onsen Challenge.
   </p>
   <p>
     <a href="https://www.python.org/downloads/">
@@ -39,8 +39,7 @@ Onsendo (温泉道) helps you track, analyze, and optimize your onsen journey in
 
 - **Visit Tracking**: Record detailed experiences with ratings, health metrics, and notes
 - **Smart Recommendations**: Distance-based filtering and availability checking
-- **Health Monitoring**: Heart rate data import and analysis
-- **Exercise Integration**: GPS workout tracking with challenge compliance stats
+- **Activity Tracking**: Strava integration for onsen monitoring and exercise tracking
 - **Rule Management**: Weekly review system for the 88 Onsen Challenge
 
 ### The 88 Onsen Challenge
@@ -198,21 +197,13 @@ Your experiences at specific onsens with comprehensive tracking data.
 - Includes: Ratings (1-10), health metrics, logistics (fees, duration), weather, notes
 - Commands: `visit add`, `visit list`, `visit modify`, `visit delete`
 
-### 💓 Heart Rate Data
+### 🏃 Activity Tracking
 
-Physiological data from fitness devices linked to onsen visits.
+Unified Strava-based system for all activities including onsen monitoring and exercise.
 
-- Formats: CSV, JSON, Apple Health, plain text
-- Features: Validation, SHA-256 integrity, visit linking
-- Commands: `heart-rate import`, `heart-rate batch-import`, `heart-rate link`
-
-### 🏃 Exercise Sessions
-
-Workout data with GPS routes, metrics, and challenge compliance tracking.
-
-- Formats: GPX, TCX, Apple Health (CSV/XML), JSON
-- Metrics: Distance, pace, elevation, heart rate, calories
-- Commands: `exercise import`, `exercise link`, `exercise stats`
+- Source: Automatic sync from Strava
+- Features: GPS routes, heart rate time-series, performance metrics, onsen monitoring
+- Commands: `strava sync`, `strava download`, `strava status`
 
 ### 📋 Rules Management
 
@@ -330,148 +321,6 @@ The recommendation engine combines multiple factors:
 ---
 
 ## Advanced Features
-
-### Heart Rate Tracking
-
-Import and analyze heart rate data from fitness devices.
-
-#### Importing Data
-
-```bash
-# Single file import
-poetry run onsendo heart-rate import path/to/data.csv
-
-# Specify format
-poetry run onsendo heart-rate import data.csv --format apple_health
-
-# Add notes
-poetry run onsendo heart-rate import data.csv --notes "Morning workout"
-
-# Validate only (don't store)
-poetry run onsendo heart-rate import data.csv --validate-only
-
-# Batch import with parallel processing
-poetry run onsendo heart-rate batch-import /path/to/files/ --recursive --max-workers 8
-```
-
-#### Supported Formats
-
-**Standard CSV**:
-
-```csv
-timestamp,heart_rate,confidence
-2024-01-15 10:00:00,72,0.95
-2024-01-15 10:01:00,75,0.92
-```
-
-**Apple Health**:
-
-```csv
-"SampleType","SampleRate","StartTime","Data"
-"HEART_RATE",1,"2025-08-11T15:24:12.000Z","72;74;73;75;76"
-```
-
-#### Managing Records
-
-```bash
-# List all records
-poetry run onsendo heart-rate list
-
-# Show only unlinked records
-poetry run onsendo heart-rate list --unlinked-only
-
-# Link to visit
-poetry run onsendo heart-rate link <hr_id> <visit_id>
-
-# Unlink from visit
-poetry run onsendo heart-rate unlink <hr_id>
-
-# Delete record
-poetry run onsendo heart-rate delete <hr_id> --force
-```
-
-#### Data Quality Features
-
-- Physiological validation (40-200 BPM)
-- Activity pattern detection
-- Time-based variations
-- Confidence scoring
-- SHA-256 file integrity
-
-### Exercise Management
-
-Track workouts with GPS data, metrics, and challenge compliance.
-
-#### Importing Workouts
-
-```bash
-# Auto-detect format
-poetry run onsendo exercise import path/to/workout.gpx
-
-# Force specific format
-poetry run onsendo exercise import workout.tcx --format tcx
-
-# Add notes
-poetry run onsendo exercise import run.gpx --notes "Morning run to station"
-
-# Batch import with parallel processing
-poetry run onsendo exercise batch-import ~/Workouts/ --recursive --max-workers 8
-```
-
-#### Supported Formats
-
-- **GPX**: GPS Exchange Format (running/cycling with GPS tracks)
-- **TCX**: Training Center XML (Garmin and other devices)
-- **Apple Health**: CSV/XML exports from Health app
-- **JSON**: Generic workout format
-- **CSV**: Simple format with timestamps and metrics
-
-#### Linking to Visits
-
-```bash
-# Auto-match based on timestamps (2-hour window)
-poetry run onsendo exercise link --exercise-id 123 --auto-match
-
-# Manual link to specific visit
-poetry run onsendo exercise link --exercise-id 123 --visit-id 456
-
-# Unlink from visit
-poetry run onsendo exercise link --exercise-id 123 --unlink
-```
-
-#### Querying and Statistics
-
-```bash
-# List all exercises
-poetry run onsendo exercise list
-
-# Filter by type and date
-poetry run onsendo exercise list --type running --date-range 2025-11-01,2025-11-30
-
-# Show unlinked only
-poetry run onsendo exercise list --unlinked-only
-
-# Weekly statistics for challenge compliance
-poetry run onsendo exercise stats --week 2025-11-10
-poetry run onsendo exercise stats --month 11 --year 2025
-```
-
-**Weekly stats output** shows:
-
-- Running distance vs target (20-35km/week)
-- Gym sessions vs target (2-4/week)
-- Hiking completion (1/week required)
-- Other activities (swimming, cycling, etc.)
-- Warnings for exceeded limits or missed targets
-
-#### Validation Features
-
-- Pace validation (2-12 min/km for running)
-- Heart rate bounds (30-220 BPM)
-- Elevation consistency checks
-- GPS gap detection
-- Haversine distance calculation
-- Duration limits (1 min to 24 hours)
 
 ### Strava Integration
 
@@ -969,23 +818,6 @@ See [.env.example](.env.example) for detailed setup instructions.
 - `visit modify` - Update visit details
 - `visit delete` - Remove visit record
 
-**Heart Rate Commands**:
-
-- `heart-rate import` - Import single file
-- `heart-rate batch-import` - Import directory
-- `heart-rate list` - List all records
-- `heart-rate link` - Link to visit
-- `heart-rate unlink` - Unlink from visit
-- `heart-rate delete` - Remove record
-
-**Exercise Commands**:
-
-- `exercise import` - Import single workout file
-- `exercise batch-import` - Import directory with parallel processing
-- `exercise list` - List all sessions
-- `exercise link` - Link to visit or heart rate data
-- `exercise stats` - Show weekly/monthly statistics
-
 **Weight Commands**:
 
 - `weight import` - Import weight data from file
@@ -1027,25 +859,6 @@ See [.env.example](.env.example) for detailed setup instructions.
 
 ### Supported Data Formats
 
-#### Heart Rate Formats
-
-| Format | File Extension | Source | Notes |
-|--------|---------------|---------|-------|
-| CSV | `.csv` | Generic | `timestamp,heart_rate,confidence` |
-| JSON | `.json` | Generic | Structured workout data |
-| Apple Health | `.csv` | iPhone/Watch | Special CSV format with semicolon-separated data |
-| Plain Text | `.txt` | Various | Simple timestamp + BPM |
-
-#### Exercise Formats
-
-| Format | File Extension | Source | Features |
-|--------|---------------|---------|----------|
-| GPX | `.gpx` | Garmin, Strava, etc. | Full GPS tracks, elevation, heart rate |
-| TCX | `.tcx` | Garmin devices | Training Center XML with detailed metrics |
-| Apple Health | `.xml`, `.csv` | iPhone/Watch | Workout summaries with auto type detection |
-| JSON | `.json` | Generic | Flexible workout format |
-| CSV | `.csv` | Generic | Simple tabular format |
-
 #### Weight Formats
 
 | Format | File Extension | Source | Format |
@@ -1061,21 +874,7 @@ See [.env.example](.env.example) for detailed setup instructions.
 ```
 onsendo/
 ├── data/
-│   ├── db/                    # SQLite databases
-│   ├── heart_rate/
-│   │   ├── raw/               # Original files from devices
-│   │   │   ├── apple_health/
-│   │   │   ├── garmin/
-│   │   │   └── fitbit/
-│   │   ├── processed/         # Validated files
-│   │   └── archived/          # Old files
-│   └── exercise/
-│       ├── raw/
-│       │   ├── garmin/        # .gpx, .tcx files
-│       │   ├── strava/        # .gpx files
-│       │   └── apple_health/  # .csv, .xml files
-│       ├── processed/
-│       └── archived/
+│   └── db/                    # SQLite databases
 ├── artifacts/
 │   └── db/backups/            # Database backups
 └── output/
@@ -1084,12 +883,10 @@ onsendo/
 
 **Best practices**:
 
-- Separate by device: Keep files from different sources in separate subdirectories
-- Date-based organization: Use `YYYY_MM` format for monthly subdirectories
-- Descriptive naming: `workout_morning_run_2025_08_15.csv`
-- Keep originals: Never modify raw files from devices
-- File permissions: `chmod 600` for personal health data
-- Regular imports: Weekly routine to import new data
+- Separate by purpose: Keep development and production databases separate
+- Regular backups: Create backups before major operations or migrations
+- Clean up analyses: Periodically remove old analysis results
+- Use migrations: Always run migrations after pulling code changes
 
 ### Example Workflows
 
@@ -1102,8 +899,8 @@ poetry run onsendo onsen recommend --location "Hotel" --distance "close"
 # 2. After visiting, record your experience
 poetry run onsendo visit add
 
-# 3. Link any exercise from earlier
-poetry run onsendo exercise link --exercise-id 123 --auto-match
+# 3. Track your weight (if desired)
+poetry run onsendo weight add
 ```
 
 **Sunday weekly review**:
@@ -1112,8 +909,8 @@ poetry run onsendo exercise link --exercise-id 123 --auto-match
 # 1. Check your week's visits
 poetry run onsendo visit list
 
-# 2. Review exercise stats
-poetry run onsendo exercise stats --week 2025-11-10
+# 2. Review weight trends
+poetry run onsendo weight stats --week 2025-11-10
 
 # 3. Complete rule review
 poetry run onsendo rules revision-create
@@ -1122,20 +919,17 @@ poetry run onsendo rules revision-create
 make backup-full
 ```
 
-**Monthly data import**:
+**Monthly weight tracking**:
 
 ```bash
-# 1. Export data from devices to organized folders
+# 1. Import weight data from devices
+poetry run onsendo weight import data/weight/2025_11.csv --format csv
 
-# 2. Batch import heart rate data
-poetry run onsendo heart-rate batch-import data/heart_rate/raw/apple_health/2025_11/ --recursive
+# 2. Review monthly trends
+poetry run onsendo weight stats --month 11 --year 2025
 
-# 3. Batch import exercise data
-poetry run onsendo exercise batch-import data/exercise/raw/garmin/2025_11/ --recursive
-
-# 4. Archive processed files
-mv data/heart_rate/raw/apple_health/2025_11/ data/heart_rate/archived/
-mv data/exercise/raw/garmin/2025_11/ data/exercise/archived/
+# 3. Export for external analysis (optional)
+poetry run onsendo weight export --format csv --output monthly_weight.csv
 ```
 
 ---
@@ -1187,8 +981,7 @@ Common targets:
 - `make test` - Run all tests
 - `make lint` - Run linter
 - `make backup` - Create database backup
-- `make exercise-import FILE=...` - Import exercise file
-- `make hr-import FILE=...` - Import heart rate file
+- `make strava-sync DAYS=7` - Sync activities from Strava
 
 ### Contributing
 
@@ -1210,12 +1003,12 @@ See [CLAUDE.md](CLAUDE.md) and [AGENTS.md](AGENTS.md) for:
 - **[CLAUDE.md](CLAUDE.md)**: Comprehensive development guide for Claude Code
 - **[AGENTS.md](AGENTS.md)**: Repository guidelines for AI agents
 - **[rules/onsendo-rules.md](rules/onsendo-rules.md)**: Complete 88 Onsen Challenge ruleset
-- **[docs/heart_rate_system.md](docs/heart_rate_system.md)**: Detailed heart rate system documentation
+- **[docs/STRAVA_WORKFLOWS.md](docs/STRAVA_WORKFLOWS.md)**: Strava integration workflows and best practices
 
 ### Templates
 
 - **Rule Review Sunday**: Weekly review template integrated into `rules revision-create` command
-- **Exercise tracking**: Weekly stats template for challenge compliance
+- **Weight tracking**: Daily measurement tracking for health monitoring during challenge
 
 ### Example Configurations
 

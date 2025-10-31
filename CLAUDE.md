@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Onsendo (温泉道 - "The Way of Onsen") is a Python application for tracking and analyzing onsen (hot spring) visits in Beppu, Japan. It combines SQLite database management, web scraping, data analysis, machine learning, and health tracking (heart rate data) to help users discover, visit, and analyze their onsen experiences.
+Onsendo (温泉道 - "The Way of Onsen") is a Python application for tracking and analyzing onsen (hot spring) visits in Beppu, Japan. It combines SQLite database management, web scraping, data analysis, machine learning, and Strava activity tracking to help users discover, visit, and analyze their onsen experiences.
 
 ## Development Commands
 
@@ -109,7 +109,7 @@ All Makefile targets support `ENV=dev|prod`:
 ```bash
 make db-init ENV=prod                    # Initialize prod database
 make backup ENV=prod                     # Backup prod database
-make exercise-stats WEEK=2025-11-03 ENV=prod
+make weight-stats WEEK=2025-11-03 ENV=prod
 ```
 
 ### Database Operations
@@ -211,75 +211,6 @@ make backup-auto        # Backup + cleanup + cloud sync
 - Backups stored in: `artifacts/db/backups/`
 - Cloud backups mirror local structure in Google Drive
 
-### Heart Rate Management
-
-All heart rate operations can be invoked via Makefile:
-
-### Exercise Management
-
-All exercise operations can be invoked via Makefile:
-
-```bash
-# Import single file
-make exercise-import FILE=path/to/workout.gpx
-make exercise-import FILE=path/to/run.gpx FORMAT=gpx NOTES="Morning run"
-
-# Batch import
-make exercise-batch DIR=path/to/directory
-make exercise-batch DIR=~/Workouts RECURSIVE=true FORMAT=apple_health
-
-# List exercise sessions
-make exercise-list                                    # All sessions
-make exercise-list TYPE=running                       # Filter by type
-make exercise-list DATE_RANGE=2025-11-01,2025-11-30  # Date range
-make exercise-list UNLINKED=true                      # Show unlinked only
-
-# Link exercise to visit or heart rate
-make exercise-link EXERCISE_ID=1 VISIT_ID=42          # Link to visit
-make exercise-link EXERCISE_ID=1 HR_ID=10             # Link to heart rate
-make exercise-link EXERCISE_ID=1 AUTO_MATCH=true     # Auto-suggest visits
-
-# Show statistics
-make exercise-stats WEEK=2025-11-03                   # Weekly stats
-make exercise-stats MONTH=11 YEAR=2025                # Monthly stats
-make exercise-stats WEEK=2025-11-03 TYPE=running      # Type-specific
-```
-
-**Exercise CLI Commands:**
-
-```bash
-# Import single file
-poetry run onsendo exercise import path/to/workout.gpx
-poetry run onsendo exercise import workout.tcx --format tcx --notes "Bike ride"
-
-# Batch import with parallel processing
-poetry run onsendo exercise batch-import ~/Workouts/ --recursive --max-workers 8
-poetry run onsendo exercise batch-import ./gpx_files/ --format gpx --dry-run
-
-# List and query sessions
-poetry run onsendo exercise list --type running --date-range 2025-11-01,2025-11-30
-poetry run onsendo exercise list --unlinked-only
-poetry run onsendo exercise list --visit-id 42
-
-# Link to visits and heart rate data
-poetry run onsendo exercise link 1 --visit 42
-poetry run onsendo exercise link 1 --heart-rate 10
-poetry run onsendo exercise link 1 --auto-match    # Smart timestamp matching
-
-# Weekly/monthly statistics (for rule revisions)
-poetry run onsendo exercise stats --week 2025-11-03
-poetry run onsendo exercise stats --month 11 --year 2025
-poetry run onsendo exercise stats --week 2025-11-03 --type running
-```
-
-**Supported Import Formats:**
-
-- **GPX** (GPS Exchange Format) - Running/cycling routes with GPS data
-- **TCX** (Training Center XML) - Garmin and other fitness devices
-- **Apple Health** - CSV/XML exports from Apple Health app
-- **JSON** - Generic JSON format
-- **CSV** - Simple CSV format with timestamps and metrics
-
 ### Weight Management
 
 All weight operations can be invoked via Makefile:
@@ -363,29 +294,6 @@ poetry run onsendo weight export --format json --date-range 2025-11-01,2025-11-3
 - `evening` - Evening measurement
 - `night` - Night measurement
 
-### Heart Rate Management (Original)
-
-All heart rate operations can be invoked via Makefile:
-
-```bash
-# Import single file
-make hr-import FILE=path/to/file.csv
-make hr-import FILE=path/to/file.csv FORMAT=apple_health NOTES="Morning workout"
-
-# Batch import
-make hr-batch DIR=path/to/directory
-make hr-batch DIR=path/to/directory RECURSIVE=true FORMAT=apple_health
-
-# Status and maintenance
-make hr-status                           # Show heart rate data status
-make hr-maintenance CMD=cleanup          # Run cleanup
-make hr-maintenance CMD=archive          # Archive old files
-make hr-maintenance CMD=validate         # Validate integrity
-
-# Interactive manager (original shell interface)
-make hr-manager
-```
-
 ### Rules Management
 
 The rules management system tracks revisions to the Onsendo Challenge ruleset following the Rule Review Sunday template.
@@ -458,9 +366,9 @@ poetry run onsendo rules-history --date-range 2025-11-01,2025-12-31
 
 The codebase follows a layered architecture with clear separation of concerns:
 
-- **`src/cli/`** - Command-line interface with subcommand groups (location, visit, onsen, heart-rate, exercise, analysis, database, system, rules)
-- **`src/db/`** - Database layer with SQLAlchemy models (Location, Onsen, OnsenVisit, HeartRateData, ExerciseSession, RuleRevision)
-- **`src/lib/`** - Core business logic and utilities (distance calculations, recommendations, heart rate management)
+- **`src/cli/`** - Command-line interface with subcommand groups (location, visit, onsen, strava, weight, rules, analysis, database, system)
+- **`src/db/`** - Database layer with SQLAlchemy models (Location, Onsen, OnsenVisit, Activity, RuleRevision, WeightMeasurement)
+- **`src/lib/`** - Core business logic and utilities (distance calculations, recommendations, Strava integration)
 - **`src/analysis/`** - Analysis engine with data pipeline, metrics, models, and visualizations
 - **`src/types/`** - Type definitions and enums for analysis and general use
 - **`src/testing/`** - Test utilities, mocks, and fixtures
@@ -474,9 +382,7 @@ The codebase follows a layered architecture with clear separation of concerns:
 - `Location` - User-defined locations for distance calculations
 - `Onsen` - Hot spring facilities with detailed metadata (ban_number, coordinates, facilities, hours)
 - `OnsenVisit` - Visit records with ratings, health metrics, logistics, weather, and optional notes
-- `HeartRateData` - **ARCHIVED** - Legacy heart rate data (see Activity model for current HR tracking)
-- `ExerciseSession` - **ARCHIVED** - Legacy exercise data (see Activity model for current activity tracking)
-- `Activity` - **CURRENT** Unified Strava-sourced activity model with comprehensive time-series data:
+- `Activity` - Unified Strava-sourced activity model with comprehensive time-series data:
   - GPS routes with lat/lon/elevation per point
   - **Heart rate time-series**: Second-by-second HR data stored in `route_data` JSON
   - Performance metrics (distance, calories, elevation gain)
@@ -493,10 +399,9 @@ The codebase follows a layered architecture with clear separation of concerns:
 
 **CLI Command Groups** (`src/cli/commands/`):
 
-- Each group has its own subdirectory (location/, visit/, onsen/, heart-rate/, exercise/, etc.)
+- Each group has its own subdirectory (location/, visit/, onsen/, strava/, weight/, rules/, etc.)
 - Commands are registered in `cmd_list.py` and organized by prefix
-- Interactive mode is preferred for complex data entry (visits, locations)
-- Exercise commands support auto-linking to visits via timestamp matching
+- Interactive mode is preferred for complex data entry (visits, locations, rules)
 
 **Analysis System** (`src/analysis/`):
 
@@ -505,26 +410,6 @@ The codebase follows a layered architecture with clear separation of concerns:
 - `metrics.py` - Statistical calculations and summary metrics
 - `visualizations.py` - Charts, maps, and interactive dashboards (matplotlib, seaborn, plotly, folium)
 - `models.py` - Machine learning models (regression, classification, clustering)
-
-**Heart Rate System** (`src/lib/heart_rate_manager.py`):
-
-- Supports multiple formats: CSV, JSON, Apple Health, plain text
-- Comprehensive validation: duration, data points, physiological ranges, gaps
-- File integrity via SHA-256 hashing
-- Batch import with parallel processing
-
-**Exercise System** (`src/lib/exercise_manager.py`):
-
-- **ARCHIVED** - Legacy exercise import system
-- Supports multiple formats: GPX, TCX, Apple Health (XML/CSV), JSON, CSV
-- Comprehensive validation: duration, pace, heart rate, elevation, GPS consistency
-- GPS route parsing with Haversine distance calculation
-- Elevation gain calculation from GPS data
-- File integrity via SHA-256 hashing
-- Batch import with parallel processing (configurable workers)
-- Smart timestamp-based linking to visits and heart rate data
-- Weekly/monthly statistics aggregation for rule compliance
-- Auto-detection of workout types from Apple Health
 
 **Activity System** (`src/lib/activity_manager.py`, `src/lib/strava_converter.py`):
 
@@ -637,44 +522,6 @@ poetry run onsendo visit list
 # Modify/delete visits
 poetry run onsendo visit modify
 poetry run onsendo visit delete
-```
-
-### Heart Rate Data
-
-```bash
-# Import single file
-poetry run onsendo heart-rate import path/to/data.csv --format apple_health
-
-# Batch import
-poetry run onsendo heart-rate batch-import /path/to/files/ --recursive --max-workers 8
-
-# Manage records
-poetry run onsendo heart-rate list --unlinked-only
-poetry run onsendo heart-rate link <hr_id> <visit_id>
-```
-
-### Exercise Data
-
-```bash
-# Import workouts from various sources
-poetry run onsendo exercise import ~/run.gpx
-poetry run onsendo exercise import ~/workout.tcx --format tcx
-poetry run onsendo exercise import ~/health_export.csv --format apple_health
-
-# Batch import with parallel processing
-poetry run onsendo exercise batch-import ~/Workouts/ --recursive --max-workers 8
-
-# Link to visits and heart rate
-poetry run onsendo exercise link 1 --auto-match  # Smart timestamp matching
-poetry run onsendo exercise link 1 --visit 42 --heart-rate 10
-
-# Query and filter sessions
-poetry run onsendo exercise list --type running --date-range 2025-11-01,2025-11-30
-poetry run onsendo exercise list --unlinked-only
-
-# Weekly statistics for rule compliance
-poetry run onsendo exercise stats --week 2025-11-03
-poetry run onsendo exercise stats --month 11 --year 2025 --type running
 ```
 
 ### Analysis & Visualization

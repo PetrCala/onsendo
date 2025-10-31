@@ -194,119 +194,6 @@ class OnsenVisit(Base):
     onsen = relationship("Onsen", back_populates="visits")
 
 
-class HeartRateData(Base):
-    """
-    Heart rate data recorded during onsen visits or other activities (ARCHIVED).
-
-    NOTE: This table has been archived. The data now lives in 'heart_rate_data_archived'.
-    This model remains for backwards compatibility and to access archived data.
-    New heart rate data from Strava should use the Activity model instead.
-
-    Columns:
-    - id: primary key
-    - recording_start: when the recording started
-    - recording_end: when the recording ended
-    - data_format: format of the data (e.g., "garmin_fit", "apple_health", "csv")
-    - data_file_path: path to the original data file
-    - data_hash: hash of the data for integrity verification
-    - average_heart_rate: average heart rate during the recording
-    - min_heart_rate: minimum heart rate recorded
-    - max_heart_rate: maximum heart rate recorded
-    - total_recording_minutes: total duration of the recording
-    - data_points_count: number of heart rate measurements
-    - notes: optional notes about the recording
-    - created_at: when this record was created in the database
-    """
-
-    __tablename__ = "heart_rate_data_archived"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    visit_id = Column(Integer, ForeignKey("onsen_visits.id"), nullable=True)
-    recording_start = Column(DateTime, nullable=False)
-    recording_end = Column(DateTime, nullable=False)
-    data_format = Column(String, nullable=False)
-    data_file_path = Column(String, nullable=False)
-    data_hash = Column(String, nullable=False)
-    average_heart_rate = Column(Float, nullable=False)
-    min_heart_rate = Column(Float, nullable=False)
-    max_heart_rate = Column(Float, nullable=False)
-    total_recording_minutes = Column(Integer, nullable=False)
-    data_points_count = Column(Integer, nullable=False)
-    notes = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    visit = relationship("OnsenVisit")
-
-
-class ExerciseSession(Base):
-    """
-    Exercise session data recorded during various activities (ARCHIVED).
-
-    NOTE: This table has been archived. The data now lives in 'exercise_sessions_archived'.
-    This model remains for backwards compatibility and to access archived data.
-    New Strava-based activities should use the Activity model instead.
-
-    Comprehensive tracking of workout sessions from various sources
-    (Apple Watch, Garmin, manual entry) with support for GPS routes,
-    heart rate data, and linking to onsen visits.
-
-    Columns:
-    - id: primary key
-    - visit_id: optional foreign key to onsen visit (if exercise was before/after onsen)
-    - heart_rate_id: optional foreign key to heart rate data (if HR was recorded)
-    - recording_start: when the exercise started
-    - recording_end: when the exercise ended
-    - duration_minutes: total duration in minutes
-    - exercise_type: type of exercise (running, gym, hiking, cycling, etc.)
-    - activity_name: specific activity name (e.g., "Morning Run", "Leg Day")
-    - workout_type: Apple Health workout type (if from Apple Health)
-    - data_source: where the data came from (apple_health, garmin, manual, etc.)
-    - data_file_path: path to the original data file (if imported)
-    - data_hash: SHA-256 hash of the data file for integrity verification
-    - distance_km: distance covered in kilometers (for cardio activities)
-    - calories_burned: estimated calories burned
-    - elevation_gain_m: total elevation gain in meters (for running/hiking)
-    - avg_heart_rate: average heart rate during exercise
-    - min_heart_rate: minimum heart rate recorded
-    - max_heart_rate: maximum heart rate recorded
-    - indoor_outdoor: whether exercise was indoor or outdoor
-    - weather_conditions: weather during outdoor exercise
-    - route_data: JSON-encoded GPS route data (lat/lon points, timestamps)
-    - notes: optional notes about the exercise session
-    - created_at: when this record was created in the database
-    """
-
-    __tablename__ = "exercise_sessions_archived"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    visit_id = Column(Integer, ForeignKey("onsen_visits.id"), nullable=True)
-    heart_rate_id = Column(Integer, ForeignKey("heart_rate_data_archived.id"), nullable=True)
-    recording_start = Column(DateTime, nullable=False, index=True)
-    recording_end = Column(DateTime, nullable=False)
-    duration_minutes = Column(Integer, nullable=False)
-    exercise_type = Column(String, nullable=False, index=True)
-    activity_name = Column(String)
-    workout_type = Column(String)
-    data_source = Column(String, nullable=False)
-    data_file_path = Column(String)
-    data_hash = Column(String)
-    distance_km = Column(Float)
-    calories_burned = Column(Integer)
-    elevation_gain_m = Column(Float)
-    avg_heart_rate = Column(Float)
-    min_heart_rate = Column(Float)
-    max_heart_rate = Column(Float)
-    indoor_outdoor = Column(String)
-    weather_conditions = Column(String)
-    route_data = Column(String)  # JSON string
-    notes = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    # Relationships
-    visit = relationship("OnsenVisit", foreign_keys=[visit_id])
-    heart_rate = relationship("HeartRateData", foreign_keys=[heart_rate_id])
-
-
 class Activity(Base):
     """
     Unified activity model for all Strava-sourced activities.
@@ -403,7 +290,9 @@ class WeightMeasurement(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     measurement_time = Column(DateTime, nullable=False, index=True)
     weight_kg = Column(Float, nullable=False)
-    measurement_conditions = Column(String)  # Optional: fasted, after_meal, post_workout, etc.
+    measurement_conditions = Column(
+        String
+    )  # Optional: fasted, after_meal, post_workout, etc.
     time_of_day = Column(String)  # Optional: morning, afternoon, evening
     data_source = Column(String, nullable=False)  # manual, scale, apple_health, etc.
     data_file_path = Column(String)  # Optional: path if imported from file

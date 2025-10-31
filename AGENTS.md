@@ -34,8 +34,8 @@
 ## Key Features & Systems
 
 - **Onsen Tracking**: Record visits with ratings, health metrics, logistics, and optional notes
-- **Heart Rate Monitoring**: Import from CSV, JSON, Apple Health; link to visits with SHA-256 integrity
-- **Exercise Tracking**: Import from GPX, TCX, Apple Health; GPS routes, pace/elevation validation, weekly stats for challenge targets
+- **Activity Tracking**: Strava integration for onsen monitoring with GPS routes, heart rate time-series, and performance metrics
+- **Weight Monitoring**: Track body weight with conditions, time-of-day metadata, and trend analysis
 - **Smart Recommendations**: Distance-based filtering using Haversine formula, availability checking, visit history personalization
 - **Rules Management**: Track Onsendo Challenge compliance with weekly review workflow and revision history
 - **Database Migrations**: Alembic-based schema evolution without data loss
@@ -46,7 +46,7 @@
 
 You MUST update README.md when:
 - Adding new CLI command or command group
-- Adding new data format support (heart rate, exercise)
+- Adding new data format support (weight, Strava activities)
 - Adding new feature or system component
 - Changing command syntax or behavior
 - Adding new workflow or use case
@@ -61,12 +61,12 @@ Before submitting any PR with new features, verify:
    - Use consistent format: `` `command subcommand` - Description ``
 
 2. **Usage Example Added** (Basic Usage or Advanced Features)
-   - Add to appropriate section (Basic for daily use, Advanced for heart rate/exercise/rules)
+   - Add to appropriate section (Basic for daily use, Advanced for Strava/weight/rules)
    - Show 2-3 common use cases with code blocks
    - Use `poetry run onsendo` prefix (never bare `onsendo`)
 
 3. **Core Concepts Updated** (if new entity)
-   - Add h3 subsection if introducing new entity type (like Exercise, Heart Rate)
+   - Add h3 subsection if introducing new entity type (like Activity, Weight)
    - Explain what it is, what it's used for, key commands
    - Keep to 3-5 bullet points
 
@@ -92,7 +92,7 @@ Before submitting any PR with new features, verify:
 
 **Section Placement**:
 - Daily commands → Basic Usage
-- Heart rate, exercise, rules, migrations, analysis → Advanced Features
+- Strava, weight, rules, migrations, analysis → Advanced Features
 - Commands reference, formats, file structure → Reference
 - Test/lint/contribute → Development
 
@@ -134,27 +134,27 @@ Run this mental checklist before submitting PR:
 **Good PR** - Adding new command:
 ```markdown
 Files changed:
-- src/cli/commands/exercise/stats.py (new command)
+- src/cli/commands/weight/stats.py (new command)
 - README.md (3 changes):
-  1. Added `exercise stats` to Command Index
-  2. Added usage example in Advanced Features > Exercise Management
+  1. Added `weight stats` to Command Index
+  2. Added usage example in Advanced Features > Weight Tracking
   3. Added to "Sunday weekly review" workflow
 ```
 
 **Bad PR** - Missing documentation:
 ```markdown
 Files changed:
-- src/cli/commands/exercise/stats.py (new command)
+- src/cli/commands/weight/stats.py (new command)
 - (README.md not updated - REJECT)
 ```
 
 **Good PR** - Adding new format:
 ```markdown
 Files changed:
-- src/lib/exercise_manager.py (FIT format support)
+- src/lib/weight_manager.py (Garmin Connect export support)
 - README.md (2 changes):
-  1. Added FIT to Exercise Formats table
-  2. Added import example with --format fit flag
+  1. Added Garmin Connect to Weight Formats table
+  2. Added import example with --format garmin_connect flag
 ```
 
 ### README Section Reference
