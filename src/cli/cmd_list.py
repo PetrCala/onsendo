@@ -1268,22 +1268,64 @@ CLI_COMMANDS = {
                 required=False,
                 help="Only sync specific activity type (Run, Ride, Hike, etc.)",
             ),
-            "auto-import": ArgumentConfig(
+            "interactive": ArgumentConfig(
                 action="store_true",
-                help="Automatically import downloaded activities",
+                help="Enable post-sync review of auto-detected onsen monitoring activities",
             ),
             "auto-link": ArgumentConfig(
                 action="store_true",
-                help="Automatically link imported activities to nearby visits",
+                help="Enable visit linking during interactive review",
+            ),
+            "no-auto-pair": ArgumentConfig(
+                action="store_true",
+                help="Disable automatic activity-visit pairing (enabled by default)",
+            ),
+            "pairing-threshold": ArgumentConfig(
+                type=float,
+                required=False,
+                help="Confidence threshold for auto-pairing (default: 0.8 = 80%%)",
             ),
             "dry-run": ArgumentConfig(
                 action="store_true",
-                help="Show what would be synced without downloading",
+                help="Show what would be synced without importing",
             ),
-            "format": ArgumentConfig(
+            "skip-existing": ArgumentConfig(
+                action="store_true",
+                help="Skip activities that already exist in database",
+            ),
+        },
+    ),
+    "strava-pair-activities": CommandConfig(
+        func=lazy_command("src.cli.commands.strava.pair", "cmd_strava_pair_activities"),
+        help="Pair onsen monitoring activities to visits based on name and time.",
+        args={
+            "since": ArgumentConfig(
                 type=str,
                 required=False,
-                help="Download format: gpx, json, hr_csv, all (default: gpx)",
+                help="Only pair activities after this date (YYYY-MM-DD)",
+            ),
+            "dry-run": ArgumentConfig(
+                action="store_true",
+                help="Preview pairings without saving to database",
+            ),
+            "auto-threshold": ArgumentConfig(
+                type=float,
+                required=False,
+                help="Confidence threshold for auto-linking (default: 0.8 = 80%%)",
+            ),
+            "review-threshold": ArgumentConfig(
+                type=float,
+                required=False,
+                help="Minimum confidence for review (default: 0.6 = 60%%)",
+            ),
+            "time-window": ArgumentConfig(
+                type=int,
+                required=False,
+                help="Search window in hours for finding visits (default: 4)",
+            ),
+            "interactive": ArgumentConfig(
+                action="store_true",
+                help="Enable interactive review for medium-confidence matches",
             ),
         },
     ),

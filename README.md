@@ -202,8 +202,8 @@ Your experiences at specific onsens with comprehensive tracking data.
 Unified Strava-based system for all activities including onsen monitoring and exercise.
 
 - Source: Automatic sync from Strava
-- Features: GPS routes, heart rate time-series, performance metrics, onsen monitoring
-- Commands: `strava sync`, `strava download`, `strava status`
+- Features: GPS routes, heart rate time-series, performance metrics, onsen monitoring, automatic visit pairing
+- Commands: `strava sync`, `strava pair-activities`, `strava download`, `strava status`
 
 ### 📋 Rules Management
 
@@ -402,6 +402,86 @@ make strava-link EXERCISE_ID=42 VISIT_ID=15
 - Searches visits within ±2 hours of activity start
 - Shows time difference for each suggestion
 - Uses closest match automatically
+
+#### Automatic Activity-Visit Pairing
+
+**New in v2.0**: Automatically pair onsen monitoring activities to visits based on name similarity and time proximity.
+
+**How it works**:
+
+1. Extracts onsen name from activity title (Japanese or romanized)
+2. Finds candidate visits within ±4 hour window
+3. Scores candidates using weighted formula:
+   - 60% name similarity (fuzzy matching)
+   - 40% time proximity
+4. Auto-links high-confidence matches (≥80%)
+5. Flags medium-confidence matches for review (60-79%)
+
+**Integrated with sync**:
+
+```bash
+# Auto-pairing enabled by default
+poetry run onsendo strava sync --days 7
+
+# Disable auto-pairing
+poetry run onsendo strava sync --days 7 --no-auto-pair
+
+# Adjust confidence threshold
+poetry run onsendo strava sync --days 7 --pairing-threshold 0.85
+```
+
+**Standalone batch pairing**:
+
+```bash
+# Pair all unlinked activities (dry-run)
+poetry run onsendo strava pair-activities --dry-run
+
+# Pair activities from last month
+poetry run onsendo strava pair-activities --since 2025-10-01
+
+# Interactive review for medium-confidence matches
+poetry run onsendo strava pair-activities --interactive
+
+# Adjust thresholds
+poetry run onsendo strava pair-activities --auto-threshold 0.85 --review-threshold 0.7
+```
+
+**Activity naming format** (for best results):
+
+```
+Onsendo 9/88 - Ebisuya onsen (湯屋えびす)
+         ↑         ↑                ↑
+      counter  romanized name  Japanese name
+```
+
+**Configuration options**:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--auto-threshold` | 0.8 (80%) | Confidence for auto-linking |
+| `--review-threshold` | 0.6 (60%) | Minimum confidence for review |
+| `--time-window` | 4 hours | Search window (±N hours) |
+| `--interactive` | False | Enable manual review |
+| `--dry-run` | False | Preview without saving |
+
+**Example output**:
+
+```
+Auto-Pairing Activities to Visits
+============================================================
+Attempting to pair 3 onsen monitoring activities...
+
+  ✓ Linked: Activity 'Onsendo 9/88 - Ebisuya onsen (湯屋えびす)'
+            → Visit '湯屋えびす' (confidence: 98.7%)
+  ✓ Linked: Activity 'Onsendo 10/88 - Takegawara onsen (竹瓦温泉)'
+            → Visit '竹瓦温泉' (confidence: 95.3%)
+
+  ⚠ 1 activities need manual review (confidence 60-80%)
+    - 'Onsendo 11/88 - Matsubara onsen (松原)':
+      Best match '松原温泉' (72.1%)
+
+Pairing summary: 2 auto-linked, 1 need review, 0 no match
+```
 
 #### Common Issues
 

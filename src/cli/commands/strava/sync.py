@@ -16,6 +16,7 @@ from src.config import get_database_config
 from src.db.conn import get_db
 from src.db.models import Activity
 from src.lib.activity_manager import ActivityManager
+from src.lib.activity_visit_pairer import PairingConfig, pair_activities_to_visits
 from src.lib.strava_client import StravaClient
 from src.lib.strava_converter import StravaToActivityConverter
 from src.paths import PATHS
@@ -42,6 +43,8 @@ def cmd_strava_sync(args):
         --type TYPE: Only sync specific activity type (Run, Ride, etc.)
         --interactive: Enable post-sync review of auto-detected onsen monitoring activities
         --auto-link: Enable visit linking during interactive review
+        --no-auto-pair: Disable automatic activity-visit pairing (enabled by default)
+        --pairing-threshold: Confidence threshold for auto-pairing (default: 0.8)
         --dry-run: Show what would be synced without importing
         --skip-existing: Skip activities that already exist in database
 
@@ -94,6 +97,8 @@ def cmd_strava_sync(args):
     activity_type = args.type if hasattr(args, "type") and args.type else None
     interactive = args.interactive if hasattr(args, "interactive") else False
     auto_link = args.auto_link if hasattr(args, "auto_link") else False
+    auto_pair = not (args.no_auto_pair if hasattr(args, "no_auto_pair") else False)
+    pairing_threshold = args.pairing_threshold if hasattr(args, "pairing_threshold") and args.pairing_threshold else 0.8
     dry_run = args.dry_run if hasattr(args, "dry_run") else False
     skip_existing = args.skip_existing if hasattr(args, "skip_existing") else False
 
@@ -218,6 +223,66 @@ def cmd_strava_sync(args):
                 logger.exception(f"Failed to store activity {activity_summary.id}")
                 print(f"  ✗ Storage failed: {e}")
                 error_count += 1
+
+        # Auto-pair onsen monitoring activities to visits
+        if auto_pair and onsen_monitoring_count > 0:
+            print("\n" + "=" * 60)
+            print("Auto-Pairing Activities to Visits")
+            print("=" * 60)
+
+            # Get IDs of newly imported onsen monitoring activities
+            onsen_activity_ids = (
+                db.query(Activity.id)
+                .filter(
+                    Activity.id.in_(imported_activity_ids),
+                    Activity.activity_type == ExerciseType.ONSEN_MONITORING.value,
+                    Activity.visit_id.is_(None)  # Only unlinked activities
+                )
+                .all()
+            )
+            onsen_activity_ids = [aid[0] for aid in onsen_activity_ids]
+
+            if onsen_activity_ids:
+                print(f"Attempting to pair {len(onsen_activity_ids)} onsen monitoring activities...")
+
+                # Configure pairing
+                pairing_config = PairingConfig(
+                    auto_link_threshold=pairing_threshold,
+                    review_threshold=0.6,
+                    time_window_hours=4,
+                )
+
+                # Run pairing
+                pairing_results = pair_activities_to_visits(db, onsen_activity_ids, pairing_config)
+
+                # Apply auto-links
+                for activity, visit, confidence in pairing_results.auto_linked:
+                    try:
+                        manager.link_to_visit(activity.id, visit.id)
+                        onsen_name = visit.onsen.name if visit.onsen else "Unknown"
+                        print(f"  ✓ Linked: Activity '{activity.activity_name}' → Visit '{onsen_name}' (confidence: {confidence:.1%})")
+                        link_count += 1
+                    except Exception as e:
+                        logger.exception(f"Failed to link activity {activity.id} to visit {visit.id}")
+                        print(f"  ✗ Link failed: {e}")
+
+                # Show manual review needed
+                if pairing_results.manual_review:
+                    print(f"\n  ⚠ {len(pairing_results.manual_review)} activities need manual review (confidence 60-{int(pairing_threshold*100)}%)")
+                    for activity, candidates in pairing_results.manual_review:
+                        if candidates:
+                            best = candidates[0]
+                            print(f"    - '{activity.activity_name}': Best match '{best.onsen_name}' ({best.combined_score:.1%})")
+
+                # Show no match
+                if pairing_results.no_match:
+                    print(f"\n  ⚠ {len(pairing_results.no_match)} activities could not be paired:")
+                    for activity in pairing_results.no_match:
+                        print(f"    - '{activity.activity_name}'")
+
+                print(f"\nPairing summary: {len(pairing_results.auto_linked)} auto-linked, "
+                      f"{len(pairing_results.manual_review)} need review, "
+                      f"{len(pairing_results.no_match)} no match")
 
         # Post-sync review for onsen monitoring activities
         if onsen_monitoring_count > 0 and interactive:
@@ -347,6 +412,17 @@ def configure_args(parser):
         "--auto-link",
         action="store_true",
         help="Enable visit linking during interactive review",
+    )
+    parser.add_argument(
+        "--no-auto-pair",
+        action="store_true",
+        help="Disable automatic activity-visit pairing (enabled by default)",
+    )
+    parser.add_argument(
+        "--pairing-threshold",
+        type=float,
+        default=0.8,
+        help="Confidence threshold for auto-pairing (default: 0.8 = 80%%)",
     )
     parser.add_argument(
         "--dry-run",
