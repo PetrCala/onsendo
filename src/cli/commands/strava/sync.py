@@ -98,7 +98,7 @@ def cmd_strava_sync(args):
     interactive = args.interactive if hasattr(args, "interactive") else False
     auto_link = args.auto_link if hasattr(args, "auto_link") else False
     auto_pair = not (args.no_auto_pair if hasattr(args, "no_auto_pair") else False)
-    pairing_threshold = args.pairing_threshold if hasattr(args, "pairing_threshold") and args.pairing_threshold else 0.8
+    pairing_threshold = args.pairing_threshold if args.pairing_threshold is not None else 0.8
     dry_run = args.dry_run if hasattr(args, "dry_run") else False
     skip_existing = args.skip_existing if hasattr(args, "skip_existing") else False
 

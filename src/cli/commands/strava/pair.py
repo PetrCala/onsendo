@@ -75,9 +75,9 @@ def cmd_strava_pair_activities(args):
 
     dry_run = args.dry_run if hasattr(args, "dry_run") else False
     interactive = args.interactive if hasattr(args, "interactive") else False
-    auto_threshold = args.auto_threshold if hasattr(args, "auto_threshold") else 0.8
-    review_threshold = args.review_threshold if hasattr(args, "review_threshold") else 0.6
-    time_window = args.time_window if hasattr(args, "time_window") else 4
+    auto_threshold = args.auto_threshold if args.auto_threshold is not None else 0.8
+    review_threshold = args.review_threshold if args.review_threshold is not None else 0.6
+    time_window = args.time_window if args.time_window is not None else 4
 
     # Validate thresholds
     if not 0.0 <= auto_threshold <= 1.0:
