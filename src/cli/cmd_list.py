@@ -283,6 +283,18 @@ CLI_COMMANDS = {
         func=lazy_command("src.cli.commands.onsen.map", "map_onsens"),
         help="Generate interactive map of all onsens in the database.",
         args={
+            "filter": ArgumentConfig(
+                action="append",
+                help="Filter onsens by keyword (can be used multiple times for OR logic). Example: --filter '足湯'",
+            ),
+            "field": ArgumentConfig(
+                action="append",
+                help="Field(s) to search in: name, description, business_form, remarks, address, region, or 'all' (default: name)",
+            ),
+            "list-matches": ArgumentConfig(
+                action="store_true",
+                help="Display table of matching onsens before generating map (only with --filter)",
+            ),
             "no-open-map": ArgumentConfig(
                 action="store_true",
                 help="Do not automatically open map in browser (default: auto-open)",
