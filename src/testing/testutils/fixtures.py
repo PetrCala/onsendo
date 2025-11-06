@@ -23,6 +23,7 @@ from src.testing.mocks.mock_onsen_data import (
     get_mock_onsen_list_html,
 )
 from src.config import ensure_not_prod_in_tests
+from src.db.models import Onsen
 
 
 @pytest.fixture(autouse=True)
@@ -53,6 +54,46 @@ def mock_db():
     with get_mock_db() as db:
         yield db
         db.close()
+
+
+@pytest.fixture
+def db_session():
+    """
+    Fixture to create a database session for integration tests.
+    Alias for mock_db for compatibility with existing tests.
+
+    Usage:
+    ```python
+    def test_something(db_session):
+        # Use db_session to interact with the database
+        assert True
+    ```
+    """
+    with get_mock_db() as db:
+        yield db
+        db.close()
+
+
+@pytest.fixture
+def sample_onsen(db_session):
+    """
+    Fixture to create a sample onsen for integration tests.
+
+    Returns:
+        Onsen: A test onsen with realistic data
+    """
+    onsen = Onsen(
+        id=1,
+        ban_number="001",
+        name="テスト温泉",
+        region="Test Region",
+        latitude=33.279,
+        longitude=131.500,
+    )
+    db_session.add(onsen)
+    db_session.commit()
+    db_session.refresh(onsen)
+    return onsen
 
 
 """
@@ -313,6 +354,8 @@ class Fixtures(CustomStrEnum):
     """Fixtures for the project."""
 
     MOCK_DB = "mock_db"
+    DB_SESSION = "db_session"
+    SAMPLE_ONSEN = "sample_onsen"
     MOCK_SELENIUM_DRIVER = "mock_selenium_driver"
     MOCK_WEBDRIVER_WAIT = "mock_webdriver_wait"
     TEMP_OUTPUT_DIR = "temp_output_dir"

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, event
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -199,12 +199,12 @@ class Activity(Base):
     Unified activity model for all Strava-sourced activities.
 
     Replaces the separate heart_rate_data and exercise_sessions tables with a
-    single unified model. All activities are imported from Strava. Activities with
-    activity_type='onsen_monitoring' represent onsen heart rate monitoring sessions.
+    single unified model. Activities can be imported from Strava or created manually.
+    Activities with activity_type='onsen_monitoring' represent onsen heart rate monitoring sessions.
 
     Columns:
     - id: primary key
-    - strava_id: Strava activity ID (unique, source of truth)
+    - strava_id: Strava activity ID (unique, optional - only for Strava-sourced activities)
     - visit_id: optional foreign key to onsen visit (only for onsen monitoring activities)
     - recording_start: when the activity started (renamed from start_time for clarity)
     - recording_end: when the activity ended (renamed from end_time for clarity)
@@ -229,8 +229,8 @@ class Activity(Base):
         * speed_mps: Speed in meters per second (optional)
       Format: JSON string of list[dict], e.g.:
         '[{"timestamp":"2025-10-30T10:00:00","lat":33.279,"lon":131.500,"elevation":50,"hr":120,"speed_mps":3.5},...]'
-    - strava_data_hash: SHA-256 hash of Strava data for sync detection
-    - last_synced_at: timestamp of last sync from Strava
+    - strava_data_hash: SHA-256 hash of Strava data for sync detection (optional)
+    - last_synced_at: timestamp of last sync from Strava (optional)
     - notes: optional notes about the activity
     - created_at: when this record was created in the database
     """
@@ -238,11 +238,11 @@ class Activity(Base):
     __tablename__ = "activities"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    strava_id = Column(String, unique=True, nullable=False, index=True)
+    strava_id = Column(String, unique=True, nullable=True, index=True)
     visit_id = Column(Integer, ForeignKey("onsen_visits.id"), nullable=True)
     recording_start = Column(DateTime, nullable=False, index=True)
     recording_end = Column(DateTime, nullable=False)
-    duration_minutes = Column(Integer, nullable=False)
+    duration_minutes = Column(Integer, nullable=True)
     activity_type = Column(String, nullable=False, index=True)
     activity_name = Column(String)
     workout_type = Column(String)
@@ -255,13 +255,26 @@ class Activity(Base):
     indoor_outdoor = Column(String)
     weather_conditions = Column(String)
     route_data = Column(String)  # JSON string
-    strava_data_hash = Column(String, nullable=False)
+    strava_data_hash = Column(String, nullable=True)
     last_synced_at = Column(DateTime, default=datetime.utcnow)
     notes = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
     visit = relationship("OnsenVisit", foreign_keys=[visit_id])
+
+
+# Event listener to auto-calculate duration_minutes if not provided
+@event.listens_for(Activity, "before_insert")
+@event.listens_for(Activity, "before_update")
+def calculate_duration_minutes(mapper, connection, target):
+    """
+    Automatically calculate duration_minutes from recording_start and recording_end
+    if duration_minutes is not provided.
+    """
+    if target.duration_minutes is None and target.recording_start and target.recording_end:
+        delta = target.recording_end - target.recording_start
+        target.duration_minutes = int(delta.total_seconds() / 60)
 
 
 class WeightMeasurement(Base):
