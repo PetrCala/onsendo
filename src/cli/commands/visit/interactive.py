@@ -7,10 +7,12 @@ import argparse
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any, Optional
+from loguru import logger
 from src.db.conn import get_db
 from src.db.models import Onsen, OnsenVisit
 from src.config import get_database_config
 from src.lib.cli_display import show_database_banner
+from src.lib.weather_service import get_weather_service
 
 
 class InteractiveSession:
@@ -316,9 +318,9 @@ def get_visit_steps(skip_onsen_selection: bool = False) -> list[dict]:
         },
         {
             "name": "temperature_outside_celsius",
-            "prompt": "Temperature outside (°C): ",
-            "validator": lambda x: not x or validate_float(x),
-            "processor": lambda x: float(x) if x else None,
+            "prompt": "Temperature outside (°C) [or 'fetch' to auto-retrieve]: ",
+            "validator": lambda x: not x or x.lower() == "fetch" or validate_float(x),
+            "processor": lambda x: float(x) if (x and x.lower() != "fetch") else None,
             "step_title": "Basic visit information",
         },
         {
@@ -669,6 +671,102 @@ def get_visit_steps(skip_onsen_selection: bool = False) -> list[dict]:
     return steps
 
 
+def handle_temperature_fetch(session: InteractiveSession, db) -> Optional[float]:  # pylint: disable=too-complex
+    """
+    Handle automatic temperature fetching via weather API.
+
+    This function has multiple conditional branches to handle various error cases
+    (missing API key, missing coordinates, API failures, etc.) and user interaction flows.
+    The complexity is unavoidable for proper error handling and user experience.
+
+    Args:
+        session (InteractiveSession): InteractiveSession containing visit data.
+        db: Database session for querying onsen data.
+
+    Returns:
+        Optional[float]: Temperature in Celsius if successful, None otherwise.
+    """
+    # Check if weather service is configured
+    weather_service = get_weather_service()
+    if not weather_service.is_configured():
+        print(
+            "⚠️  Weather API not configured. "
+            "Set WEATHERAPI_API_KEY in .env to use auto-fetch."
+        )
+        return None
+
+    # Get onsen_id from session
+    onsen_id = session.visit_data.get("onsen_id")
+    if not onsen_id:
+        print("⚠️  Onsen not selected yet. Please enter temperature manually.")
+        return None
+
+    # Query onsen for coordinates
+    onsen = db.query(Onsen).filter(Onsen.id == onsen_id).first()
+    if not onsen:
+        print(f"⚠️  Onsen with ID {onsen_id} not found. Please enter temperature manually.")
+        return None
+
+    if not onsen.latitude or not onsen.longitude:
+        print(
+            f"⚠️  Onsen '{onsen.name}' has no coordinates. "
+            "Please enter temperature manually."
+        )
+        return None
+
+    # Get visit date and time from session
+    visit_date = session.visit_data.get("visit_date")
+    visit_time_str = session.visit_data.get("visit_time_str")
+
+    if not visit_date:
+        print("⚠️  Visit date not entered yet. Please enter temperature manually.")
+        return None
+
+    # Construct datetime
+    if not visit_time_str:
+        # No time specified, use current time
+        now = datetime.now()
+        visit_datetime = visit_date.replace(
+            hour=now.hour, minute=now.minute, second=0, microsecond=0
+        )
+    else:
+        # Parse time and combine with date
+        time_obj = datetime.strptime(visit_time_str, "%H:%M")
+        visit_datetime = visit_date.replace(
+            hour=time_obj.hour, minute=time_obj.minute, second=0, microsecond=0
+        )
+
+    # Fetch temperature
+    print(
+        f"\n🌡️  Fetching temperature for {onsen.name} "
+        f"at {visit_datetime.strftime('%Y-%m-%d %H:%M')} JST..."
+    )
+
+    try:
+        temperature = weather_service.fetch_temperature(
+            lat=onsen.latitude,
+            lon=onsen.longitude,
+            dt=visit_datetime,
+            max_retries=1
+        )
+
+        if temperature is not None:
+            print(f"✅ Fetched temperature: {temperature}°C")
+            return temperature
+        else:
+            print("❌ Could not fetch temperature. Please enter manually.")
+            return None
+
+    except ValueError as e:
+        logger.error(f"Temperature fetch error: {e}")
+        print(f"❌ Error: {e}")
+        return None
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Unexpected error during temperature fetch: {e}")
+        print(f"❌ Unexpected error: {e}. Please enter manually.")
+        return None
+
+
 def execute_workflow(session: InteractiveSession, steps: list[dict], db=None) -> InteractiveSession:
     """
     Execute the step-by-step workflow for collecting visit data.
@@ -752,6 +850,43 @@ def execute_workflow(session: InteractiveSession, steps: list[dict], db=None) ->
                     print(f"Found onsen: {onsen.name}")
                 except ValueError:
                     print("Invalid onsen ID")
+                    continue
+
+            # Special handling for temperature fetch
+            if step["name"] == "temperature_outside_celsius" and user_input.lower() == "fetch" and db:
+                fetched_temp = handle_temperature_fetch(session, db)
+                if fetched_temp is not None:
+                    # Ask for confirmation
+                    confirmation_prompt = (
+                        f"Accept {fetched_temp}°C? "
+                        "(y/yes to accept, n/no to enter manually, or enter a different value): "
+                    )
+                    confirmation = input(confirmation_prompt).strip()  # pylint: disable=bad-builtin
+
+                    if confirmation.lower() in ["y", "yes", ""]:
+                        # Accept the fetched temperature
+                        session.visit_data[step["name"]] = fetched_temp
+                        session.add_to_history(step["name"], fetched_temp, step["prompt"])
+                        current_step_index += 1
+                        break
+                    elif confirmation.lower() in ["n", "no"]:
+                        # User wants to enter manually, prompt again
+                        print("Please enter temperature manually:")
+                        continue
+                    else:
+                        # User entered a different value
+                        try:
+                            manual_temp = float(confirmation)
+                            session.visit_data[step["name"]] = manual_temp
+                            session.add_to_history(step["name"], manual_temp, step["prompt"])
+                            current_step_index += 1
+                            break
+                        except ValueError:
+                            print("Invalid temperature value. Please try again.")
+                            continue
+                else:
+                    # Fetch failed, prompt for manual entry
+                    print("Please enter temperature manually:")
                     continue
 
             # Validate input (allow empty input for all fields)

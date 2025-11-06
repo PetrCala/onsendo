@@ -524,6 +524,29 @@ poetry run onsendo visit modify
 poetry run onsendo visit delete
 ```
 
+**Automatic Temperature Fetching:**
+
+During the interactive `visit add` workflow, when prompted for "Temperature outside (°C)", you can type `fetch` to automatically retrieve the historical temperature data from WeatherAPI.com. The system will:
+
+1. Use the onsen's coordinates and your entered visit date/time
+2. Fetch the temperature in Celsius from WeatherAPI.com
+3. Display the fetched temperature and ask for confirmation
+4. Allow you to accept, reject, or enter a different value
+
+**Setup Requirements:**
+
+- Sign up for a free API key at [https://www.weatherapi.com/signup.aspx](https://www.weatherapi.com/signup.aspx)
+- Add `WEATHERAPI_API_KEY=your_key_here` to your `.env` file (see [.env.example](.env.example) for full setup instructions)
+- Free tier provides 1M API calls/month (more than sufficient for personal use)
+
+**Behavior:**
+
+- If API key is not configured, you'll see a warning and can enter temperature manually
+- If the onsen has no coordinates, automatic fetching is not available
+- All times are assumed to be in Japan Standard Time (JST/UTC+9)
+- The system retries once on network failures, then falls back to manual entry
+- This feature is completely optional - you can always enter temperature manually
+
 ### Analysis & Visualization
 
 ```bash
