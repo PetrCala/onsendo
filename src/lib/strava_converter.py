@@ -82,6 +82,39 @@ class StravaActivityTypeMapper:
 class StravaToActivityConverter:
     """Converts Strava activities to ActivityData objects for the unified activity system."""
 
+    # Timezone fix for specific onsen monitoring activities
+    # These activities were recorded in European timezone (UTC+1) instead of JST (UTC+9)
+    # Requires +8 hour correction to align with JST
+    TIMEZONE_FIX_STRAVA_IDS = {
+        16260033512,  # Onsendo 1/88 - Yamada onsen
+        16267464501,  # Onsendo 2/88 - Suehiro onsen
+        16267965840,  # Onsendo 3/88 - Teruyu onsen
+        16276842757,  # Onsendo 4/88 - Yamato onsen
+        16278276762,  # Onsendo 5/88 - Takegawara onsen
+        16291745250,  # Onsendo 6/88 - Yahata onsen
+        16291744853,  # Onsendo 7/88 - Higashihasuda onsen
+        16298077670,  # Onsendo 8/88 - Matsubara onsen
+        16298797489,  # Onsendo 9/88 - Ebisuya onsen
+        16308540420,  # Onsendo 10/88 - Tenman onsen
+        16309449316,  # Onsendo 11/88 - Kasuga onsen
+        16338045104,  # Onsendo 12/88 - Kinei onsen
+        16339447496,  # Onsendo 13/88 - Sunline Beppu
+    }
+    TIMEZONE_FIX_OFFSET = timedelta(hours=8)
+
+    @classmethod
+    def _needs_timezone_fix(cls, strava_id: int) -> bool:
+        """
+        Check if activity requires timezone correction.
+
+        Args:
+            strava_id: Strava activity ID
+
+        Returns:
+            True if activity needs +8 hour timezone correction
+        """
+        return strava_id in cls.TIMEZONE_FIX_STRAVA_IDS
+
     @classmethod
     def convert(
         cls,
@@ -108,6 +141,16 @@ class StravaToActivityConverter:
             >>> activity_data = StravaToActivityConverter.convert(activity, streams)
             >>> manager.store_activity(activity_data)
         """
+        # Check if this activity needs timezone correction
+        needs_tz_fix = cls._needs_timezone_fix(activity.id)
+        tz_offset = cls.TIMEZONE_FIX_OFFSET if needs_tz_fix else timedelta(0)
+
+        if needs_tz_fix:
+            logger.info(
+                f"Applying timezone fix (+8 hours) to activity {activity.id} "
+                f"({activity.name})"
+            )
+
         # Map activity type (initial mapping from Strava type)
         exercise_type = StravaActivityTypeMapper.map_type(activity.activity_type)
 
@@ -124,7 +167,7 @@ class StravaToActivityConverter:
         route_data = None
         route_data_json = None
         if streams:
-            route_data = cls._build_route_data(streams, activity.start_date)
+            route_data = cls._build_route_data(streams, activity.start_date, tz_offset)
             # Convert to JSON string for analysis
             if route_data:
                 route_data_json = json.dumps(route_data)
@@ -170,9 +213,10 @@ class StravaToActivityConverter:
 
         return ActivityData(
             strava_id=str(activity.id),
-            start_time=activity.start_date_local,
+            start_time=activity.start_date_local + tz_offset,
             end_time=activity.start_date_local
-            + timedelta(seconds=activity.elapsed_time_s),
+            + timedelta(seconds=activity.elapsed_time_s)
+            + tz_offset,
             activity_type=exercise_type.value,
             activity_name=activity.name,
             workout_type=activity.sport_type,
@@ -193,7 +237,10 @@ class StravaToActivityConverter:
 
     @classmethod
     def _build_route_data(
-        cls, streams: dict[str, StravaStream], start_time: datetime
+        cls,
+        streams: dict[str, StravaStream],
+        start_time: datetime,
+        tz_offset: timedelta = timedelta(0),
     ) -> list[dict]:
         """
         Build route data from Strava streams.
@@ -201,6 +248,7 @@ class StravaToActivityConverter:
         Args:
             streams: Dictionary of stream data
             start_time: Activity start time
+            tz_offset: Optional timezone offset to apply to all timestamps
 
         Returns:
             List of route point dictionaries
@@ -212,7 +260,7 @@ class StravaToActivityConverter:
 
         route_points = []
         for i, timestamp_offset in enumerate(time_stream.data):
-            point_time = start_time + timedelta(seconds=timestamp_offset)
+            point_time = start_time + timedelta(seconds=timestamp_offset) + tz_offset
             point_data = {"timestamp": point_time.isoformat()}
 
             # Add GPS coordinates if available

@@ -427,3 +427,157 @@ def test_activity_converter_route_data_json_serialization() -> None:
     assert parsed[0]["hr"] == 120
     assert parsed[1]["hr"] == 125
     assert parsed[2]["hr"] == 130
+
+
+# ============================================================================
+# StravaToActivityConverter Tests - Timezone Fix
+# ============================================================================
+
+
+def test_needs_timezone_fix_for_affected_activities() -> None:
+    """Test that timezone fix is correctly identified for affected activities."""
+    # Test affected activity IDs
+    affected_ids = [
+        16260033512,  # Onsendo 1/88
+        16267464501,  # Onsendo 2/88
+        16339447496,  # Onsendo 13/88
+    ]
+
+    for activity_id in affected_ids:
+        assert (
+            StravaToActivityConverter._needs_timezone_fix(activity_id) is True
+        ), f"Activity {activity_id} should need timezone fix"
+
+
+def test_needs_timezone_fix_for_unaffected_activities() -> None:
+    """Test that timezone fix is not applied to regular activities."""
+    # Test unaffected activity IDs
+    unaffected_ids = [
+        12345678,  # Random activity
+        16340000000,  # Activity 14/88 (not in fix list)
+        99999999,  # Another random activity
+    ]
+
+    for activity_id in unaffected_ids:
+        assert (
+            StravaToActivityConverter._needs_timezone_fix(activity_id) is False
+        ), f"Activity {activity_id} should not need timezone fix"
+
+
+def test_timezone_fix_applies_to_activity_timestamps() -> None:
+    """Test that timezone fix correctly shifts activity start/end times by +8 hours."""
+    # Create activity with affected ID
+    activity_detail = _create_mock_activity(
+        activity_id=16260033512,  # Onsendo 1/88
+        name="Onsendo 1/88 - Yamada onsen",
+        activity_type="Workout",
+    )
+    # Original local time: 2025-10-30 19:00:00 JST
+    # After +8h fix: 2025-10-31 03:00:00 JST
+
+    streams = {
+        "time": _stream("time", [0, 300, 600]),  # 0s, 5min, 10min
+        "heartrate": _stream("heartrate", [85, 90, 88]),
+    }
+
+    activity_data = StravaToActivityConverter.convert(activity_detail, streams)
+
+    # Check start_time is shifted by +8 hours
+    expected_start = datetime(2025, 10, 31, 3, 0, 0)  # 19:00 + 8h = 03:00 next day
+    assert activity_data.start_time == expected_start
+
+    # Check end_time is also shifted by +8 hours
+    expected_end = datetime(2025, 10, 31, 3, 30, 0)  # 19:30 + 8h = 03:30 next day
+    assert activity_data.end_time == expected_end
+
+
+def test_timezone_fix_applies_to_route_data_timestamps() -> None:
+    """Test that timezone fix correctly shifts all route_data timestamps by +8 hours."""
+    # Create activity with affected ID
+    activity_detail = _create_mock_activity(
+        activity_id=16298077670,  # Onsendo 8/88
+        name="Onsendo 8/88 - Matsubara onsen",
+        activity_type="Workout",
+    )
+
+    streams = {
+        "time": _stream("time", [0, 60, 120, 180]),  # 0s, 1min, 2min, 3min
+        "heartrate": _stream("heartrate", [82, 88, 90, 87]),
+    }
+
+    activity_data = StravaToActivityConverter.convert(activity_detail, streams)
+
+    assert activity_data.route_data is not None
+    assert len(activity_data.route_data) == 4
+
+    # Check that all timestamps are shifted by +8 hours
+    # Original: 2025-10-30T10:00:00 UTC
+    # +8h = 2025-10-30T18:00:00 UTC
+    assert activity_data.route_data[0]["timestamp"].startswith("2025-10-30T18:00:00")
+    assert activity_data.route_data[1]["timestamp"].startswith("2025-10-30T18:01:00")
+    assert activity_data.route_data[2]["timestamp"].startswith("2025-10-30T18:02:00")
+    assert activity_data.route_data[3]["timestamp"].startswith("2025-10-30T18:03:00")
+
+
+def test_timezone_fix_does_not_affect_normal_activities() -> None:
+    """Test that regular activities are not affected by timezone fix."""
+    # Create activity with normal (unaffected) ID
+    activity_detail = _create_mock_activity(
+        activity_id=99999999,  # Regular activity
+        name="Morning Run",
+        activity_type="Run",
+    )
+
+    streams = {
+        "time": _stream("time", [0, 60, 120]),
+        "heartrate": _stream("heartrate", [120, 130, 125]),
+    }
+
+    activity_data = StravaToActivityConverter.convert(activity_detail, streams)
+
+    # Check that timestamps are NOT shifted (should use original start_date)
+    # Original: 2025-10-30T10:00:00 UTC (no shift applied)
+    assert activity_data.route_data[0]["timestamp"].startswith("2025-10-30T10:00:00")
+    assert activity_data.route_data[1]["timestamp"].startswith("2025-10-30T10:01:00")
+    assert activity_data.route_data[2]["timestamp"].startswith("2025-10-30T10:02:00")
+
+    # Check start/end times are not shifted
+    expected_start = datetime(2025, 10, 30, 19, 0, 0)  # Original local time
+    assert activity_data.start_time == expected_start
+
+
+def test_timezone_fix_with_gps_data() -> None:
+    """Test timezone fix works correctly with GPS data included."""
+    activity_detail = _create_mock_activity(
+        activity_id=16309449316,  # Onsendo 11/88
+        name="Onsendo 11/88 - Kasuga onsen",
+        activity_type="Workout",
+    )
+
+    streams = {
+        "time": _stream("time", [0, 30, 60]),
+        "heartrate": _stream("heartrate", [80, 85, 83]),
+        "latlng": _stream(
+            "latlng",
+            [[33.279, 131.500], [33.279, 131.500], [33.279, 131.500]],
+        ),
+        "altitude": _stream("altitude", [10.0, 10.0, 10.0]),
+    }
+
+    activity_data = StravaToActivityConverter.convert(activity_detail, streams)
+
+    assert activity_data.route_data is not None
+    assert len(activity_data.route_data) == 3
+
+    # Verify all route data fields are present
+    for point in activity_data.route_data:
+        assert "timestamp" in point
+        assert "hr" in point
+        assert "lat" in point
+        assert "lon" in point
+        assert "elevation" in point
+
+    # Verify timestamps are shifted by +8 hours
+    assert activity_data.route_data[0]["timestamp"].startswith("2025-10-30T18:00:00")
+    assert activity_data.route_data[1]["timestamp"].startswith("2025-10-30T18:00:30")
+    assert activity_data.route_data[2]["timestamp"].startswith("2025-10-30T18:01:00")
