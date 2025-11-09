@@ -2,7 +2,7 @@
 .PHONY: hr-import hr-batch hr-status hr-maintenance
 .PHONY: backup backup-cloud backup-full backup-cleanup backup-restore backup-list backup-verify
 .PHONY: db-init db-fill db-path use-prod use-dev show-env
-.PHONY: run-cli
+.PHONY: run-cli map
 .PHONY: strava-auth strava-status strava-browse strava-interactive strava-download strava-sync strava-link
 
 # Color output
@@ -343,6 +343,10 @@ location-add: ## Add a new location (Usage: make location-add [ENV=dev|prod])
 location-list: ## List all locations (Usage: make location-list [ENV=dev|prod])
 	@echo "$(BLUE)[INFO]$(NC) Listing locations from $(ENV) database..."
 	poetry run onsendo --env $(ENV) location list
+
+map: ## Generate interactive onsen map (Usage: make map [ARGS="--no-show-locations"] [ENV=dev|prod])
+	@echo "$(BLUE)[INFO]$(NC) Generating onsen map from $(ENV) database..."
+	poetry run onsendo --env $(ENV) onsen map $(ARGS)
 
 ##@ Strava Integration
 
