@@ -30,6 +30,7 @@ def get_command_group_config() -> dict[str, str]:
         "analysis": "Analysis and modeling commands",
         "rules": "Rules management commands",
         "strava": "Strava integration commands",
+        "weight": "Weight management commands",
     }
 
 
@@ -44,6 +45,7 @@ def get_command_group_mapping() -> dict[str, str]:
         "analysis-": "analysis",
         "rules-": "rules",
         "strava-": "strava",
+        "weight-": "weight",
     }
 
 
