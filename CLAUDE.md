@@ -669,6 +669,47 @@ from datetime import datetime  # Standard library must come first
 - Add module-level pylint disable: `# pylint: disable=bad-builtin` at top of CLI command files
 - Inline disable is also acceptable: `user_input = input("Prompt: ")  # pylint: disable=bad-builtin`
 
+### CLI Command Argument Patterns
+
+**Commands that operate on specific records (delete, modify, show) MUST support interactive selection:**
+
+1. **ID arguments**: Always optional named arguments, never positional or required
+2. **Interactive fallback**: When no ID provided, show list and prompt for selection
+3. **Configuration**:
+   - Set `required=False` in `ArgumentConfig`
+   - Do NOT use `positional=True`
+   - Help text should indicate interactive mode: `"ID to delete (if not provided, interactive selection)"`
+
+**Example** (`cmd_list.py`):
+```python
+"weight-delete": CommandConfig(
+    args={
+        "id": ArgumentConfig(
+            type=int,
+            required=False,  # NOT required
+            # positional=True NOT set
+            help="Measurement ID to delete (if not provided, interactive selection)",
+        ),
+    },
+),
+```
+
+**Implementation pattern**:
+```python
+def delete_command(args: argparse.Namespace) -> int:
+    measurement_id = getattr(args, "id", None)
+
+    if measurement_id is None:
+        # Show list, prompt for ID
+        measurements = manager.get_all()
+        # ... display table with tabulate ...
+        measurement_id = int(input("Enter ID to delete: "))
+
+    # Proceed with ID
+```
+
+**See**: `visit/delete.py`, `visit/modify.py`, `weight/delete.py` for reference implementations.
+
 ### Complexity Management
 
 - Keep function complexity under McCabe rating of 10
@@ -779,9 +820,10 @@ Closes #123
 
 1. Define command in appropriate `src/cli/commands/{group}/` file
 2. Register in `src/cli/cmd_list.py` with proper group prefix
-3. Add business logic to `src/lib/` or relevant module
-4. Add tests in `tests/unit/` or `tests/integration/`
-5. **Update README.md** - Add command to appropriate section (see Documentation Maintenance Guidelines below)
+3. **For delete/modify/show commands**: Follow [CLI Command Argument Patterns](#cli-command-argument-patterns) - make ID arguments optional with interactive fallback
+4. Add business logic to `src/lib/` or relevant module
+5. Add tests in `tests/unit/` or `tests/integration/`
+6. **Update README.md** - Add command to appropriate section (see Documentation Maintenance Guidelines below)
 
 ### Adding a Database Column
 
