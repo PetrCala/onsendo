@@ -817,8 +817,7 @@ CLI_COMMANDS = {
             "id": ArgumentConfig(
                 type=int,
                 required=False,
-                help="Measurement ID to delete",
-                positional=True,
+                help="Measurement ID to delete (if not provided, interactive selection)",
             ),
         },
     ),

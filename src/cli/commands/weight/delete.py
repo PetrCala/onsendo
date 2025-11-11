@@ -28,9 +28,9 @@ def delete_weight_measurement(args: argparse.Namespace) -> int:
             manager = WeightDataManager(db)
 
             # Get measurement ID
-            if hasattr(args, "id") and args.id:
-                measurement_id = args.id
-            else:
+            measurement_id = getattr(args, "id", None)
+
+            if measurement_id is None:
                 # Interactive selection
                 measurements = manager.get_all()
 
