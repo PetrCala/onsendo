@@ -99,13 +99,18 @@ def import_weight_data(args: argparse.Namespace) -> int:
             manager = WeightDataManager(db)
             records = manager.store_measurements_bulk(measurements)
 
+            # Access attributes while session is still open
+            first_id = records[0].id
+            last_id = records[-1].id
+            file_hash = records[0].data_hash
+
         print(
             f"✅ Successfully stored {len(records)} measurement(s) "
-            f"(IDs: {records[0].id}-{records[-1].id})"
+            f"(IDs: {first_id}-{last_id})"
         )
 
-        if records[0].data_hash:
-            print(f"🔗 File hash: {records[0].data_hash[:16]}...")
+        if file_hash:
+            print(f"🔗 File hash: {file_hash[:16]}...")
 
         return 0
 
