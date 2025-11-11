@@ -193,7 +193,7 @@ class WeightDataImporter:
         """
         Import from CSV format.
 
-        Expected columns: timestamp, weight_kg, [conditions], [time_of_day], [notes]
+        Expected columns: timestamp, weight_kg, [conditions], [hydrated_before], [notes]
         """
         measurements = []
 
@@ -219,7 +219,10 @@ class WeightDataImporter:
 
                 # Optional fields
                 conditions = row.get("conditions") or row.get("measurement_conditions")
-                time_of_day = row.get("time_of_day")
+                hydrated_str = row.get("hydrated_before")
+                hydrated_before = None
+                if hydrated_str:
+                    hydrated_before = hydrated_str.lower() in ["true", "1", "yes"]
                 notes = row.get("notes")
 
                 measurement = WeightMeasurement(
@@ -227,7 +230,7 @@ class WeightDataImporter:
                     weight_kg=weight_kg,
                     data_source="csv",
                     measurement_conditions=conditions,
-                    time_of_day=time_of_day,
+                    hydrated_before=hydrated_before,
                     source_file=file_path,
                     notes=notes,
                 )
@@ -251,7 +254,7 @@ class WeightDataImporter:
             "timestamp": "2025-11-01T07:30:00",
             "weight_kg": 72.5,
             "conditions": "fasted",
-            "time_of_day": "morning",
+            "hydrated_before": true,
             "notes": "After workout"
           },
           ...
@@ -285,7 +288,7 @@ class WeightDataImporter:
 
             # Optional fields
             conditions = item.get("conditions") or item.get("measurement_conditions")
-            time_of_day = item.get("time_of_day")
+            hydrated_before = item.get("hydrated_before")
             notes = item.get("notes")
 
             measurement = WeightMeasurement(
@@ -293,7 +296,7 @@ class WeightDataImporter:
                 weight_kg=weight_kg,
                 data_source="json",
                 measurement_conditions=conditions,
-                time_of_day=time_of_day,
+                hydrated_before=hydrated_before,
                 source_file=file_path,
                 notes=notes,
             )
@@ -471,7 +474,7 @@ class WeightDataManager:
                 measurement_time=measurement.measurement_time,
                 weight_kg=measurement.weight_kg,
                 measurement_conditions=measurement.measurement_conditions,
-                time_of_day=measurement.time_of_day,
+                hydrated_before=measurement.hydrated_before,
                 data_source=measurement.data_source,
                 data_file_path=measurement.source_file,
                 data_hash=file_hash,

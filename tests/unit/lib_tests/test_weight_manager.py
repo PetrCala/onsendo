@@ -28,7 +28,7 @@ class TestWeightMeasurement:
             weight_kg=72.5,
             data_source="manual",
             measurement_conditions="fasted",
-            time_of_day="morning",
+            hydrated_before=True,
             notes="After workout",
         )
 
@@ -36,7 +36,7 @@ class TestWeightMeasurement:
         assert measurement.weight_kg == 72.5
         assert measurement.data_source == "manual"
         assert measurement.measurement_conditions == "fasted"
-        assert measurement.time_of_day == "morning"
+        assert measurement.hydrated_before is True
         assert measurement.notes == "After workout"
 
     def test_weight_measurement_required_only(self):
@@ -49,7 +49,7 @@ class TestWeightMeasurement:
 
         assert measurement.weight_kg == 70.0
         assert measurement.measurement_conditions is None
-        assert measurement.time_of_day is None
+        assert measurement.hydrated_before is None
         assert measurement.notes is None
 
     def test_weight_measurement_invalid_weight(self):
@@ -150,31 +150,6 @@ class TestWeightDataValidator:
         assert not is_valid
         assert any("invalid measurement conditions" in error.lower() for error in errors)
 
-    def test_valid_time_of_day(self):
-        """Test validation accepts valid time of day values."""
-        for time_of_day in ["morning", "afternoon", "evening", "night"]:
-            measurement = WeightMeasurement(
-                measurement_time=datetime(2025, 10, 15, 7, 30, 0),
-                weight_kg=72.5,
-                data_source="manual",
-                time_of_day=time_of_day,
-            )
-
-            is_valid, errors = WeightDataValidator.validate_measurement(measurement)
-            assert is_valid, f"Time of day '{time_of_day}' should be valid"
-
-    def test_invalid_time_of_day(self):
-        """Test validation rejects invalid time of day."""
-        measurement = WeightMeasurement(
-            measurement_time=datetime(2025, 10, 15, 7, 30, 0),
-            weight_kg=72.5,
-            data_source="manual",
-            time_of_day="invalid_time",
-        )
-
-        is_valid, errors = WeightDataValidator.validate_measurement(measurement)
-        assert not is_valid
-        assert any("invalid time of day" in error.lower() for error in errors)
 
 
 class TestWeightDataImporter:
@@ -207,9 +182,9 @@ class TestWeightDataImporter:
             # Create test CSV
             with open(csv_file, "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                writer.writerow(["timestamp", "weight_kg", "conditions", "time_of_day", "notes"])
-                writer.writerow(["2025-11-01 07:30:00", "72.5", "fasted", "morning", "Test 1"])
-                writer.writerow(["2025-11-02 07:30:00", "73.0", "after_meal", "morning", "Test 2"])
+                writer.writerow(["timestamp", "weight_kg", "conditions", "hydrated_before", "notes"])
+                writer.writerow(["2025-11-01 07:30:00", "72.5", "fasted", "true", "Test 1"])
+                writer.writerow(["2025-11-02 07:30:00", "73.0", "after_meal", "false", "Test 2"])
 
             # Import
             measurements = WeightDataImporter.import_from_file(str(csv_file))
@@ -231,14 +206,14 @@ class TestWeightDataImporter:
                     "timestamp": "2025-11-01T07:30:00",
                     "weight_kg": 72.5,
                     "conditions": "fasted",
-                    "time_of_day": "morning",
+                    "hydrated_before": True,
                     "notes": "Test 1",
                 },
                 {
                     "timestamp": "2025-11-02T07:30:00",
                     "weight_kg": 73.0,
                     "conditions": "after_meal",
-                    "time_of_day": "morning",
+                    "hydrated_before": False,
                     "notes": "Test 2",
                 },
             ]

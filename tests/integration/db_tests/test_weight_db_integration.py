@@ -21,7 +21,7 @@ class TestWeightDatabaseIntegration:
             weight_kg=72.5,
             data_source="manual",
             measurement_conditions="fasted",
-            time_of_day="morning",
+            hydrated_before=True,
             notes="Test measurement",
         )
 
