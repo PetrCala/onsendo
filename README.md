@@ -117,11 +117,13 @@ poetry run onsendo --env prod system init-db
 **Method 1: Shell Helpers (Recommended - Simple & Persistent)**
 
 Add to your `~/.zshrc` or `~/.bashrc`:
+
 ```bash
 source ~/code/onsendo/scripts/shell_helpers.sh
 ```
 
 Then use simple commands:
+
 ```bash
 use-prod      # Switch to production (all commands use prod)
 use-dev       # Switch back to development
@@ -129,6 +131,7 @@ onsendo-env   # Show current environment
 ```
 
 **Method 2: Per-Command Override**
+
 ```bash
 # CLI commands
 poetry run onsendo --env prod visit list
@@ -138,6 +141,7 @@ make backup ENV=prod
 ```
 
 **Method 3: Environment Variable (Advanced)**
+
 ```bash
 # Set for entire session
 export ONSENDO_ENV=prod
@@ -550,20 +554,21 @@ poetry run onsendo weight import weights.csv --validate-only
 #### Supported Formats
 
 **CSV**:
+
 ```csv
-timestamp,weight_kg,conditions,time_of_day,notes
-2025-11-01 07:30:00,72.5,fasted,morning,After workout
-2025-11-02 07:30:00,72.3,fasted,morning,
+timestamp,weight_kg,conditions,notes
+2025-11-01 07:30:00,72.5,fasted,After workout
+2025-11-02 07:30:00,72.3,fasted, After workout
 ```
 
 **JSON**:
+
 ```json
 [
   {
     "timestamp": "2025-11-01T07:30:00",
     "weight_kg": 72.5,
     "conditions": "fasted",
-    "time_of_day": "morning",
     "notes": "After workout"
   }
 ]
@@ -601,6 +606,7 @@ poetry run onsendo weight stats --all-time
 ```
 
 **Statistics include**:
+
 - Total measurements
 - Average, minimum, maximum weight
 - Weight change (first to last)
@@ -943,7 +949,7 @@ See [.env.example](.env.example) for detailed setup instructions.
 
 | Format | File Extension | Source | Format |
 |--------|---------------|---------|--------|
-| CSV | `.csv` | Generic | `timestamp,weight_kg,conditions,time_of_day,notes` |
+| CSV | `.csv` | Generic | `timestamp,weight_kg,conditions,notes` |
 | JSON | `.json` | Generic | Structured measurement data with metadata |
 | Apple Health | `.xml` | iPhone/Watch | BodyMass records from Health export |
 

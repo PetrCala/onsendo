@@ -133,7 +133,7 @@ weight-add: ## Add weight measurement manually (Usage: make weight-add WEIGHT=72
 		echo "$(BLUE)[INFO]$(NC) Adding weight measurement to $(ENV) database: $(WEIGHT) kg"; \
 		poetry run onsendo --env $(ENV) weight add --weight $(WEIGHT) \
 			$(if $(CONDITIONS),--conditions $(CONDITIONS),) \
-			$(if $(TIME_OF_DAY),--time-of-day $(TIME_OF_DAY),) \
+			$(if $(HYDRATED_BEFORE),--hydrated-before $(HYDRATED_BEFORE),) \
 			$(if $(NOTES),--notes "$(NOTES)",); \
 	fi
 

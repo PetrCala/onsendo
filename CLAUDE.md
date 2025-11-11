@@ -222,7 +222,7 @@ make weight-import FILE=path/to/weight.csv FORMAT=apple_health NOTES="Morning we
 
 # Add measurement manually
 make weight-add WEIGHT=72.5
-make weight-add WEIGHT=72.5 CONDITIONS=fasted TIME_OF_DAY=morning NOTES="After workout"
+make weight-add WEIGHT=72.5 CONDITIONS=fasted NOTES="After workout"
 
 # List measurements
 make weight-list                                    # All measurements
@@ -505,6 +505,7 @@ poetry run onsendo onsen print-summary --ban-number "123"
 ```
 
 **Map Behavior:**
+
 - By default, all maps display user location markers (pink home icons)
 - Recommendation maps also show the reference location in red
 - Use `--no-show-locations` to hide all location markers
@@ -681,6 +682,7 @@ from datetime import datetime  # Standard library must come first
    - Help text should indicate interactive mode: `"ID to delete (if not provided, interactive selection)"`
 
 **Example** (`cmd_list.py`):
+
 ```python
 "weight-delete": CommandConfig(
     args={
@@ -695,6 +697,7 @@ from datetime import datetime  # Standard library must come first
 ```
 
 **Implementation pattern**:
+
 ```python
 def delete_command(args: argparse.Namespace) -> int:
     measurement_id = getattr(args, "id", None)

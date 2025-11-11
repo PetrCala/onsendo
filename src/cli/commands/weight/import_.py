@@ -46,8 +46,9 @@ def import_weight_data(args: argparse.Namespace) -> int:
             print(f"   🕐 Time: {measurement.measurement_time}")
             if measurement.measurement_conditions:
                 print(f"   📝 Conditions: {measurement.measurement_conditions}")
-            if measurement.time_of_day:
-                print(f"   🌅 Time of day: {measurement.time_of_day}")
+            if measurement.hydrated_before is not None:
+                status = "Yes" if measurement.hydrated_before else "No"
+                print(f"   💧 Hydrated before: {status}")
 
         if len(measurements) > 5:
             print(f"\n   ... and {len(measurements) - 5} more measurement(s)")
