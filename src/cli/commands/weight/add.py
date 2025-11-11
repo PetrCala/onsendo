@@ -34,6 +34,15 @@ def add_weight_measurement(args: argparse.Namespace) -> int:
             timestamp = args.time if hasattr(args, "time") and args.time else datetime.now()
             conditions = args.conditions if hasattr(args, "conditions") else None
             time_of_day = args.time_of_day if hasattr(args, "time_of_day") else None
+
+            # Parse hydrated_before flag
+            hydrated_before = None
+            if hasattr(args, "hydrated_before") and args.hydrated_before:
+                if args.hydrated_before.lower() in ["y", "yes", "true"]:
+                    hydrated_before = True
+                elif args.hydrated_before.lower() in ["n", "no", "false"]:
+                    hydrated_before = False
+
             notes = args.notes if hasattr(args, "notes") else None
         else:
             # Interactive mode
@@ -86,6 +95,17 @@ def add_weight_measurement(args: argparse.Namespace) -> int:
             print("   Options: morning, afternoon, evening, night")
             time_of_day = input("   Time of day (press Enter to skip): ").strip() or None
 
+            # Get hydration status (optional)
+            print("\n💧 Hydration before measurement (optional):")
+            print("   Did you drink water before weighing?")
+            hydrated_input = input("   (y/n, press Enter to skip): ").strip().lower()
+            if hydrated_input in ["y", "yes"]:
+                hydrated_before = True
+            elif hydrated_input in ["n", "no"]:
+                hydrated_before = False
+            else:
+                hydrated_before = None
+
             # Get notes (optional)
             notes = input("\n💬 Notes (press Enter to skip): ").strip() or None
 
@@ -96,6 +116,7 @@ def add_weight_measurement(args: argparse.Namespace) -> int:
             data_source="manual",
             measurement_conditions=conditions,
             time_of_day=time_of_day,
+            hydrated_before=hydrated_before,
             notes=notes,
         )
 
@@ -119,6 +140,9 @@ def add_weight_measurement(args: argparse.Namespace) -> int:
             print(f"   📝 Conditions: {measurement.measurement_conditions}")
         if measurement.time_of_day:
             print(f"   🌅 Time of day: {measurement.time_of_day}")
+        if measurement.hydrated_before is not None:
+            hydration_status = "Yes" if measurement.hydrated_before else "No"
+            print(f"   💧 Hydrated before: {hydration_status}")
         if measurement.notes:
             print(f"   💬 Notes: {measurement.notes}")
 

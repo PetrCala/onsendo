@@ -71,6 +71,7 @@ def list_weight_measurements(args: argparse.Namespace) -> int:
                             "weight_kg": m.weight_kg,
                             "measurement_conditions": m.measurement_conditions,
                             "time_of_day": m.time_of_day,
+                            "hydrated_before": m.hydrated_before,
                             "data_source": m.data_source,
                             "notes": m.notes,
                         }
@@ -81,6 +82,14 @@ def list_weight_measurements(args: argparse.Namespace) -> int:
                 # Table output (default)
                 table_data = []
                 for m in measurements:
+                    # Format hydration status
+                    if m.hydrated_before is None:
+                        hydration = "-"
+                    elif m.hydrated_before:
+                        hydration = "Yes"
+                    else:
+                        hydration = "No"
+
                     table_data.append(
                         [
                             m.id,
@@ -88,6 +97,7 @@ def list_weight_measurements(args: argparse.Namespace) -> int:
                             f"{m.weight_kg} kg",
                             m.measurement_conditions or "-",
                             m.time_of_day or "-",
+                            hydration,
                             m.data_source,
                             (m.notes[:30] + "...") if m.notes and len(m.notes) > 30 else (m.notes or "-"),
                         ]
@@ -99,6 +109,7 @@ def list_weight_measurements(args: argparse.Namespace) -> int:
                     "Weight",
                     "Conditions",
                     "Time of Day",
+                    "Hydrated",
                     "Source",
                     "Notes",
                 ]

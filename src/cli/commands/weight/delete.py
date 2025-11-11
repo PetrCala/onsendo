@@ -79,6 +79,9 @@ def delete_weight_measurement(args: argparse.Namespace) -> int:
             print(f"   Time: {measurement.measurement_time}")
             if measurement.measurement_conditions:
                 print(f"   Conditions: {measurement.measurement_conditions}")
+            if measurement.hydrated_before is not None:
+                hydration_status = "Yes" if measurement.hydrated_before else "No"
+                print(f"   Hydrated before: {hydration_status}")
             if measurement.notes:
                 print(f"   Notes: {measurement.notes}")
 

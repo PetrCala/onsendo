@@ -7,7 +7,6 @@ import csv
 import json
 import os
 from datetime import datetime
-from pathlib import Path
 
 from src.lib.weight_manager import WeightDataManager
 from src.db.conn import get_db
@@ -53,9 +52,7 @@ def export_weight_data(args: argparse.Namespace) -> int:
                 # Parse date range
                 date_parts = args.date_range.split(",")
                 if len(date_parts) != 2:
-                    print(
-                        "❌ Invalid date range format. Use: YYYY-MM-DD,YYYY-MM-DD"
-                    )
+                    print("❌ Invalid date range format. Use: YYYY-MM-DD,YYYY-MM-DD")
                     return 1
 
                 start_str, end_str = date_parts
@@ -63,9 +60,7 @@ def export_weight_data(args: argparse.Namespace) -> int:
                 end_date = datetime.strptime(end_str.strip(), "%Y-%m-%d")
 
                 measurements = manager.get_by_date_range(start_date, end_date)
-                print(
-                    f"📊 Exporting measurements from {start_str} to {end_str}"
-                )
+                print(f"📊 Exporting measurements from {start_str} to {end_str}")
             else:
                 measurements = manager.get_all()
                 print("📊 Exporting all measurements")
@@ -75,7 +70,9 @@ def export_weight_data(args: argparse.Namespace) -> int:
             return 0
 
         # Export based on format
-        print(f"💾 Exporting {len(measurements)} measurement(s) to {export_format.upper()}...")
+        print(
+            f"💾 Exporting {len(measurements)} measurement(s) to {export_format.upper()}..."
+        )
 
         if export_format == "json":
             export_json(measurements, output_path)
@@ -119,6 +116,7 @@ def export_csv(measurements, output_path: str) -> None:
         "weight_kg",
         "measurement_conditions",
         "time_of_day",
+        "hydrated_before",
         "data_source",
         "notes",
     ]
@@ -131,10 +129,15 @@ def export_csv(measurements, output_path: str) -> None:
             writer.writerow(
                 {
                     "id": m.id,
-                    "measurement_time": m.measurement_time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "measurement_time": m.measurement_time.strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
                     "weight_kg": m.weight_kg,
                     "measurement_conditions": m.measurement_conditions or "",
                     "time_of_day": m.time_of_day or "",
+                    "hydrated_before": (
+                        m.hydrated_before if m.hydrated_before is not None else ""
+                    ),
                     "data_source": m.data_source,
                     "notes": m.notes or "",
                 }
@@ -158,6 +161,7 @@ def export_json(measurements, output_path: str) -> None:
                 "weight_kg": m.weight_kg,
                 "measurement_conditions": m.measurement_conditions,
                 "time_of_day": m.time_of_day,
+                "hydrated_before": m.hydrated_before,
                 "data_source": m.data_source,
                 "data_file_path": m.data_file_path,
                 "data_hash": m.data_hash,

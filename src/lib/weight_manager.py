@@ -36,6 +36,7 @@ class WeightMeasurement:
     data_source: str  # manual, scale, apple_health, etc.
     measurement_conditions: Optional[str] = None  # fasted, after_meal, post_workout
     time_of_day: Optional[str] = None  # morning, afternoon, evening
+    hydrated_before: Optional[bool] = None  # True if drank water before measurement
     source_file: Optional[str] = None  # Path to original file if imported
     notes: Optional[str] = None
 
@@ -441,6 +442,7 @@ class WeightDataManager:
             weight_kg=measurement.weight_kg,
             measurement_conditions=measurement.measurement_conditions,
             time_of_day=measurement.time_of_day,
+            hydrated_before=measurement.hydrated_before,
             data_source=measurement.data_source,
             data_file_path=measurement.source_file,
             data_hash=file_hash,

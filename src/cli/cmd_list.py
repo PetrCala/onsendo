@@ -782,6 +782,11 @@ CLI_COMMANDS = {
                 required=False,
                 help="Time of day (morning, afternoon, evening, night)",
             ),
+            "hydrated-before": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Hydration status before measurement (yes/no)",
+            ),
             "notes": ArgumentConfig(
                 type=str,
                 required=False,
