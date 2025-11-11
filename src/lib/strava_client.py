@@ -791,6 +791,7 @@ class StravaClient:
             start_date=start_date,
             start_date_local=start_date_local,
             timezone=data.get("timezone", "UTC"),
+            manual=data.get("manual", False),
             distance_m=data.get("distance"),
             moving_time_s=data.get("moving_time", 0),
             elapsed_time_s=data.get("elapsed_time", 0),

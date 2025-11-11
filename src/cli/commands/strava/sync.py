@@ -181,7 +181,13 @@ def cmd_strava_sync(args):
             # Fetch full activity data with streams
             try:
                 activity = client.get_activity(activity_summary.id)
-                streams = client.get_activity_streams(activity_summary.id)
+
+                # Skip stream fetching for manual activities (they don't have streams)
+                if activity.manual:
+                    print(f"  ℹ Manual activity - skipping stream data")
+                    streams = None
+                else:
+                    streams = client.get_activity_streams(activity_summary.id)
             except Exception as e:
                 logger.exception(f"Failed to fetch activity {activity_summary.id}")
                 print(f"  ✗ Fetch failed: {e}")

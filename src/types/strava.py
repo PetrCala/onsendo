@@ -344,6 +344,7 @@ class StravaActivityDetail:
     start_date: datetime
     start_date_local: datetime
     timezone: str
+    manual: bool = False  # Whether activity was manually created (no device data)
 
     # Metrics
     distance_m: Optional[float] = None
