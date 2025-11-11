@@ -290,7 +290,6 @@ class WeightMeasurement(Base):
     - measurement_time: when the weight was measured (with timezone awareness)
     - weight_kg: body weight in kilograms
     - measurement_conditions: conditions at time of measurement (e.g., "fasted", "after_meal", "post_workout")
-    - time_of_day: general time of day (e.g., "morning", "afternoon", "evening")
     - hydrated_before: whether water was consumed before measurement (True if hydrated, False/None if empty stomach)
     - data_source: source of the measurement (manual, scale, apple_health, etc.)
     - data_file_path: path to original data file if imported
@@ -307,7 +306,6 @@ class WeightMeasurement(Base):
     measurement_conditions = Column(
         String
     )  # Optional: fasted, after_meal, post_workout, etc.
-    time_of_day = Column(String)  # Optional: morning, afternoon, evening
     hydrated_before = Column(Boolean)  # Optional: True if drank water before measurement
     data_source = Column(String, nullable=False)  # manual, scale, apple_health, etc.
     data_file_path = Column(String)  # Optional: path if imported from file

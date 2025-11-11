@@ -777,11 +777,6 @@ CLI_COMMANDS = {
                 required=False,
                 help="Measurement conditions (fasted, after_meal, post_workout, etc.)",
             ),
-            "time-of-day": ArgumentConfig(
-                type=str,
-                required=False,
-                help="Time of day (morning, afternoon, evening, night)",
-            ),
             "hydrated-before": ArgumentConfig(
                 type=str,
                 required=False,

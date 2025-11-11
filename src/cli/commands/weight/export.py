@@ -115,7 +115,6 @@ def export_csv(measurements, output_path: str) -> None:
         "measurement_time",
         "weight_kg",
         "measurement_conditions",
-        "time_of_day",
         "hydrated_before",
         "data_source",
         "notes",
@@ -134,7 +133,6 @@ def export_csv(measurements, output_path: str) -> None:
                     ),
                     "weight_kg": m.weight_kg,
                     "measurement_conditions": m.measurement_conditions or "",
-                    "time_of_day": m.time_of_day or "",
                     "hydrated_before": (
                         m.hydrated_before if m.hydrated_before is not None else ""
                     ),
@@ -160,7 +158,6 @@ def export_json(measurements, output_path: str) -> None:
                 "measurement_time": m.measurement_time.isoformat(),
                 "weight_kg": m.weight_kg,
                 "measurement_conditions": m.measurement_conditions,
-                "time_of_day": m.time_of_day,
                 "hydrated_before": m.hydrated_before,
                 "data_source": m.data_source,
                 "data_file_path": m.data_file_path,

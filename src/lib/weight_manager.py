@@ -35,7 +35,6 @@ class WeightMeasurement:
     weight_kg: float
     data_source: str  # manual, scale, apple_health, etc.
     measurement_conditions: Optional[str] = None  # fasted, after_meal, post_workout
-    time_of_day: Optional[str] = None  # morning, afternoon, evening
     hydrated_before: Optional[bool] = None  # True if drank water before measurement
     source_file: Optional[str] = None  # Path to original file if imported
     notes: Optional[str] = None
@@ -77,7 +76,6 @@ class WeightDataValidator:
         "before_workout",
         "normal",
     }
-    VALID_TIME_OF_DAY = {"morning", "afternoon", "evening", "night"}
 
     @classmethod
     def validate_measurement(
@@ -120,15 +118,6 @@ class WeightDataValidator:
                 errors.append(
                     f"Invalid measurement conditions: '{measurement.measurement_conditions}'. "
                     f"Valid options: {', '.join(sorted(cls.VALID_CONDITIONS))}"
-                )
-
-        # Check time of day if provided
-        if measurement.time_of_day:
-            time_lower = measurement.time_of_day.lower()
-            if time_lower not in cls.VALID_TIME_OF_DAY:
-                errors.append(
-                    f"Invalid time of day: '{measurement.time_of_day}'. "
-                    f"Valid options: {', '.join(sorted(cls.VALID_TIME_OF_DAY))}"
                 )
 
         return len(errors) == 0, errors
@@ -441,7 +430,6 @@ class WeightDataManager:
             measurement_time=measurement.measurement_time,
             weight_kg=measurement.weight_kg,
             measurement_conditions=measurement.measurement_conditions,
-            time_of_day=measurement.time_of_day,
             hydrated_before=measurement.hydrated_before,
             data_source=measurement.data_source,
             data_file_path=measurement.source_file,
