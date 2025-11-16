@@ -220,7 +220,7 @@ def recommend_onsen_interactive(args: argparse.Namespace) -> None:
 
         # Get filters
         exclude_closed = (
-            input("Exclude closed onsens? (y/n, default: y): ").strip().lower() != "n"
+            input("Exclude closed onsens? (y/n, default: n): ").strip().lower() == "y"
         )
         exclude_visited = (
             input("Exclude visited onsens? (y/n, default: y): ").strip().lower() != "n"
@@ -249,18 +249,18 @@ def recommend_onsen_interactive(args: argparse.Namespace) -> None:
 
         # Get minimum hours after target time
         min_hours_input = input(
-            "Minimum hours onsen should be open after target time (press Enter for 2, or 0 to disable): "
+            "Minimum hours onsen should be open after target time (press Enter for 0, or enter a number to enable): "
         ).strip()
-        min_hours_after = 2  # default
+        min_hours_after = 0  # default
         if min_hours_input:
             try:
                 min_hours_after = int(min_hours_input)
                 if min_hours_after < 0:
-                    print("Invalid number. Using default of 2 hours.")
-                    min_hours_after = 2
+                    print("Invalid number. Using default of 0 hours.")
+                    min_hours_after = 0
             except ValueError:
-                print("Invalid number. Using default of 2 hours.")
-                min_hours_after = 2
+                print("Invalid number. Using default of 0 hours.")
+                min_hours_after = 0
 
         # Get limit
         limit_input = input(
