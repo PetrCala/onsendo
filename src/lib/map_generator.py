@@ -217,8 +217,8 @@ def generate_recommendation_map(
                     onsen, distance, metadata, location.name, i
                 )
 
-                # Generate the .command script
-                generate_reminder_script(reminder_title, target_time, script_path, body=reminder_body)
+                # Generate the .command script (verbose=False to avoid excessive logging)
+                generate_reminder_script(reminder_title, target_time, script_path, body=reminder_body, verbose=False)
 
                 reminder_scripts[onsen.id] = script_path
             except (OSError, ValueError) as e:

@@ -94,7 +94,11 @@ def create_reminder(
 
 
 def generate_reminder_script(
-    title: str, reminder_datetime: datetime, script_path: str, body: str | None = None
+    title: str,
+    reminder_datetime: datetime,
+    script_path: str,
+    body: str | None = None,
+    verbose: bool = True,
 ) -> None:
     """
     Generate a shell script (.command file) that creates an Apple Reminder.
@@ -107,6 +111,7 @@ def generate_reminder_script(
         reminder_datetime: When the reminder should trigger
         script_path: Absolute path where the script should be saved
         body: Optional reminder body/notes with additional details
+        verbose: Whether to log debug messages (default: True)
 
     Raises:
         RuntimeError: If not running on macOS
@@ -191,7 +196,8 @@ sleep 3
             os.stat(script_path).st_mode | stat.S_IEXEC | stat.S_IXUSR | stat.S_IXGRP,
         )
 
-        logger.debug(f"Generated reminder script at: {script_path}")
+        if verbose:
+            logger.debug(f"Generated reminder script at: {script_path}")
 
     except OSError as e:
         logger.error(f"Failed to create reminder script: {e}")
