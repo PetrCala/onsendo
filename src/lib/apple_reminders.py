@@ -79,7 +79,7 @@ def create_reminder(
             check=True,
         )
 
-        logger.info(f"Successfully created reminder: {title} for {reminder_datetime}")
+        logger.debug(f"Successfully created reminder: {title} for {reminder_datetime}")
         return True
 
     except subprocess.CalledProcessError as e:
@@ -191,7 +191,7 @@ sleep 3
             os.stat(script_path).st_mode | stat.S_IEXEC | stat.S_IXUSR | stat.S_IXGRP,
         )
 
-        logger.info(f"Generated reminder script at: {script_path}")
+        logger.debug(f"Generated reminder script at: {script_path}")
 
     except OSError as e:
         logger.error(f"Failed to create reminder script: {e}")
