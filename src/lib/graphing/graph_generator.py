@@ -150,7 +150,11 @@ class GraphGenerator:
     def _generate_histogram(
         self, graph_def: GraphDefinition, data: pd.DataFrame
     ) -> "go.Figure":
-        """Generate a histogram with proper binning for integer data."""
+        """Generate a histogram with optimal binning.
+
+        Uses Freedman-Diaconis rule for continuous data and integer-centered
+        bins for discrete data.
+        """
         # Remove null values
         clean_data = data[data[graph_def.field].notna()]
 
@@ -207,11 +211,13 @@ class GraphGenerator:
                     color_discrete_sequence=self._px.colors.qualitative.Set2,
                 )
         else:
-            # Continuous data, use nbins normally
+            # Continuous data - calculate optimal bins using Freedman-Diaconis rule
+            optimal_bins = self._calculate_optimal_bins(series)
+
             fig = self._px.histogram(
                 clean_data,
                 x=graph_def.field,
-                nbins=graph_def.bins,
+                nbins=optimal_bins,
                 color=graph_def.color_field,
                 title=graph_def.title,
                 color_discrete_sequence=self._px.colors.qualitative.Set2,
@@ -223,6 +229,57 @@ class GraphGenerator:
 
         fig.update_layout(showlegend=True if graph_def.color_field else False)
         return fig
+
+    def _calculate_optimal_bins(self, series: pd.Series) -> int:
+        """Calculate optimal number of bins using Freedman-Diaconis rule.
+
+        The Freedman-Diaconis rule is robust to outliers and works well for
+        various data distributions.
+
+        Formula:
+            bin_width = 2 * IQR / n^(1/3)
+            num_bins = (max - min) / bin_width
+
+        Args:
+            series: Data series to calculate bins for
+
+        Returns:
+            Optimal number of bins (between 5 and 50)
+        """
+        import numpy as np
+
+        n = len(series)
+        if n < 2:
+            return 1
+
+        # Calculate IQR (interquartile range)
+        q75, q25 = np.percentile(series, [75, 25])
+        iqr = q75 - q25
+
+        # If IQR is 0 (all values in middle 50% are the same), fall back to std
+        if iqr == 0:
+            # Use Sturges' formula as fallback
+            num_bins = int(np.ceil(np.log2(n) + 1))
+        else:
+            # Freedman-Diaconis rule
+            bin_width = 2 * iqr / (n ** (1/3))
+
+            # Calculate number of bins
+            data_range = series.max() - series.min()
+            if bin_width > 0:
+                num_bins = int(np.ceil(data_range / bin_width))
+            else:
+                num_bins = int(np.ceil(np.log2(n) + 1))
+
+        # Constrain to reasonable range (5-50 bins)
+        num_bins = max(5, min(50, num_bins))
+
+        logger.debug(
+            f"Calculated {num_bins} bins for {len(series)} data points "
+            f"(range: {series.min():.2f}-{series.max():.2f})"
+        )
+
+        return num_bins
 
     def _generate_pie(
         self, graph_def: GraphDefinition, data: pd.DataFrame
