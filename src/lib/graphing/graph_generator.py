@@ -6,6 +6,7 @@ This module generates individual Plotly figures from GraphDefinition objects.
 import warnings
 from typing import Optional
 
+import numpy as np
 import pandas as pd
 from loguru import logger
 import plotly.graph_objects as go
@@ -153,7 +154,8 @@ class GraphGenerator:
         """Generate a histogram with optimal binning.
 
         Uses Freedman-Diaconis rule for continuous data and integer-centered
-        bins for discrete data.
+        bins for discrete data. For numeric data with many unique values,
+        uses continuous bins with minimum width to ensure visibility.
         """
         # Remove null values
         clean_data = data[data[graph_def.field].notna()]
@@ -164,78 +166,250 @@ class GraphGenerator:
             fig.update_layout(title=graph_def.title)
             return fig
 
-        # Check if data is integer-like (all values are integers)
         series = clean_data[graph_def.field]
+        min_val = series.min()
+        max_val = series.max()
+        value_range = max_val - min_val
+        unique_count = series.nunique()
+
+        # Check if data is integer-like (all values are integers)
         is_integer_data = all(
             isinstance(x, (int, pd.Int64Dtype))
             or (isinstance(x, float) and x.is_integer())
             for x in series.dropna()
         )
 
-        # For small integer ranges (like ratings 1-10), use explicit bins
-        if is_integer_data:
-            min_val = series.min()
-            max_val = series.max()
-            value_range = max_val - min_val
+        # Determine if we should use continuous bins
+        # Use continuous bins if:
+        # 1. Not integer data, OR
+        # 2. Integer data but has many unique values (more than 30) OR
+        # 3. Integer data with large range relative to unique count (sparse distribution)
+        use_continuous_bins = (
+            not is_integer_data
+            or unique_count > 30
+            or (value_range > 0 and unique_count / value_range < 0.5)
+        )
 
-            # If small integer range (< 30 values), create bins centered on integers
-            if value_range < 30:
-                # Create bins centered on integer values
-                # e.g., for ratings 1-10: bins at 0.5, 1.5, 2.5, ..., 10.5
-                fig = self._px.histogram(
-                    clean_data,
-                    x=graph_def.field,
-                    color=graph_def.color_field,
-                    title=graph_def.title,
-                    color_discrete_sequence=self._px.colors.qualitative.Set2,
-                    nbins=None,  # Don't use nbins with custom range
-                )
+        if use_continuous_bins:
+            # Use continuous bins with optimal width calculation
+            bin_width = self._calculate_optimal_bin_width(series)
 
-                # Update x-axis to use our bin edges
-                fig.update_traces(
-                    xbins=dict(start=min_val - 0.5, end=max_val + 0.5, size=1.0)
-                )
+            logger.debug(
+                f"Histogram binning: field={graph_def.field}, "
+                f"min={min_val:.2f}, max={max_val:.2f}, "
+                f"range={value_range:.2f}, bin_width={bin_width:.2f}"
+            )
 
-                # Set x-axis ticks to integer values
-                fig.update_xaxes(tickmode="linear", tick0=min_val, dtick=1)
-            else:
-                # Large integer range, use optimal bins (Freedman-Diaconis rule)
-                optimal_bins = self._calculate_optimal_bins(series)
-                fig = self._px.histogram(
-                    clean_data,
-                    x=graph_def.field,
-                    nbins=optimal_bins,
-                    color=graph_def.color_field,
-                    title=graph_def.title,
-                    color_discrete_sequence=self._px.colors.qualitative.Set2,
-                )
-        else:
-            # Continuous data - calculate optimal bins using Freedman-Diaconis rule
-            optimal_bins = self._calculate_optimal_bins(series)
-
+            # Create histogram with explicit bin width and range
+            # Pass xbins directly to px.histogram to ensure proper binning
             fig = self._px.histogram(
                 clean_data,
                 x=graph_def.field,
-                nbins=optimal_bins,
                 color=graph_def.color_field,
                 title=graph_def.title,
                 color_discrete_sequence=self._px.colors.qualitative.Set2,
+                nbins=None,  # Don't use nbins with custom xbins
+                histfunc="count",
             )
 
-        # Add KDE overlay if requested (only for continuous data)
-        if graph_def.show_kde and not is_integer_data:
-            self._add_kde_overlay(fig, clean_data[graph_def.field])
+            # Set continuous bins with calculated width
+            # Use update_traces to set xbins for all traces
+            # Combine with hovertemplate update to ensure both are applied
+            fig.update_traces(
+                xbins=dict(
+                    start=min_val,
+                    end=max_val,
+                    size=bin_width,
+                ),
+                hovertemplate="<b>Range: %{x}</b><br>"
+                + "Count: %{y}<br>"
+                + "<extra></extra>",
+            )
 
-        # Update hover template for clearer information
+            # Explicitly set x-axis range to match data
+            # This is critical to prevent Plotly from auto-calculating wrong ranges
+            fig.update_xaxes(range=[min_val, max_val])
+
+            # Also set in layout to ensure it's applied
+            fig.update_layout(xaxis=dict(range=[min_val, max_val]))
+
+            # Add KDE overlay if requested
+            if graph_def.show_kde:
+                self._add_kde_overlay(fig, series)
+        else:
+            # Small integer range (like ratings 1-10), use explicit bins centered on integers
+            # Create bins centered on integer values
+            # e.g., for ratings 1-10: bins at 0.5, 1.5, 2.5, ..., 10.5
+            fig = self._px.histogram(
+                clean_data,
+                x=graph_def.field,
+                color=graph_def.color_field,
+                title=graph_def.title,
+                color_discrete_sequence=self._px.colors.qualitative.Set2,
+                nbins=None,  # Don't use nbins with custom range
+            )
+
+            # Update x-axis to use our bin edges
+            fig.update_traces(
+                xbins=dict(start=min_val - 0.5, end=max_val + 0.5, size=1.0)
+            )
+
+            # Set x-axis ticks to integer values and range
+            fig.update_xaxes(
+                tickmode="linear",
+                tick0=min_val,
+                dtick=1,
+                range=[min_val - 0.5, max_val + 0.5],
+            )
+
+            # Also set in layout
+            fig.update_layout(xaxis=dict(range=[min_val - 0.5, max_val + 0.5]))
+
+        # Update hover template for clearer information (if not already set)
         # For histograms, Plotly provides bin info in hover
-        fig.update_traces(
-            hovertemplate="<b>Range: %{x}</b><br>"
-            + "Count: %{y}<br>"
-            + "<extra></extra>"
-        )
+        # Only update if we didn't already set it in the continuous bins branch
+        if not use_continuous_bins:
+            fig.update_traces(
+                hovertemplate="<b>Range: %{x}</b><br>"
+                + "Count: %{y}<br>"
+                + "<extra></extra>"
+            )
 
         fig.update_layout(showlegend=True if graph_def.color_field else False)
         return fig
+
+    def _calculate_optimal_bin_width(self, series: pd.Series) -> float:
+        """Calculate optimal bin width for continuous histograms.
+
+        Uses Freedman-Diaconis rule with smart constraints to ensure bins are
+        visible but not too wide. For data with many unique values (like entry fees),
+        ensures minimum bin width to prevent 1-2px bins.
+
+        Args:
+            series: Data series to calculate bin width for
+
+        Returns:
+            Optimal bin width (balanced for visibility and detail)
+        """
+        n = len(series)
+        if n < 2:
+            return 1.0
+
+        data_range = series.max() - series.min()
+        if data_range == 0:
+            return 1.0
+
+        unique_count = series.nunique()
+
+        # Calculate IQR (interquartile range)
+        q75, q25 = np.percentile(series, [75, 25])
+        iqr = q75 - q25
+
+        # If IQR is 0 (all values in middle 50% are the same), fall back to std
+        if iqr == 0:
+            # Use standard deviation as fallback
+            std_dev = series.std()
+            if std_dev > 0:
+                # Use Scott's rule: bin_width = 3.5 * std / n^(1/3)
+                bin_width = 3.5 * std_dev / (n ** (1 / 3))
+            else:
+                # All values are the same, use Sturges' formula
+                num_bins = max(5, min(50, int(np.ceil(np.log2(n) + 1))))
+                bin_width = data_range / num_bins if num_bins > 0 else 1.0
+        else:
+            # Freedman-Diaconis rule
+            bin_width = 2 * iqr / (n ** (1 / 3))
+
+        # Determine if this is a sparse distribution (like entry fees with many unique values)
+        # vs dense distribution (like temperatures with fewer unique values)
+        density_ratio = unique_count / data_range if data_range > 0 else 1.0
+        is_sparse_distribution = unique_count > 30 and density_ratio < 0.5
+
+        # For sparse distributions with many unique values (like entry fees),
+        # ensure minimum bin width to prevent bins from being too narrow (1-2px).
+        # For dense distributions (like temperatures), use the calculated width as-is.
+        if is_sparse_distribution:
+            # Sparse distribution - ensure minimum visibility
+            min_bin_width = max(data_range * 0.01, 1.0)
+            bin_width = max(bin_width, min_bin_width)
+
+        # Determine target number of bins based on data characteristics
+        # Sparse distributions (entry fees) can have fewer bins to prevent 1-2px bins
+        # Dense distributions (temperatures, travel times) need more bins for detail
+        # For dense distributions, ensure we have at least 5 bins
+        # For sparse distributions, allow fewer bins but at least 3
+        min_required_bins = 3 if is_sparse_distribution else 5
+
+        if is_sparse_distribution:
+            # Sparse: aim for 5-20 bins (fewer bins, wider to prevent 1-2px)
+            target_min_bins = 5
+            target_max_bins = 20
+        else:
+            # Dense: aim for 10-30 bins (more bins, narrower for detail)
+            target_min_bins = 10
+            target_max_bins = 30
+
+        # Adjust bin_width to achieve target bin count
+        num_bins = data_range / bin_width if bin_width > 0 else 1
+        if num_bins > target_max_bins:
+            bin_width = data_range / target_max_bins
+        elif num_bins < target_min_bins:
+            bin_width = data_range / target_min_bins
+
+        # Safety check: ensure bin_width doesn't exceed data_range
+        # This prevents creating 1-bin histograms
+        bin_width = min(bin_width, data_range / min_required_bins)
+
+        # Round to reasonable precision based on data scale
+        # Use smart rounding that preserves reasonable bin counts
+        def round_bin_width(bw: float, dr: float) -> float:
+            """Round bin width intelligently based on data range."""
+            if dr > 1000:
+                return max(100, round(bw / 100) * 100)
+            elif dr > 100:
+                return max(10, round(bw / 50) * 50)
+            elif dr > 10:
+                # For ranges 10-100, use finer granularity
+                if bw < 1:
+                    return 1.0
+                elif bw < 2:
+                    return round(bw * 2) / 2  # 0.5, 1.0, 1.5, 2.0
+                elif bw < 5:
+                    return round(bw)  # Nearest integer: 2, 3, 4, 5
+                else:
+                    return round(bw / 5) * 5  # Nearest 5: 5, 10, 15, ...
+            elif dr > 1:
+                return max(0.5, round(bw * 2) / 2)  # Nearest 0.5
+            else:
+                return max(0.1, round(bw * 10) / 10)  # Nearest 0.1
+
+        bin_width = round_bin_width(bin_width, data_range)
+
+        # Verify final bin count and adjust if needed
+        # This is critical to prevent 1-bin histograms
+        final_num_bins = data_range / bin_width if bin_width > 0 else 1
+
+        if final_num_bins < min_required_bins:
+            # Recalculate with target bin count
+            target_bins = min_required_bins
+            bin_width = data_range / target_bins
+            bin_width = round_bin_width(bin_width, data_range)
+            # Final safety: ensure we don't create too few bins
+            final_num_bins = data_range / bin_width if bin_width > 0 else 1
+            if final_num_bins < min_required_bins:
+                # Last resort: use exact division
+                bin_width = data_range / min_required_bins
+
+        # Ensure bin_width is valid: positive, not larger than range
+        bin_width = max(0.1, min(bin_width, data_range))
+
+        logger.debug(
+            f"Calculated bin width {bin_width:.2f} for {len(series)} data points "
+            f"(range: {series.min():.2f}-{series.max():.2f}, "
+            f"IQR: {iqr:.2f}, unique: {unique_count}, density: {density_ratio:.3f})"
+        )
+
+        return float(bin_width)
 
     def _calculate_optimal_bins(self, series: pd.Series) -> int:
         """Calculate optimal number of bins using Freedman-Diaconis rule.
@@ -253,8 +427,6 @@ class GraphGenerator:
         Returns:
             Optimal number of bins (between 5 and 50)
         """
-        import numpy as np
-
         n = len(series)
         if n < 2:
             return 1
