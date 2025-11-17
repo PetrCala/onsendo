@@ -456,7 +456,12 @@ class DashboardBuilder:
             showlegend=False,
             height=800 * rows,
             template="plotly_white",
-            margin={"t": 150, "b": 50, "l": 50, "r": 50},  # Increased top margin
+            margin={
+                "t": 200,
+                "b": 200,
+                "l": 50,
+                "r": 50,
+            },
         )
 
         return fig
