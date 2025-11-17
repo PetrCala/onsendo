@@ -394,9 +394,9 @@ class DashboardBuilder:
         # vertical_spacing max = 1 / (rows - 1) for rows > 1
         if rows > 1:
             max_vertical_spacing = 1.0 / (rows - 1)
-            vertical_spacing = min(0.08, max_vertical_spacing * 0.8)  # Use 80% of max
+            vertical_spacing = min(0.04, max_vertical_spacing * 0.5)  # Reduced spacing
         else:
-            vertical_spacing = 0.08
+            vertical_spacing = 0.04
 
         # horizontal_spacing max = 1 / (cols - 1) for cols > 1
         if cols > 1:
