@@ -225,6 +225,14 @@ class GraphGenerator:
         if graph_def.show_kde and not is_integer_data:
             self._add_kde_overlay(fig, clean_data[graph_def.field])
 
+        # Update hover template for clearer information
+        # For histograms, Plotly provides bin info in hover
+        fig.update_traces(
+            hovertemplate="<b>Range: %{x}</b><br>"
+            + "Count: %{y}<br>"
+            + "<extra></extra>"
+        )
+
         fig.update_layout(showlegend=True if graph_def.color_field else False)
         return fig
 
@@ -290,17 +298,40 @@ class GraphGenerator:
         if graph_def.limit:
             value_counts = value_counts.head(graph_def.limit)
 
+        # Calculate percentages to determine which labels to show
+        total = value_counts.sum()
+        percentages = (value_counts.values / total) * 100
+
+        # Create custom text: only show for slices >= 5%
+        custom_text = []
+        for i, pct in enumerate(percentages):
+            if pct >= 5:
+                # Show label and percentage for larger slices
+                custom_text.append(f"{value_counts.index[i]}<br>{pct:.1f}%")
+            else:
+                # Hide text for small slices
+                custom_text.append("")
+
         fig = self._px.pie(
             values=value_counts.values,
             names=value_counts.index,
             title=graph_def.title,
             color_discrete_sequence=self._px.colors.qualitative.Set3,
+            hole=0.3,  # Donut style makes charts more prominent
         )
 
+        # Update traces with custom text and enhanced hover
         fig.update_traces(
+            text=custom_text,
             textposition="inside",
-            textinfo="percent+label",
-            textfont_size=14,  # Larger text for better readability
+            textinfo="text",  # Use our custom text
+            textfont_size=14,
+            # Custom hover template with clear formatting (shows for all slices)
+            hovertemplate="<b>%{label}</b><br>"
+            + "Count: %{value}<br>"
+            + "Percentage: %{percent}<br>"
+            + "<extra></extra>",  # Hide trace name in hover
+            marker={"line": {"color": "white", "width": 2}},
         )
         return fig
 
@@ -344,6 +375,11 @@ class GraphGenerator:
             color_discrete_sequence=[self._px.colors.qualitative.Set2[0]],
         )
 
+        # Update hover template for clearer information
+        fig.update_traces(
+            hovertemplate="<b>%{x}</b><br>" + "Count: %{y}<br>" + "<extra></extra>"
+        )
+
         fig.update_layout(xaxis_title=graph_def.field, yaxis_title="Count")
         return fig
 
@@ -363,6 +399,15 @@ class GraphGenerator:
             color=graph_def.color_field,
             title=graph_def.title,
             color_discrete_sequence=self._px.colors.qualitative.Set2,
+        )
+
+        # Update hover template for clearer information
+        x_label = graph_def.field.replace("_", " ").title()
+        y_label = graph_def.field_y.replace("_", " ").title()
+        fig.update_traces(
+            hovertemplate=f"<b>{x_label}:</b> %{{x}}<br>"
+            + f"<b>{y_label}:</b> %{{y}}<br>"
+            + "<extra></extra>"
         )
 
         return fig
@@ -388,6 +433,17 @@ class GraphGenerator:
                 title=graph_def.title,
                 color_discrete_sequence=[self._px.colors.qualitative.Set2[0]],
             )
+
+        # Update hover template for clearer box plot statistics
+        fig.update_traces(
+            hovertemplate="<b>%{x}</b><br>"
+            + "Max: %{y}<br>"
+            + "Upper Quartile (Q3): %{q3}<br>"
+            + "Median: %{median}<br>"
+            + "Lower Quartile (Q1): %{q1}<br>"
+            + "Min: %{lowerfence}<br>"
+            + "<extra></extra>"
+        )
 
         return fig
 
