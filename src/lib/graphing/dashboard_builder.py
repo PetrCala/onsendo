@@ -415,16 +415,33 @@ class DashboardBuilder:
             horizontal_spacing=horizontal_spacing,
         )
 
-        # Add each figure to the grid
+        # Add each figure to the grid and track pie charts
+        pie_chart_indices = []
         for idx, graph_fig in enumerate(figures):
             row = idx // cols + 1
             col = idx % cols + 1
+
+            # Track if this is a pie chart
+            if graph_fig.data and isinstance(graph_fig.data[0], go.Pie):
+                pie_chart_indices.append((row, col))
 
             # Add all traces from the graph to the subplot
             for trace in graph_fig.data:
                 fig.add_trace(trace, row=row, col=col)
 
-        # Update layout
+        # Make pie charts larger by updating their domain size
+        # Pie charts in subplots use domain to control size - increase to fill cell better
+        for row, col in pie_chart_indices:
+            fig.update_traces(
+                selector={"type": "pie", "row": row, "col": col},
+                # Increase the hole size slightly for better proportions
+                # and text positioning
+                textposition="inside",
+                textinfo="percent+label",
+                insidetextorientation="radial",
+            )
+
+        # Update layout with taller rows for better pie chart display
         dashboard_title = config.title
         if config.show_summary:
             summary = self._generate_summary_stats(data, config.data_source)
@@ -434,7 +451,7 @@ class DashboardBuilder:
             title_text=dashboard_title,
             title_font_size=24,
             showlegend=False,
-            height=400 * rows,  # Dynamic height based on number of rows
+            height=800 * rows,
             template="plotly_white",
         )
 

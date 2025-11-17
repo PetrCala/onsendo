@@ -166,7 +166,11 @@ class GraphGenerator:
 
         # Check if data is integer-like (all values are integers)
         series = clean_data[graph_def.field]
-        is_integer_data = all(isinstance(x, (int, pd.Int64Dtype)) or (isinstance(x, float) and x.is_integer()) for x in series.dropna())
+        is_integer_data = all(
+            isinstance(x, (int, pd.Int64Dtype))
+            or (isinstance(x, float) and x.is_integer())
+            for x in series.dropna()
+        )
 
         # For small integer ranges (like ratings 1-10), use explicit bins
         if is_integer_data:
@@ -188,18 +192,12 @@ class GraphGenerator:
                 )
 
                 # Update x-axis to use our bin edges
-                fig.update_traces(xbins=dict(
-                    start=min_val - 0.5,
-                    end=max_val + 0.5,
-                    size=1.0
-                ))
+                fig.update_traces(
+                    xbins=dict(start=min_val - 0.5, end=max_val + 0.5, size=1.0)
+                )
 
                 # Set x-axis ticks to integer values
-                fig.update_xaxes(
-                    tickmode='linear',
-                    tick0=min_val,
-                    dtick=1
-                )
+                fig.update_xaxes(tickmode="linear", tick0=min_val, dtick=1)
             else:
                 # Large integer range, use nbins normally
                 fig = self._px.histogram(
@@ -262,7 +260,7 @@ class GraphGenerator:
             num_bins = int(np.ceil(np.log2(n) + 1))
         else:
             # Freedman-Diaconis rule
-            bin_width = 2 * iqr / (n ** (1/3))
+            bin_width = 2 * iqr / (n ** (1 / 3))
 
             # Calculate number of bins
             data_range = series.max() - series.min()
@@ -299,7 +297,11 @@ class GraphGenerator:
             color_discrete_sequence=self._px.colors.qualitative.Set3,
         )
 
-        fig.update_traces(textposition="inside", textinfo="percent+label")
+        fig.update_traces(
+            textposition="inside",
+            textinfo="percent+label",
+            textfont_size=14,  # Larger text for better readability
+        )
         return fig
 
     def _generate_bar(
