@@ -40,7 +40,9 @@ class CommandConfig:
 # Lazy loading helpers -----------------------------------------------------
 
 
-def _load_command_callable(module_path: str, func_name: str) -> Callable[[argparse.Namespace], None]:
+def _load_command_callable(
+    module_path: str, func_name: str
+) -> Callable[[argparse.Namespace], None]:
     """Import ``module_path`` and return ``func_name`` from it."""
 
     module = import_module(module_path)
@@ -50,7 +52,9 @@ def _load_command_callable(module_path: str, func_name: str) -> Callable[[argpar
     return function
 
 
-def lazy_command(module_path: str, func_name: str) -> Callable[[argparse.Namespace], None]:
+def lazy_command(
+    module_path: str, func_name: str
+) -> Callable[[argparse.Namespace], None]:
     """Create a lazily imported CLI command handler."""
 
     @lru_cache(maxsize=None)
@@ -191,7 +195,9 @@ CLI_COMMANDS = {
             "pre-visit-mood": ArgumentConfig(type=str, default=""),
             "post-visit-mood": ArgumentConfig(type=str, default=""),
             "visit-time": ArgumentConfig(help="YYYY-MM-DD HH:MM", default=None),
-            "notes": ArgumentConfig(type=str, default="", help="Optional notes about the visit"),
+            "notes": ArgumentConfig(
+                type=str, default="", help="Optional notes about the visit"
+            ),
             "exercise-before-onsen": ArgumentConfig(action="store_true"),
             "had-soap": ArgumentConfig(action="store_true"),
             "had-sauna": ArgumentConfig(action="store_true"),
@@ -443,17 +449,17 @@ CLI_COMMANDS = {
         },
     ),
     "database-migrate-to-envs": CommandConfig(
-        func=lazy_command("src.cli.commands.database.migrate_to_envs", "migrate_to_environments"),
+        func=lazy_command(
+            "src.cli.commands.database.migrate_to_envs", "migrate_to_environments"
+        ),
         help="Migrate from single database to multi-environment setup (one-time migration).",
         args={
             "force": ArgumentConfig(
                 action="store_true",
-                help="Overwrite existing environment databases if they exist"
+                help="Overwrite existing environment databases if they exist",
             ),
             "yes": ArgumentConfig(
-                short="y",
-                action="store_true",
-                help="Skip confirmation prompt"
+                short="y", action="store_true", help="Skip confirmation prompt"
             ),
         },
     ),
@@ -545,7 +551,9 @@ CLI_COMMANDS = {
         },
     ),
     "database-drop-visits-by-criteria": CommandConfig(
-        func=lazy_command("src.cli.commands.database.drop_visits", "drop_visits_by_criteria"),
+        func=lazy_command(
+            "src.cli.commands.database.drop_visits", "drop_visits_by_criteria"
+        ),
         help="Drop visits from the database based on specific criteria.",
         args={
             "onsen-id": ArgumentConfig(
@@ -580,7 +588,10 @@ CLI_COMMANDS = {
         },
     ),
     "database-generate-realistic-data": CommandConfig(
-        func=lazy_command("src.cli.commands.database.generate_realistic_data", "generate_realistic_data"),
+        func=lazy_command(
+            "src.cli.commands.database.generate_realistic_data",
+            "generate_realistic_data",
+        ),
         help="Generate comprehensive realistic mock data with user profiles and correlations.",
         args={
             "scenario": ArgumentConfig(
@@ -619,12 +630,16 @@ CLI_COMMANDS = {
         },
     ),
     "database-list-profiles": CommandConfig(
-        func=lazy_command("src.cli.commands.database.generate_realistic_data", "list_user_profiles"),
+        func=lazy_command(
+            "src.cli.commands.database.generate_realistic_data", "list_user_profiles"
+        ),
         help="List available user profiles for mock data generation.",
         args={},
     ),
     "database-scenario-info": CommandConfig(
-        func=lazy_command("src.cli.commands.database.generate_realistic_data", "show_scenario_info"),
+        func=lazy_command(
+            "src.cli.commands.database.generate_realistic_data", "show_scenario_info"
+        ),
         help="Show detailed information about a data generation scenario.",
         args={
             "scenario": ArgumentConfig(
@@ -700,7 +715,9 @@ CLI_COMMANDS = {
         },
     ),
     "calculate-milestones": CommandConfig(
-        func=lazy_command("src.cli.commands.system.calculate_milestones", "calculate_milestones"),
+        func=lazy_command(
+            "src.cli.commands.system.calculate_milestones", "calculate_milestones"
+        ),
         help="Calculate distance milestones for a location based on onsen distribution.",
         args={
             "location-identifier": ArgumentConfig(
@@ -728,7 +745,9 @@ CLI_COMMANDS = {
         },
     ),
     "update-artifacts": CommandConfig(
-        func=lazy_command("src.cli.commands.system.update_artifacts", "update_artifacts"),
+        func=lazy_command(
+            "src.cli.commands.system.update_artifacts", "update_artifacts"
+        ),
         help="Update database artifacts in the artifacts/db folder for presentation purposes.",
         args={},
     ),
@@ -811,7 +830,9 @@ CLI_COMMANDS = {
         },
     ),
     "weight-delete": CommandConfig(
-        func=lazy_command("src.cli.commands.weight.delete", "delete_weight_measurement"),
+        func=lazy_command(
+            "src.cli.commands.weight.delete", "delete_weight_measurement"
+        ),
         help="Delete a weight measurement",
         args={
             "id": ArgumentConfig(
@@ -964,7 +985,9 @@ CLI_COMMANDS = {
         },
     ),
     "analysis-scenario": CommandConfig(
-        func=lazy_command("src.cli.commands.analysis.run_scenario_analysis", "run_scenario_analysis"),
+        func=lazy_command(
+            "src.cli.commands.analysis.run_scenario_analysis", "run_scenario_analysis"
+        ),
         help="Run a predefined analysis scenario",
         args={
             "no-interactive": ArgumentConfig(
@@ -1002,12 +1025,16 @@ CLI_COMMANDS = {
         args={},
     ),
     "analysis-list-options": CommandConfig(
-        func=lazy_command("src.cli.commands.analysis.list_analysis_options", "list_analysis_options"),
+        func=lazy_command(
+            "src.cli.commands.analysis.list_analysis_options", "list_analysis_options"
+        ),
         help="List available analysis options",
         args={},
     ),
     "analysis-summary": CommandConfig(
-        func=lazy_command("src.cli.commands.analysis.show_analysis_summary", "show_analysis_summary"),
+        func=lazy_command(
+            "src.cli.commands.analysis.show_analysis_summary", "show_analysis_summary"
+        ),
         help="Show summary of all analyses performed",
         args={
             "output-dir": ArgumentConfig(
@@ -1018,7 +1045,9 @@ CLI_COMMANDS = {
         },
     ),
     "analysis-clear-cache": CommandConfig(
-        func=lazy_command("src.cli.commands.analysis.clear_analysis_cache", "clear_analysis_cache"),
+        func=lazy_command(
+            "src.cli.commands.analysis.clear_analysis_cache", "clear_analysis_cache"
+        ),
         help="Clear the analysis cache and optionally clean up old directories",
         args={
             "output-dir": ArgumentConfig(
@@ -1043,7 +1072,10 @@ CLI_COMMANDS = {
         },
     ),
     "analysis-export": CommandConfig(
-        func=lazy_command("src.cli.commands.analysis.export_analysis_results", "export_analysis_results"),
+        func=lazy_command(
+            "src.cli.commands.analysis.export_analysis_results",
+            "export_analysis_results",
+        ),
         help="Export analysis results",
         args={
             "analysis-key": ArgumentConfig(
@@ -1082,8 +1114,8 @@ CLI_COMMANDS = {
             "columns": ArgumentConfig(
                 type=int,
                 required=False,
-                default=2,
-                help="Number of columns in dashboard grid (default: 2)",
+                default=3,
+                help="Number of columns in dashboard grid (default: 3)",
             ),
             "no-summary": ArgumentConfig(
                 action="store_true",
@@ -1204,7 +1236,9 @@ CLI_COMMANDS = {
         },
     ),
     "rules-revision-compare": CommandConfig(
-        func=lazy_command("src.cli.commands.rules.revision_compare", "compare_revisions"),
+        func=lazy_command(
+            "src.cli.commands.rules.revision_compare", "compare_revisions"
+        ),
         help="Compare two rule revisions.",
         args={
             "version-a": ArgumentConfig(

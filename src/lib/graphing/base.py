@@ -115,7 +115,7 @@ class DashboardConfig:
         title: Dashboard title
         data_source: Primary data source
         graph_definitions: List of graphs to include
-        columns: Number of columns in grid layout (default: 2)
+        columns: Number of columns in grid layout (default: 3)
         show_summary: Show summary statistics header (default: True)
         output_filename: Output filename (default: auto-generated)
     """
@@ -123,7 +123,7 @@ class DashboardConfig:
     title: str
     data_source: DataSource
     graph_definitions: list[GraphDefinition]
-    columns: int = 2
+    columns: int = 3
     show_summary: bool = True
     output_filename: Optional[str] = None
 
