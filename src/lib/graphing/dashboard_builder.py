@@ -441,6 +441,9 @@ class DashboardBuilder:
                 insidetextorientation="radial",
             )
 
+        # Adjust subplot title positioning to add space between title and chart
+        fig.update_annotations(yshift=10)  # Push titles up by 10 pixels
+
         # Update layout with taller rows for better pie chart display
         dashboard_title = config.title
         if config.show_summary:
