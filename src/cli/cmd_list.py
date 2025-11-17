@@ -1064,6 +1064,58 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    "analysis-graph": CommandConfig(
+        func=lazy_command("src.cli.commands.analysis.graph", "generate_graphs"),
+        help="Generate interactive graph dashboard from visit data",
+        args={
+            "data-source": ArgumentConfig(
+                type=str,
+                required=False,
+                default="visit",
+                help="Data source to graph (visit, weight, exercise)",
+            ),
+            "category": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Graph category to generate (financial, categorical, physical, time, ratings, mood)",
+            ),
+            "columns": ArgumentConfig(
+                type=int,
+                required=False,
+                default=2,
+                help="Number of columns in dashboard grid (default: 2)",
+            ),
+            "no-summary": ArgumentConfig(
+                action="store_true",
+                help="Don't show summary statistics in dashboard",
+            ),
+            "no-open": ArgumentConfig(
+                action="store_true",
+                help="Don't open dashboard in browser automatically",
+            ),
+            "output": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output filename (default: auto-generated with timestamp)",
+            ),
+        },
+    ),
+    "analysis-graph-list-categories": CommandConfig(
+        func=lazy_command("src.cli.commands.analysis.graph", "list_categories"),
+        help="List available graph categories",
+        args={},
+    ),
+    "analysis-graph-list": CommandConfig(
+        func=lazy_command("src.cli.commands.analysis.graph", "list_graphs"),
+        help="List all available graphs or graphs in a specific category",
+        args={
+            "category": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Category to list graphs for (optional)",
+            ),
+        },
+    ),
     # Rules commands
     "rules-print": CommandConfig(
         func=lazy_command("src.cli.commands.rules.print", "print_rules"),

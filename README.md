@@ -777,6 +777,52 @@ poetry run onsendo analysis run descriptive \
 poetry run onsendo analysis clear-cache --cleanup-old-analyses --keep-recent 5
 ```
 
+#### Interactive Graph Dashboards
+
+Generate comprehensive, interactive HTML dashboards with visualizations of your onsen visit data.
+
+```bash
+# Generate complete dashboard with all graphs (auto-opens in browser)
+poetry run onsendo analysis graph
+
+# Generate specific category of graphs
+poetry run onsendo analysis graph --category financial
+poetry run onsendo analysis graph --category ratings
+poetry run onsendo analysis graph --category mood
+
+# Save without opening browser
+poetry run onsendo analysis graph --no-open
+
+# Customize dashboard layout
+poetry run onsendo analysis graph --columns 3  # 3-column grid
+
+# List available graph categories
+poetry run onsendo analysis graph-list-categories
+
+# List all available graphs
+poetry run onsendo analysis graph-list
+poetry run onsendo analysis graph-list --category time
+```
+
+**Available Graph Categories**:
+
+- **financial**: Entry fees, payment methods, travel time
+- **categorical**: Weather, companions, travel mode, crowd levels, bath types, water color
+- **physical**: Outdoor temperature, bath temperature, sauna duration
+- **time**: Visit time of day, stay length, day of week, monthly patterns
+- **ratings**: Personal ratings, accessibility, cleanliness, view, atmosphere, hydration
+- **mood**: Energy level changes, pre/post-visit mood
+
+**Dashboard Features**:
+
+- **Interactive charts**: Zoom, pan, hover for details
+- **Auto-opens in browser**: One-click access to all visualizations
+- **Summary statistics**: Total visits, date range displayed in header
+- **Timestamped files**: Each dashboard saved with timestamp for historical comparison
+- **Flexible layout**: Adjust columns for different screen sizes
+
+**Output**: Dashboards saved to `output/graphs/visit_dashboard_{timestamp}.html`
+
 ---
 
 ## Data Management
@@ -941,6 +987,9 @@ See [.env.example](.env.example) for detailed setup instructions.
 
 - `analysis scenario <name>` - Run predefined scenario
 - `analysis run <type>` - Custom analysis
+- `analysis graph` - Generate interactive graph dashboard
+- `analysis graph-list-categories` - List available graph categories
+- `analysis graph-list` - List all available graphs
 - `analysis clear-cache` - Clean up old analyses
 
 ### Supported Data Formats

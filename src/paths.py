@@ -16,6 +16,7 @@ class PATHS(CustomStrEnum):
     STRAVA_ACTIVITY_DIR = os.path.join(STRAVA_DIR, "activities")
     OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output")
     MAPS_DIR = os.path.join(OUTPUT_DIR, "maps")
+    GRAPHS_DIR = os.path.join(OUTPUT_DIR, "graphs")
     ARTIFACTS_DIR = os.path.join(PROJECT_ROOT, "artifacts")
     ARTIFACTS_DB_DIR = os.path.join(ARTIFACTS_DIR, "db")
     ARTIFACTS_DB_BACKUPS_DIR = os.path.join(ARTIFACTS_DB_DIR, "backups")
