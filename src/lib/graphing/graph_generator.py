@@ -150,21 +150,75 @@ class GraphGenerator:
     def _generate_histogram(
         self, graph_def: GraphDefinition, data: pd.DataFrame
     ) -> "go.Figure":
-        """Generate a histogram."""
+        """Generate a histogram with proper binning for integer data."""
         # Remove null values
         clean_data = data[data[graph_def.field].notna()]
 
-        fig = self._px.histogram(
-            clean_data,
-            x=graph_def.field,
-            nbins=graph_def.bins,
-            color=graph_def.color_field,
-            title=graph_def.title,
-            color_discrete_sequence=self._px.colors.qualitative.Set2,
-        )
+        if clean_data.empty:
+            # Return empty figure if no data
+            fig = self._go.Figure()
+            fig.update_layout(title=graph_def.title)
+            return fig
 
-        # Add KDE overlay if requested
-        if graph_def.show_kde:
+        # Check if data is integer-like (all values are integers)
+        series = clean_data[graph_def.field]
+        is_integer_data = all(isinstance(x, (int, pd.Int64Dtype)) or (isinstance(x, float) and x.is_integer()) for x in series.dropna())
+
+        # For small integer ranges (like ratings 1-10), use explicit bins
+        if is_integer_data:
+            min_val = series.min()
+            max_val = series.max()
+            value_range = max_val - min_val
+
+            # If small integer range (< 30 values), create bins centered on integers
+            if value_range < 30:
+                # Create bins centered on integer values
+                # e.g., for ratings 1-10: bins at 0.5, 1.5, 2.5, ..., 10.5
+                fig = self._px.histogram(
+                    clean_data,
+                    x=graph_def.field,
+                    color=graph_def.color_field,
+                    title=graph_def.title,
+                    color_discrete_sequence=self._px.colors.qualitative.Set2,
+                    nbins=None,  # Don't use nbins with custom range
+                )
+
+                # Update x-axis to use our bin edges
+                fig.update_traces(xbins=dict(
+                    start=min_val - 0.5,
+                    end=max_val + 0.5,
+                    size=1.0
+                ))
+
+                # Set x-axis ticks to integer values
+                fig.update_xaxes(
+                    tickmode='linear',
+                    tick0=min_val,
+                    dtick=1
+                )
+            else:
+                # Large integer range, use nbins normally
+                fig = self._px.histogram(
+                    clean_data,
+                    x=graph_def.field,
+                    nbins=graph_def.bins,
+                    color=graph_def.color_field,
+                    title=graph_def.title,
+                    color_discrete_sequence=self._px.colors.qualitative.Set2,
+                )
+        else:
+            # Continuous data, use nbins normally
+            fig = self._px.histogram(
+                clean_data,
+                x=graph_def.field,
+                nbins=graph_def.bins,
+                color=graph_def.color_field,
+                title=graph_def.title,
+                color_discrete_sequence=self._px.colors.qualitative.Set2,
+            )
+
+        # Add KDE overlay if requested (only for continuous data)
+        if graph_def.show_kde and not is_integer_data:
             self._add_kde_overlay(fig, clean_data[graph_def.field])
 
         fig.update_layout(showlegend=True if graph_def.color_field else False)
