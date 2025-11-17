@@ -71,7 +71,7 @@ def generate_graphs(args: argparse.Namespace) -> int:
         title=dashboard_title,
         data_source=data_source,
         graph_definitions=graph_definitions,
-        columns=getattr(args, "columns", 3),
+        columns=getattr(args, "columns", 2),
         show_summary=not getattr(args, "no_summary", False),
         output_filename=getattr(args, "output", None),
     )
