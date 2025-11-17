@@ -199,11 +199,12 @@ class GraphGenerator:
                 # Set x-axis ticks to integer values
                 fig.update_xaxes(tickmode="linear", tick0=min_val, dtick=1)
             else:
-                # Large integer range, use nbins normally
+                # Large integer range, use optimal bins (Freedman-Diaconis rule)
+                optimal_bins = self._calculate_optimal_bins(series)
                 fig = self._px.histogram(
                     clean_data,
                     x=graph_def.field,
-                    nbins=graph_def.bins,
+                    nbins=optimal_bins,
                     color=graph_def.color_field,
                     title=graph_def.title,
                     color_discrete_sequence=self._px.colors.qualitative.Set2,
