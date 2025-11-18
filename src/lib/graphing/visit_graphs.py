@@ -298,6 +298,7 @@ ADDITIONAL_GRAPHS = [
         data_source=DataSource.VISIT,
         category=GraphCategory.TIME,
         field="visits_per_day",
+        deduplicate_by=["visit_date"],
         notes="How often you visit multiple onsens in one day (requires derived field)",
     ),
     GraphDefinition(

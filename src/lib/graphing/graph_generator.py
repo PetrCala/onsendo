@@ -67,6 +67,20 @@ class GraphGenerator:
         if graph_def.filters:
             data = self._apply_filters(data, graph_def.filters)
 
+        # Deduplicate if requested (e.g., day-level summaries)
+        if graph_def.deduplicate_by:
+            missing_fields = [
+                field for field in graph_def.deduplicate_by if field not in data.columns
+            ]
+            if missing_fields:
+                logger.warning(
+                    "Cannot deduplicate for '%s': missing fields %s",
+                    graph_def.title,
+                    missing_fields,
+                )
+            else:
+                data = data.drop_duplicates(subset=graph_def.deduplicate_by)
+
         # Check if we have data after filtering
         if data.empty:
             logger.warning(

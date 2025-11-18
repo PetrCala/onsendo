@@ -68,6 +68,7 @@ class GraphDefinition:  # pylint: disable=too-many-instance-attributes
         show_kde: Show KDE overlay for histograms (default: False)
         filters: Data filters to apply (optional)
         aggregation: Aggregation function for grouped data (optional)
+        deduplicate_by: Columns to deduplicate on before graphing (optional)
         sort_by: Field to sort by (optional)
         limit: Limit number of items displayed (optional)
         notes: Additional notes or description
@@ -85,6 +86,7 @@ class GraphDefinition:  # pylint: disable=too-many-instance-attributes
     show_kde: bool = False
     filters: dict = dataclass_field(default_factory=dict)
     aggregation: Optional[str] = None  # "mean", "sum", "count", etc.
+    deduplicate_by: Optional[list[str]] = None
     sort_by: Optional[str] = None
     limit: Optional[int] = None
     notes: str = ""
@@ -98,6 +100,9 @@ class GraphDefinition:  # pylint: disable=too-many-instance-attributes
             self.data_source = DataSource(self.data_source)
         if isinstance(self.category, str):
             self.category = GraphCategory(self.category)
+
+        if isinstance(self.deduplicate_by, str):
+            self.deduplicate_by = [self.deduplicate_by]
 
         # Validate graph type requirements
         if self.graph_type in {GraphType.SCATTER, GraphType.HEATMAP}:
