@@ -188,7 +188,7 @@ class StatisticsMapGenerator:
             )
             marker.add_to(onsen_layer)
 
-            # Store marker data for JavaScript
+            # Store marker data for JavaScript (using coordinates as unique identifier)
             marker_data.append(
                 {
                     "onsen_id": onsen.id,
@@ -335,7 +335,8 @@ class StatisticsMapGenerator:
         q75 = bins.get("q75", min_val)
         max_val = bins.get("max", min_val)
 
-        # Color gradient: blue (low) -> cyan -> green -> yellow -> orange -> red (high)
+        # Improved color gradient: blue (low) -> cyan -> green -> yellow -> orange -> red (high)
+        # Better represents value distribution
         if value <= q25:
             return "blue"
         if value <= q50:
@@ -347,11 +348,11 @@ class StatisticsMapGenerator:
             range_above_q75 = max_val - q75
             if range_above_q75 > 0:
                 position = (value - q75) / range_above_q75
-                if position < 0.5:
+                if position < 0.33:
                     return "yellow"
-                if position < 0.8:
+                if position < 0.67:
                     return "orange"
-        return "red"
+        return "red"  # Highest values are red
 
     def _create_popup_html(
         self, onsen: Onsen, visit: OnsenVisit, statistics: dict[str, float | int]
@@ -452,16 +453,22 @@ class StatisticsMapGenerator:
                 return f"{val:.1f}°C"
             return f"{val:.1f}"
 
+        # Calculate sub-bins for top quartile to match color scheme
+        range_above_q75 = max_val - q75
+        q67 = q75 + range_above_q75 * 0.67 if range_above_q75 > 0 else max_val
+        
         legend_html = f'''
         <div id="statistics-legend" style="position: fixed;
                     bottom: 50px; right: 50px; width: 200px; height: auto;
                     background-color: white; z-index:9999; font-size:14px;
-                    border:2px solid grey; border-radius: 5px; padding: 10px;">
+                    border:2px solid grey; border-radius: 5px; padding: 10px;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
             <p style="margin: 0 0 8px 0; font-weight: bold;">{display_name}</p>
             <p style="margin: 3px 0;"><span style="color: blue;">●</span> {format_val(min_val)} - {format_val(q25)}</p>
             <p style="margin: 3px 0;"><span style="color: cyan;">●</span> {format_val(q25)} - {format_val(q50)}</p>
             <p style="margin: 3px 0;"><span style="color: green;">●</span> {format_val(q50)} - {format_val(q75)}</p>
-            <p style="margin: 3px 0;"><span style="color: yellow;">●</span> {format_val(q75)} - {format_val(max_val)}</p>
+            <p style="margin: 3px 0;"><span style="color: yellow;">●</span> {format_val(q75)} - {format_val(q67)}</p>
+            <p style="margin: 3px 0;"><span style="color: orange;">●</span> {format_val(q67)} - {format_val(max_val)}</p>
         </div>
         '''
         return legend_html
@@ -483,12 +490,14 @@ class StatisticsMapGenerator:
             marker_data: List of marker data dictionaries
             default_statistic: Default statistic to display
         """
-        # Create dropdown HTML
+        # Create dropdown HTML - positioned to avoid overlap with Folium layer control
+        # Layer control is typically at top-right, so we place this at top-left
         dropdown_html = f'''
         <div id="statistic-selector" style="position: fixed;
-                    top: 10px; right: 10px; width: 250px; height: auto;
+                    top: 10px; left: 10px; width: 250px; height: auto;
                     background-color: white; z-index:9999; font-size:14px;
-                    border:2px solid grey; border-radius: 5px; padding: 10px;">
+                    border:2px solid grey; border-radius: 5px; padding: 10px;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
             <label for="statistic-dropdown" style="font-weight: bold; display: block; margin-bottom: 5px;">Select Statistic:</label>
             <select id="statistic-dropdown" style="width: 100%; padding: 5px; font-size: 14px;">
         '''
@@ -551,11 +560,11 @@ class StatisticsMapGenerator:
                 const range = max - q75;
                 if (range > 0) {{
                     const position = (value - q75) / range;
-                    if (position < 0.5) return 'yellow';
-                    if (position < 0.8) return 'orange';
+                    if (position < 0.33) return 'yellow';
+                    if (position < 0.67) return 'orange';
                 }}
             }}
-            return 'red';
+            return 'red';  // Highest values are red
         }}
 
         function formatLegendValue(value, statistic) {{
@@ -574,55 +583,67 @@ class StatisticsMapGenerator:
             return value.toFixed(1);
         }}
 
-        function updateMap(selectedStatistic) {{
-            const bins = statisticBins[selectedStatistic];
-            if (!bins) return;
-
-            // Update all markers by finding them via their coordinates
-            // Folium stores layers in the map object, accessible via window.map or the global 'map'
-            let mapObj = null;
-            if (typeof map !== 'undefined') {{
-                mapObj = map;
-            }} else if (window.map) {{
-                mapObj = window.map;
-            }}
-            
-            if (!mapObj) {{
-                // Fallback: try to get map from Leaflet's global registry
-                setTimeout(function() {{
-                    if (typeof map !== 'undefined') {{
-                        updateMap(selectedStatistic);
-                    }}
-                }}, 100);
+        // Store marker references when map loads
+        const markerRefs = {{}};
+        
+        function initializeMarkers() {{
+            // Wait for map to be fully loaded
+            if (typeof map === 'undefined') {{
+                setTimeout(initializeMarkers, 100);
                 return;
             }}
-
-            // Update all markers
-            mapObj.eachLayer(function(layer) {{
+            
+            // Find all CircleMarkers and store references by coordinates
+            // Need to check both map layers and FeatureGroups
+            function processLayer(layer) {{
                 if (layer instanceof L.CircleMarker) {{
                     const lat = layer.getLatLng().lat;
                     const lon = layer.getLatLng().lng;
-                    
-                    // Find matching marker data
-                    const data = markerData.find(m => 
-                        Math.abs(m.lat - lat) < 0.0001 && Math.abs(m.lon - lon) < 0.0001
-                    );
-                    
-                    if (data && data.statistics[selectedStatistic] !== undefined) {{
-                        const value = data.statistics[selectedStatistic];
-                        const color = getColorForValue(value, bins);
-                        layer.setStyle({{
-                            fillColor: color,
-                            fillOpacity: 0.7
-                        }});
-                    }} else {{
-                        layer.setStyle({{
-                            fillColor: 'gray',
-                            fillOpacity: 0.3
-                        }});
-                    }}
+                    const key = lat.toFixed(6) + ',' + lon.toFixed(6);
+                    markerRefs[key] = layer;
+                }} else if (layer instanceof L.FeatureGroup || layer instanceof L.LayerGroup) {{
+                    // Recursively process FeatureGroup layers
+                    layer.eachLayer(processLayer);
+                }}
+            }}
+            
+            map.eachLayer(processLayer);
+        }}
+        
+        function updateMap(selectedStatistic) {{
+            const bins = statisticBins[selectedStatistic];
+            if (!bins) {{
+                console.warn('No bins for statistic:', selectedStatistic);
+                return;
+            }}
+
+            // Update all markers by matching coordinates
+            markerData.forEach(function(data) {{
+                const key = data.lat.toFixed(6) + ',' + data.lon.toFixed(6);
+                const marker = markerRefs[key];
+                
+                if (marker && data.statistics[selectedStatistic] !== undefined) {{
+                    const value = data.statistics[selectedStatistic];
+                    const color = getColorForValue(value, bins);
+                    marker.setStyle({{
+                        fillColor: color,
+                        fillOpacity: 0.7
+                    }});
+                }} else if (marker) {{
+                    // No data for this statistic
+                    marker.setStyle({{
+                        fillColor: 'gray',
+                        fillOpacity: 0.3
+                    }});
                 }}
             }});
+            
+            // If markers not initialized yet, try again
+            if (Object.keys(markerRefs).length === 0) {{
+                initializeMarkers();
+                setTimeout(function() {{ updateMap(selectedStatistic); }}, 200);
+                return;
+            }}
 
             // Update legend
             const legendDiv = document.getElementById('statistics-legend');
@@ -634,24 +655,38 @@ class StatisticsMapGenerator:
                 const q75 = bins.q75 || min;
                 const max = bins.max || min;
 
+                // Create legend with proper color gradient
+                const q33 = q75 + (max - q75) * 0.33;
+                const q67 = q75 + (max - q75) * 0.67;
+                
                 legendDiv.innerHTML = `
                     <p style="margin: 0 0 8px 0; font-weight: bold;">${{displayName}}</p>
                     <p style="margin: 3px 0;"><span style="color: blue;">●</span> ${{formatLegendValue(min, selectedStatistic)}} - ${{formatLegendValue(q25, selectedStatistic)}}</p>
                     <p style="margin: 3px 0;"><span style="color: cyan;">●</span> ${{formatLegendValue(q25, selectedStatistic)}} - ${{formatLegendValue(q50, selectedStatistic)}}</p>
                     <p style="margin: 3px 0;"><span style="color: green;">●</span> ${{formatLegendValue(q50, selectedStatistic)}} - ${{formatLegendValue(q75, selectedStatistic)}}</p>
-                    <p style="margin: 3px 0;"><span style="color: yellow;">●</span> ${{formatLegendValue(q75, selectedStatistic)}} - ${{formatLegendValue(max, selectedStatistic)}}</p>
+                    <p style="margin: 3px 0;"><span style="color: yellow;">●</span> ${{formatLegendValue(q75, selectedStatistic)}} - ${{formatLegendValue(q67, selectedStatistic)}}</p>
+                    <p style="margin: 3px 0;"><span style="color: orange;">●</span> ${{formatLegendValue(q67, selectedStatistic)}} - ${{formatLegendValue(max, selectedStatistic)}}</p>
                 `;
             }}
         }}
 
-        // Set up dropdown handler
-        document.getElementById('statistic-dropdown').addEventListener('change', function(e) {{
-            updateMap(e.target.value);
+        // Initialize markers when page loads
+        window.addEventListener('load', function() {{
+            initializeMarkers();
         }});
+        
+        // Also try immediately (in case page already loaded)
+        initializeMarkers();
 
-        // Store map reference for updateMap function
-        // Folium creates a global 'map' variable, but we need to access it via the map object
-        // We'll use a different approach: iterate through all layers
+        // Set up dropdown handler
+        document.addEventListener('DOMContentLoaded', function() {{
+            const dropdown = document.getElementById('statistic-dropdown');
+            if (dropdown) {{
+                dropdown.addEventListener('change', function(e) {{
+                    updateMap(e.target.value);
+                }});
+            }}
+        }});
         </script>
         """
 
