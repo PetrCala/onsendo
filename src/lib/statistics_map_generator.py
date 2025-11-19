@@ -126,10 +126,22 @@ class StatisticsMapGenerator:
             tiles="OpenStreetMap",
         )
 
-        # Add tile layers
-        folium.TileLayer("Stamen Terrain", name="Terrain").add_to(folium_map)
-        folium.TileLayer("Stamen Toner", name="Toner").add_to(folium_map)
-        folium.TileLayer("CartoDB positron", name="Light").add_to(folium_map)
+        # Add tile layers with proper attribution
+        folium.TileLayer(
+            tiles="Stamen Terrain",
+            name="Terrain",
+            attr='Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+        ).add_to(folium_map)
+        folium.TileLayer(
+            tiles="Stamen Toner",
+            name="Toner",
+            attr='Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+        ).add_to(folium_map)
+        folium.TileLayer(
+            tiles="CartoDB positron",
+            name="Light",
+            attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        ).add_to(folium_map)
 
         # Add location markers
         if show_locations:
