@@ -453,9 +453,11 @@ class StatisticsMapGenerator:
                 return f"{val:.1f}°C"
             return f"{val:.1f}"
 
-        # Calculate sub-bins for top quartile to match color scheme
+        # Calculate sub-bins for top quartile to match color scheme exactly
+        # Colors: blue (<=q25), cyan (<=q50), green (<=q75), yellow (q75 to q75+33%), orange (q75+33% to q75+67%), red (>q75+67%)
         range_above_q75 = max_val - q75
-        q67 = q75 + range_above_q75 * 0.67 if range_above_q75 > 0 else max_val
+        q33_above = q75 + range_above_q75 * 0.33 if range_above_q75 > 0 else max_val
+        q67_above = q75 + range_above_q75 * 0.67 if range_above_q75 > 0 else max_val
         
         legend_html = f'''
         <div id="statistics-legend" style="position: fixed;
@@ -467,8 +469,17 @@ class StatisticsMapGenerator:
             <p style="margin: 3px 0;"><span style="color: blue;">●</span> {format_val(min_val)} - {format_val(q25)}</p>
             <p style="margin: 3px 0;"><span style="color: cyan;">●</span> {format_val(q25)} - {format_val(q50)}</p>
             <p style="margin: 3px 0;"><span style="color: green;">●</span> {format_val(q50)} - {format_val(q75)}</p>
-            <p style="margin: 3px 0;"><span style="color: yellow;">●</span> {format_val(q75)} - {format_val(q67)}</p>
-            <p style="margin: 3px 0;"><span style="color: orange;">●</span> {format_val(q67)} - {format_val(max_val)}</p>
+        '''
+        
+        # Only show top quartile bins if there's a range above q75
+        if range_above_q75 > 0:
+            legend_html += f'''
+            <p style="margin: 3px 0;"><span style="color: yellow;">●</span> {format_val(q75)} - {format_val(q33_above)}</p>
+            <p style="margin: 3px 0;"><span style="color: orange;">●</span> {format_val(q33_above)} - {format_val(q67_above)}</p>
+            <p style="margin: 3px 0;"><span style="color: red;">●</span> {format_val(q67_above)} - {format_val(max_val)}</p>
+            '''
+        
+        legend_html += '''
         </div>
         '''
         return legend_html
@@ -655,18 +666,27 @@ class StatisticsMapGenerator:
                 const q75 = bins.q75 || min;
                 const max = bins.max || min;
 
-                // Create legend with proper color gradient
-                const q33 = q75 + (max - q75) * 0.33;
-                const q67 = q75 + (max - q75) * 0.67;
-                
-                legendDiv.innerHTML = `
+                // Create legend with proper color gradient matching the color function exactly
+                const rangeAboveQ75 = max - q75;
+                let legendHTML = `
                     <p style="margin: 0 0 8px 0; font-weight: bold;">${{displayName}}</p>
                     <p style="margin: 3px 0;"><span style="color: blue;">●</span> ${{formatLegendValue(min, selectedStatistic)}} - ${{formatLegendValue(q25, selectedStatistic)}}</p>
                     <p style="margin: 3px 0;"><span style="color: cyan;">●</span> ${{formatLegendValue(q25, selectedStatistic)}} - ${{formatLegendValue(q50, selectedStatistic)}}</p>
                     <p style="margin: 3px 0;"><span style="color: green;">●</span> ${{formatLegendValue(q50, selectedStatistic)}} - ${{formatLegendValue(q75, selectedStatistic)}}</p>
-                    <p style="margin: 3px 0;"><span style="color: yellow;">●</span> ${{formatLegendValue(q75, selectedStatistic)}} - ${{formatLegendValue(q67, selectedStatistic)}}</p>
-                    <p style="margin: 3px 0;"><span style="color: orange;">●</span> ${{formatLegendValue(q67, selectedStatistic)}} - ${{formatLegendValue(max, selectedStatistic)}}</p>
                 `;
+                
+                // Only show top quartile bins if there's a range above q75
+                if (rangeAboveQ75 > 0) {{
+                    const q33Above = q75 + rangeAboveQ75 * 0.33;
+                    const q67Above = q75 + rangeAboveQ75 * 0.67;
+                    legendHTML += `
+                    <p style="margin: 3px 0;"><span style="color: yellow;">●</span> ${{formatLegendValue(q75, selectedStatistic)}} - ${{formatLegendValue(q33Above, selectedStatistic)}}</p>
+                    <p style="margin: 3px 0;"><span style="color: orange;">●</span> ${{formatLegendValue(q33Above, selectedStatistic)}} - ${{formatLegendValue(q67Above, selectedStatistic)}}</p>
+                    <p style="margin: 3px 0;"><span style="color: red;">●</span> ${{formatLegendValue(q67Above, selectedStatistic)}} - ${{formatLegendValue(max, selectedStatistic)}}</p>
+                    `;
+                }}
+                
+                legendDiv.innerHTML = legendHTML;
             }}
         }}
 
