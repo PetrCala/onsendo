@@ -823,6 +823,50 @@ poetry run onsendo analysis graph-list --category time
 
 **Output**: Dashboards saved to `output/graphs/visit_dashboard_{timestamp}.html`
 
+#### Interactive Statistics Maps
+
+Generate interactive HTML maps showing visited onsens with colored circles representing statistics from visits. Select which statistic to display via a dropdown in the browser.
+
+```bash
+# Generate statistics map (uses latest visit per onsen by default)
+poetry run onsendo analysis map
+
+# Use first visit instead of latest
+poetry run onsendo analysis map --visit-selection first
+
+# Use specific visit number (e.g., 2nd visit)
+poetry run onsendo analysis map --visit-selection nth:2
+
+# Save without opening browser
+poetry run onsendo analysis map --no-open
+
+# Hide user location markers
+poetry run onsendo analysis map --no-show-locations
+
+# Custom output filename
+poetry run onsendo analysis map --output my_statistics_map.html
+
+# List all available statistics
+poetry run onsendo analysis map-list-statistics
+```
+
+**Available Statistics**:
+
+- **Ratings** (1-10 scale): Personal rating, accessibility, cleanliness, navigability, view, atmosphere, rest area, food quality, sauna, outdoor bath, smell intensity, changing room cleanliness, locker availability, local interaction quality, hydration level
+- **Durations** (minutes): Stay length, travel time, sauna duration
+- **Numeric**: Entry fee (yen), outside temperature, main bath temperature, sauna temperature, outdoor bath temperature, energy level change
+
+**Map Features**:
+
+- **Interactive statistic selection**: Dropdown menu to switch between all available statistics
+- **Color-coded visualization**: Automatic color bins based on data distribution (blue → cyan → green → yellow → orange → red)
+- **Detailed popups**: Click any onsen marker to see all statistics and visit details
+- **Dynamic legend**: Updates automatically when you change statistics
+- **Visit selection strategies**: Choose latest, first, or nth visit per onsen
+- **Location markers**: Optionally show your saved locations on the map
+
+**Output**: Maps saved to `output/maps/analysis_statistics_map_{timestamp}.html`
+
 ---
 
 ## Data Management
@@ -990,6 +1034,8 @@ See [.env.example](.env.example) for detailed setup instructions.
 - `analysis graph` - Generate interactive graph dashboard
 - `analysis graph-list-categories` - List available graph categories
 - `analysis graph-list` - List all available graphs
+- `analysis map` - Generate interactive statistics map
+- `analysis map-list-statistics` - List all available statistics for mapping
 - `analysis clear-cache` - Clean up old analyses
 
 ### Supported Data Formats

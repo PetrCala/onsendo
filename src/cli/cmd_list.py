@@ -1116,6 +1116,36 @@ CLI_COMMANDS = {
             ),
         },
     ),
+    "analysis-map": CommandConfig(
+        func=lazy_command("src.cli.commands.analysis.map", "generate_statistics_map"),
+        help="Generate interactive statistics map from visit data",
+        args={
+            "visit-selection": ArgumentConfig(
+                type=str,
+                required=False,
+                default="latest",
+                help="Visit selection strategy: 'latest', 'first', or 'nth:N' (e.g., 'nth:2' for 2nd visit)",
+            ),
+            "output": ArgumentConfig(
+                type=str,
+                required=False,
+                help="Output filename (default: auto-generated with timestamp)",
+            ),
+            "no-open": ArgumentConfig(
+                action="store_true",
+                help="Don't open map in browser automatically",
+            ),
+            "no-show-locations": ArgumentConfig(
+                action="store_true",
+                help="Don't show user location markers on map",
+            ),
+        },
+    ),
+    "analysis-map-list-statistics": CommandConfig(
+        func=lazy_command("src.cli.commands.analysis.map", "list_statistics"),
+        help="List all available statistics for mapping",
+        args={},
+    ),
     # Rules commands
     "rules-print": CommandConfig(
         func=lazy_command("src.cli.commands.rules.print", "print_rules"),
