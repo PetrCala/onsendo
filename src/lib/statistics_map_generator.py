@@ -114,7 +114,10 @@ class StatisticsMapGenerator:
         for field_name in statistic_field_names:
             values = all_statistic_values[field_name]
             if values:
-                statistic_bins[field_name] = self._calculate_bins(values)
+                # Check if this is a rating statistic (1-10 integer scale)
+                stat_info = self.registry.get_statistic(field_name)
+                is_rating = stat_info and stat_info.get("type") == "rating"
+                statistic_bins[field_name] = self._calculate_bins(values, is_rating=is_rating)
 
         # Create map
         center_lat = np.mean([d["onsen"].latitude for d in onsen_data])
@@ -287,30 +290,47 @@ class StatisticsMapGenerator:
 
         return None
 
-    def _calculate_bins(self, values: list[float | int]) -> dict:
+    def _calculate_bins(self, values: list[float | int], is_rating: bool = False) -> dict:
         """Calculate color bins based on data distribution.
 
-        Uses quantiles (25%, 50%, 75%) to create 4 bins.
+        Uses quantiles (25%, 50%, 75%) to create bins.
+        For ratings (1-10 integer scale), rounds boundaries to integers.
 
         Args:
             values: List of numeric values
+            is_rating: If True, use integer boundaries (for 1-10 rating scale)
 
         Returns:
-            Dictionary with bin boundaries (all values converted to float for JSON serialization)
+            Dictionary with bin boundaries
         """
         if not values:
             return {}
 
         values_array = np.array(values, dtype=float)
+        min_val = np.min(values_array)
+        max_val = np.max(values_array)
         q25, q50, q75 = np.percentile(values_array, [25, 50, 75])
+
+        if is_rating:
+            # For ratings, round to integers and ensure they're within 1-10 range
+            min_val = max(1, int(round(min_val)))
+            max_val = min(10, int(round(max_val)))
+            q25 = max(1, min(10, int(round(q25))))
+            q50 = max(1, min(10, int(round(q50))))
+            q75 = max(1, min(10, int(round(q75))))
+            
+            # Ensure bins are in order
+            q25 = max(min_val, min(q25, q50))
+            q50 = max(q25, min(q50, q75))
+            q75 = max(q50, min(q75, max_val))
 
         # Convert all to native Python floats for JSON serialization
         return {
-            "min": float(np.min(values_array)),
+            "min": float(min_val),
             "q25": float(q25),
             "q50": float(q50),
             "q75": float(q75),
-            "max": float(np.max(values_array)),
+            "max": float(max_val),
         }
 
     def _get_color_for_value(
@@ -444,7 +464,8 @@ class StatisticsMapGenerator:
 
         def format_val(val):
             if stat_type == "rating":
-                return f"{val:.1f}"
+                # Ratings are integers, so show as integer
+                return f"{int(round(val))}"
             if stat_type == "duration":
                 return f"{int(val)} min"
             if "fee" in statistic.lower() or "yen" in statistic.lower():
@@ -458,6 +479,14 @@ class StatisticsMapGenerator:
         range_above_q75 = max_val - q75
         q33_above = q75 + range_above_q75 * 0.33 if range_above_q75 > 0 else max_val
         q67_above = q75 + range_above_q75 * 0.67 if range_above_q75 > 0 else max_val
+        
+        # For ratings, round sub-bin boundaries to integers
+        if stat_type == "rating":
+            q33_above = int(round(q33_above))
+            q67_above = int(round(q67_above))
+            # Ensure they're in valid range and order
+            q33_above = max(int(q75), min(q33_above, q67_above))
+            q67_above = max(q33_above, min(q67_above, int(max_val)))
         
         legend_html = f'''
         <div id="statistics-legend" style="position: fixed;
@@ -580,7 +609,8 @@ class StatisticsMapGenerator:
 
         function formatLegendValue(value, statistic) {{
             if (statistic.includes('rating')) {{
-                return value.toFixed(1);
+                // Ratings are integers, so show as integer
+                return Math.round(value).toString();
             }}
             if (statistic.includes('duration') || statistic.includes('minutes')) {{
                 return Math.round(value) + ' min';
@@ -668,6 +698,8 @@ class StatisticsMapGenerator:
 
                 // Create legend with proper color gradient matching the color function exactly
                 const rangeAboveQ75 = max - q75;
+                const isRating = selectedStatistic.includes('rating');
+                
                 let legendHTML = `
                     <p style="margin: 0 0 8px 0; font-weight: bold;">${{displayName}}</p>
                     <p style="margin: 3px 0;"><span style="color: blue;">●</span> ${{formatLegendValue(min, selectedStatistic)}} - ${{formatLegendValue(q25, selectedStatistic)}}</p>
@@ -677,8 +709,18 @@ class StatisticsMapGenerator:
                 
                 // Only show top quartile bins if there's a range above q75
                 if (rangeAboveQ75 > 0) {{
-                    const q33Above = q75 + rangeAboveQ75 * 0.33;
-                    const q67Above = q75 + rangeAboveQ75 * 0.67;
+                    let q33Above = q75 + rangeAboveQ75 * 0.33;
+                    let q67Above = q75 + rangeAboveQ75 * 0.67;
+                    
+                    // For ratings, round to integers
+                    if (isRating) {{
+                        q33Above = Math.round(q33Above);
+                        q67Above = Math.round(q67Above);
+                        // Ensure they're in valid range and order
+                        q33Above = Math.max(Math.round(q75), Math.min(q33Above, q67Above));
+                        q67Above = Math.max(q33Above, Math.min(q67Above, Math.round(max)));
+                    }}
+                    
                     legendHTML += `
                     <p style="margin: 3px 0;"><span style="color: yellow;">●</span> ${{formatLegendValue(q75, selectedStatistic)}} - ${{formatLegendValue(q33Above, selectedStatistic)}}</p>
                     <p style="margin: 3px 0;"><span style="color: orange;">●</span> ${{formatLegendValue(q33Above, selectedStatistic)}} - ${{formatLegendValue(q67Above, selectedStatistic)}}</p>
